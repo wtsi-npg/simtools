@@ -69,20 +69,25 @@ bool SortByPosition(const snpClass &snp1, const snpClass &snp2)
 }
 
 
-void showUsage(char *argv[])
+void showUsage(int argc, char *argv[])
 {
+	string command = "";
+
+	if (argc > 2) command = argv[2];
+
 	cout << endl;
-	if (strcmp(argv[2],"create") == 0) {
+	if (command == "create") {
 		cout << "Usage:   " << argv[0] << " create [options]" << endl << endl;
 		cout << "Create a SIM file from a list of GTC files" << endl<< endl;
 		cout << "Options: --infile <filename>    File containing list of GTC files to process" << endl;
 		cout << "         --outfile <filename>   Name of SIM file to create or '-' for STDOUT" << endl;
 		cout << "         --man_dir <dirname>    Directory to look for Manifest file in" << endl;
 		cout << "         --normalize            Normalize the intensities (default is raw values)" << endl;
+		cout << "         --verbose              Show progress messages to STDERR" << endl;
 		exit(0);
 	}
 
-	if (strcmp(argv[2],"illuminus") == 0) {
+	if (command == "illuminus") {
 		cout << "Usage:   " << argv[0] << " illuminus [options]" << endl << endl;
 		cout << "Create an Illuminus file from a SIM file" << endl<< endl;
 		cout << "Options: --infile <filename>    Name of SIM file to provess or '-' for STDIN" << endl;
@@ -90,16 +95,26 @@ void showUsage(char *argv[])
 		cout << "         --man_dir <dirname>    Directory to look for Manifest file in" << endl;
 		cout << "         --start <index>        Which SNP to start processing at (default is to start at the beginning)" << endl;
 		cout << "         --end <index>          Which SNP to end processing at (default is to continue until the end)" << endl;
+		cout << "         --verbose              Show progress messages to STDERR" << endl;
 		exit(0);
 	}
 
-	if (strcmp(argv[2],"genosnp") == 0) {
+	if (command == "genosnp") {
 		cout << "Usage:   " << argv[0] << " genosnp [options]" << endl << endl;
 		cout << "Create a GenoSNP file from a SIM file" << endl<< endl;
 		cout << "Options: --infile   The name of the SIM file or '-' for STDIN" << endl;
 		cout << "         --outfile  Name of GenoSNP file to create or '-' for STDOUT" << endl;
 		cout << "         --start <index>        Which sample to start processing at (default is to start at the beginning)" << endl;
 		cout << "         --end <index>          Which sample to end processing at (default is to continue until the end)" << endl;
+		cout << "         --verbose              Show progress messages to STDERR" << endl;
+		exit(0);
+	}
+
+	if (command == "view") {
+		cout << "Usage:   " << argv[0] << " view [options]" << endl << endl;
+		cout << "Display some information from a SIM file" << endl<< endl;
+		cout << "Options: --infile   The name of the SIM file or '-' for STDIN" << endl;
+		cout << "         --verbose  Display intensities as well as header information" << endl;
 		exit(0);
 	}
 
@@ -402,13 +417,13 @@ int main(int argc, char *argv[])
 	int c;
 
 	// Get command
-	if (argc < 2) showUsage(argv);
+	if (argc < 2) showUsage(argc,argv);
 	string command = argv[1];
-	if (command == "help") showUsage(argv);
+	if (command == "help") showUsage(argc, argv);
 
 	// get options
 	while ( (c=getopt_long(argc,argv,"h?",long_options,&option_index)) != -1) {
-		if (c == '?') showUsage(argv);	// unknown option
+		if (c == '?') showUsage(argc,argv);	// unknown option
 		if (option_index > -1) {
 			string option = long_options[option_index].name;
 			if (option == "infile") infile = optarg;
@@ -432,7 +447,7 @@ int main(int argc, char *argv[])
 	else if (command == "genosnp")   commandGenoSNP(infile, outfile, manfile, start_pos, end_pos, verbose);
 	else {
 		cerr << "Unknown command '" << command << "'" << endl;
-		showUsage(argv);
+		showUsage(argc,argv);
 	}
 
 	return 0;
