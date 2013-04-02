@@ -49,7 +49,7 @@ using namespace std;
 static struct option long_options[] = {
                    {"infile", 1, 0, 0},
                    {"outfile", 1, 0, 0},
-                   {"man_dir", 1, 0, 0},
+                   {"man_file", 1, 0, 0},
                    {"normalize", 0, 0, 0},
                    {"verbose", 0, 0, 0},
                    {"start", 1, 0, 0},
@@ -81,7 +81,7 @@ void showUsage(int argc, char *argv[])
 		cout << "Create a SIM file from a list of GTC files" << endl<< endl;
 		cout << "Options: --infile <filename>    File containing list of GTC files to process" << endl;
 		cout << "         --outfile <filename>   Name of SIM file to create or '-' for STDOUT" << endl;
-		cout << "         --man_dir <dirname>    Directory to look for Manifest file in" << endl;
+		cout << "         --man_file <dirname>    Directory to look for Manifest file in" << endl;
 		cout << "         --normalize            Normalize the intensities (default is raw values)" << endl;
 		cout << "         --verbose              Show progress messages to STDERR" << endl;
 		exit(0);
@@ -92,7 +92,7 @@ void showUsage(int argc, char *argv[])
 		cout << "Create an Illuminus file from a SIM file" << endl<< endl;
 		cout << "Options: --infile <filename>    Name of SIM file to provess or '-' for STDIN" << endl;
 		cout << "         --outfile <filename>   Name of Illuminus file to create or '-' for STDOUT" << endl;
-		cout << "         --man_dir <dirname>    Directory to look for Manifest file in" << endl;
+		cout << "         --man_file <dirname>    Directory to look for Manifest file in" << endl;
 		cout << "         --start <index>        Which SNP to start processing at (default is to start at the beginning)" << endl;
 		cout << "         --end <index>          Which SNP to end processing at (default is to continue until the end)" << endl;
 		cout << "         --verbose              Show progress messages to STDERR" << endl;
@@ -315,7 +315,7 @@ void commandIlluminus(string infile, string outfile, string manfile, int start_p
 	Sim *sim = new Sim();
 	ofstream outFStream;
 	ostream *outStream;
-	char *sampleName = new char[sim->sampleNameSize];
+	char *sampleName;
     vector<uint16_t> *intensity_int = new vector<uint16_t>;
     vector<float> *intensity_float = new vector<float>;
 	vector<vector<float> > SNPArray;
@@ -330,6 +330,8 @@ void commandIlluminus(string infile, string outfile, string manfile, int start_p
 
 	sim->open(infile);
 
+	sampleName = new char[sim->sampleNameSize];
+
 	// We need a manifest file to sort the SNPs
 	loadManifest(manifest, manfile);
 	// Sort the SNPs into position order
@@ -341,6 +343,7 @@ void commandIlluminus(string infile, string outfile, string manfile, int start_p
 	if (verbose) cerr << "Reading SIM file " << infile << endl;
 	for(unsigned int n=0; n < sim->numSamples; n++) {
 		vector<float> *s = new vector<float>; 
+		if (!s) { cerr << "new s failed" << endl; exit(1); }
 		intensity_float->clear();
 		intensity_int->clear();
 		if (sim->numberFormat == 0) sim->getNextRecord(sampleName, intensity_float);
@@ -429,7 +432,7 @@ int main(int argc, char *argv[])
 			if (option == "infile") infile = optarg;
 			if (option == "outfile") outfile = optarg;
 			if (option == "verbose") verbose = true;
-			if (option == "man_dir") manfile = optarg;
+			if (option == "man_file") manfile = optarg;
 			if (option == "normalize") normalize = true;
 			if (option == "start") start_pos = atoi(optarg);
 			if (option == "end") end_pos = atoi(optarg);
@@ -441,6 +444,7 @@ int main(int argc, char *argv[])
 	if (outfile == "stdout") outfile = "-";
 
 	// Process the command
+	try {
 	     if (command == "view")      commandView(infile, verbose);
 	else if (command == "create")    commandCreate(infile, outfile, normalize, manfile, verbose);
 	else if (command == "illuminus") commandIlluminus(infile, outfile, manfile, start_pos, end_pos, verbose);
@@ -449,7 +453,12 @@ int main(int argc, char *argv[])
 		cerr << "Unknown command '" << command << "'" << endl;
 		showUsage(argc,argv);
 	}
-
+	} catch (const char *error_msg) {
+		cerr << error_msg << endl << endl;
+	}
+	catch (string error_msg) {
+		cerr << error_msg << endl << endl;
+	}
 	return 0;
 }
 

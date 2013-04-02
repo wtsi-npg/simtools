@@ -174,6 +174,7 @@ void Sim::getNextRecord(char *sampleName, vector<uint16_t> *intensity)
 	unsigned int n;
 	char *p;
 	char *buff = new char[recordLength];
+
 	infile->read(buff,recordLength);
 	memcpy(sampleName,buff,sampleNameSize);
 	for (n=0, p=buff+sampleNameSize; n < numProbes*numChannels; n++, p+=2) {

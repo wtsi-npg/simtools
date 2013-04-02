@@ -57,7 +57,7 @@ catch (string m) { cout << m << endl; }
 	cout << "Format:    " << (int)sim->numberFormat << endl;
 
 	cout << endl;
-	char *sampleName = new char[sim->sampleNameSize];
+	char *sampleName = new char[sim->sampleNameSize+1];
 	vector<uint16_t> *intensity = new vector<uint16_t>;;
 	for (unsigned int n=0; n < sim->numSamples; n++) {
 		intensity->clear();
