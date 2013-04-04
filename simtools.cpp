@@ -50,6 +50,7 @@ static struct option long_options[] = {
                    {"infile", 1, 0, 0},
                    {"outfile", 1, 0, 0},
                    {"man_file", 1, 0, 0},
+                   {"man_dir", 1, 0, 0},
                    {"normalize", 0, 0, 0},
                    {"verbose", 0, 0, 0},
                    {"start", 1, 0, 0},
@@ -348,7 +349,8 @@ void commandIlluminus(string infile, string outfile, string manfile, int start_p
 		intensity_int->clear();
 		if (sim->numberFormat == 0) sim->getNextRecord(sampleName, intensity_float);
 		else                        sim->getNextRecord(sampleName, intensity_int);
-		for (int i=start_pos; i < start_pos+(end_pos-start_pos+1)*2; i++) {
+//		for (int i=start_pos; i < start_pos+(end_pos-start_pos+1)*2; i++) {
+		for (int i=start_pos; i <= end_pos; i++) {
 			float v;
 			if (sim->numberFormat==0) v = intensity_float->at(i);
 			else                      v = intensity_int->at(i);
@@ -361,7 +363,7 @@ void commandIlluminus(string infile, string outfile, string manfile, int start_p
 
 	// Now write it out in Illuminus format
 	if (verbose) cerr << "Writing Illuminus file " << outfile << endl;
-	for (int i=start_pos, j=0; i < end_pos; j+=sim->numChannels, i++) {
+	for (int i=start_pos, j=0; i <= end_pos; j+=sim->numChannels, i++) {
 		*outStream << manifest->snps[i].name << "\t" << manifest->snps[i].position << "\t" << manifest->snps[i].snp[0] << manifest->snps[i].snp[1];
 		for(unsigned int n=0; n < sim->numSamples; n++) {
 			vector <float> s = SNPArray[n];
@@ -433,6 +435,7 @@ int main(int argc, char *argv[])
 			if (option == "outfile") outfile = optarg;
 			if (option == "verbose") verbose = true;
 			if (option == "man_file") manfile = optarg;
+			if (option == "man_dir") manfile = optarg;
 			if (option == "normalize") normalize = true;
 			if (option == "start") start_pos = atoi(optarg);
 			if (option == "end") end_pos = atoi(optarg);
