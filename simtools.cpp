@@ -49,6 +49,7 @@ using namespace std;
 static struct option long_options[] = {
                    {"infile", 1, 0, 0},
                    {"outfile", 1, 0, 0},
+                   {"man_file", 1, 0, 0},
                    {"man_dir", 1, 0, 0},
                    {"normalize", 0, 0, 0},
                    {"verbose", 0, 0, 0},
@@ -69,33 +70,52 @@ bool SortByPosition(const snpClass &snp1, const snpClass &snp2)
 }
 
 
-void showUsage(char *argv[])
+void showUsage(int argc, char *argv[])
 {
+	string command = "";
+
+	if (argc > 2) command = argv[2];
+
 	cout << endl;
-	if (strcmp(argv[2],"create") == 0) {
+	if (command == "create") {
 		cout << "Usage:   " << argv[0] << " create [options]" << endl << endl;
 		cout << "Create a SIM file from a list of GTC files" << endl<< endl;
 		cout << "Options: --infile <filename>    File containing list of GTC files to process" << endl;
 		cout << "         --outfile <filename>   Name of SIM file to create or '-' for STDOUT" << endl;
-		cout << "         --man_dir <dirname>    Directory to look for Manifest file in" << endl;
+		cout << "         --man_file <dirname>    Directory to look for Manifest file in" << endl;
 		cout << "         --normalize            Normalize the intensities (default is raw values)" << endl;
+		cout << "         --verbose              Show progress messages to STDERR" << endl;
 		exit(0);
 	}
 
-	if (strcmp(argv[2],"illuminus") == 0) {
+	if (command == "illuminus") {
 		cout << "Usage:   " << argv[0] << " illuminus [options]" << endl << endl;
 		cout << "Create an Illuminus file from a SIM file" << endl<< endl;
 		cout << "Options: --infile <filename>    Name of SIM file to provess or '-' for STDIN" << endl;
 		cout << "         --outfile <filename>   Name of Illuminus file to create or '-' for STDOUT" << endl;
-		cout << "         --man_dir <dirname>    Directory to look for Manifest file in" << endl;
+		cout << "         --man_file <dirname>    Directory to look for Manifest file in" << endl;
+		cout << "         --start <index>        Which SNP to start processing at (default is to start at the beginning)" << endl;
+		cout << "         --end <index>          Which SNP to end processing at (default is to continue until the end)" << endl;
+		cout << "         --verbose              Show progress messages to STDERR" << endl;
 		exit(0);
 	}
 
-	if (strcmp(argv[2],"genosnp") == 0) {
+	if (command == "genosnp") {
 		cout << "Usage:   " << argv[0] << " genosnp [options]" << endl << endl;
 		cout << "Create a GenoSNP file from a SIM file" << endl<< endl;
 		cout << "Options: --infile   The name of the SIM file or '-' for STDIN" << endl;
 		cout << "         --outfile  Name of GenoSNP file to create or '-' for STDOUT" << endl;
+		cout << "         --start <index>        Which sample to start processing at (default is to start at the beginning)" << endl;
+		cout << "         --end <index>          Which sample to end processing at (default is to continue until the end)" << endl;
+		cout << "         --verbose              Show progress messages to STDERR" << endl;
+		exit(0);
+	}
+
+	if (command == "view") {
+		cout << "Usage:   " << argv[0] << " view [options]" << endl << endl;
+		cout << "Display some information from a SIM file" << endl<< endl;
+		cout << "Options: --infile   The name of the SIM file or '-' for STDIN" << endl;
+		cout << "         --verbose  Display intensities as well as header information" << endl;
 		exit(0);
 	}
 
@@ -296,7 +316,7 @@ void commandIlluminus(string infile, string outfile, string manfile, int start_p
 	Sim *sim = new Sim();
 	ofstream outFStream;
 	ostream *outStream;
-	char *sampleName = new char[sim->sampleNameSize];
+	char *sampleName;
     vector<uint16_t> *intensity_int = new vector<uint16_t>;
     vector<float> *intensity_float = new vector<float>;
 	vector<vector<float> > SNPArray;
@@ -311,20 +331,26 @@ void commandIlluminus(string infile, string outfile, string manfile, int start_p
 
 	sim->open(infile);
 
+	sampleName = new char[sim->sampleNameSize];
+
 	// We need a manifest file to sort the SNPs
 	loadManifest(manifest, manfile);
 	// Sort the SNPs into position order
 	sort(manifest->snps.begin(), manifest->snps.end(), SortByPosition);
 
+	if (end_pos == -1) end_pos = sim->numProbes * sim->numChannels;
+
 	// load the (relevant parts of) the SIM file
 	if (verbose) cerr << "Reading SIM file " << infile << endl;
 	for(unsigned int n=0; n < sim->numSamples; n++) {
 		vector<float> *s = new vector<float>; 
+		if (!s) { cerr << "new s failed" << endl; exit(1); }
 		intensity_float->clear();
 		intensity_int->clear();
 		if (sim->numberFormat == 0) sim->getNextRecord(sampleName, intensity_float);
 		else                        sim->getNextRecord(sampleName, intensity_int);
-		for (int i=start_pos; i < start_pos+(end_pos-start_pos+1)*2 && i < (int)sim->numProbes*sim->numChannels; i++) {
+//		for (int i=start_pos; i < start_pos+(end_pos-start_pos+1)*2; i++) {
+		for (int i=start_pos; i <= end_pos; i++) {
 			float v;
 			if (sim->numberFormat==0) v = intensity_float->at(i);
 			else                      v = intensity_int->at(i);
@@ -337,7 +363,7 @@ void commandIlluminus(string infile, string outfile, string manfile, int start_p
 
 	// Now write it out in Illuminus format
 	if (verbose) cerr << "Writing Illuminus file " << outfile << endl;
-	for (int i=start_pos, j=0; i <= end_pos && i < (int)sim->numProbes*sim->numChannels; j+=sim->numChannels, i++) {
+	for (int i=start_pos, j=0; i <= end_pos; j+=sim->numChannels, i++) {
 		*outStream << manifest->snps[i].name << "\t" << manifest->snps[i].position << "\t" << manifest->snps[i].snp[0] << manifest->snps[i].snp[1];
 		for(unsigned int n=0; n < sim->numSamples; n++) {
 			vector <float> s = SNPArray[n];
@@ -349,13 +375,13 @@ void commandIlluminus(string infile, string outfile, string manfile, int start_p
 
 }
 
-void commandGenoSNP(string infile, string outfile, string manfile, bool verbose)
+void commandGenoSNP(string infile, string outfile, string manfile, int start_pos, int end_pos, bool verbose)
 {
 	Sim *sim = new Sim();
 	ofstream outFStream;
 	ostream *outStream;
 
-		outStream = &cout;
+	outStream = &cout;
 	if (outfile == "-") {
 	} else {
 		outFStream.open(outfile.c_str(),ios::binary | ios::trunc | ios::out);
@@ -364,12 +390,14 @@ void commandGenoSNP(string infile, string outfile, string manfile, bool verbose)
 
 	sim->open(infile);
 
+	if (end_pos == -1) end_pos = sim->numSamples;
+
 	char *sampleName = new char[sim->sampleNameSize];
     vector<uint16_t> *intensity = new vector<uint16_t>;;
-    for (unsigned int n=0; n < sim->numSamples; n++) {
+    for (int n=0; n < end_pos ; n++) {
         intensity->clear();
         sim->getNextRecord(sampleName, intensity);
-		if (verbose) cerr << "Writing sample " << n+1 << " of " << sim->numSamples << endl;
+	if (n < start_pos) continue;
 		*outStream << sampleName << "\t" << sampleName;
 		for (vector<uint16_t>::iterator i = intensity->begin(); i != intensity->end(); i+=2) {
 			*outStream << "\t" << std::fixed << setprecision(3) << *i;
@@ -389,23 +417,24 @@ int main(int argc, char *argv[])
 	bool verbose = false;
 	bool normalize = false;
 	int start_pos = 0;
-	int end_pos = INT_MAX;
+	int end_pos = -1;
 	int option_index = -1;
 	int c;
 
 	// Get command
-	if (argc < 2) showUsage(argv);
+	if (argc < 2) showUsage(argc,argv);
 	string command = argv[1];
-	if (command == "help") showUsage(argv);
+	if (command == "help") showUsage(argc, argv);
 
 	// get options
 	while ( (c=getopt_long(argc,argv,"h?",long_options,&option_index)) != -1) {
-		if (c == '?') showUsage(argv);	// unknown option
+		if (c == '?') showUsage(argc,argv);	// unknown option
 		if (option_index > -1) {
 			string option = long_options[option_index].name;
 			if (option == "infile") infile = optarg;
 			if (option == "outfile") outfile = optarg;
 			if (option == "verbose") verbose = true;
+			if (option == "man_file") manfile = optarg;
 			if (option == "man_dir") manfile = optarg;
 			if (option == "normalize") normalize = true;
 			if (option == "start") start_pos = atoi(optarg);
@@ -418,15 +447,21 @@ int main(int argc, char *argv[])
 	if (outfile == "stdout") outfile = "-";
 
 	// Process the command
+	try {
 	     if (command == "view")      commandView(infile, verbose);
 	else if (command == "create")    commandCreate(infile, outfile, normalize, manfile, verbose);
 	else if (command == "illuminus") commandIlluminus(infile, outfile, manfile, start_pos, end_pos, verbose);
-	else if (command == "genosnp")   commandGenoSNP(infile, outfile, manfile, verbose);
+	else if (command == "genosnp")   commandGenoSNP(infile, outfile, manfile, start_pos, end_pos, verbose);
 	else {
 		cerr << "Unknown command '" << command << "'" << endl;
-		showUsage(argv);
+		showUsage(argc,argv);
 	}
-
+	} catch (const char *error_msg) {
+		cerr << error_msg << endl << endl;
+	}
+	catch (string error_msg) {
+		cerr << error_msg << endl << endl;
+	}
 	return 0;
 }
 
