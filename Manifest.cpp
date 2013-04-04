@@ -151,6 +151,11 @@ void Manifest::open(string filename, bool wide)
 	else {
 	  // Index,Name,Chromosome,Position,GenTrain Score,SNP,ILMN Strand,Customer Strand,NormID
 	  //   0     1       2        3             4       5      6               7          8
+      if (s.find("Index") != 0) {
+		cerr << "Manifest::open(" << filename << ")  :  invalid file header (" << s.find("Index") << ")" << endl;
+	    exit(1);
+	  }
+
 	  INDEX_COL = 0;
 	  NAME_COL = 1;
 	  CHROM_COL = 2;
