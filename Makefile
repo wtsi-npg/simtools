@@ -61,6 +61,9 @@ default: all
 clean:
 	rm -f *.o Gtc_wrap.cxx Gtc.pm Sim_wrap.cxx Sim.pm $(TARGETS)
 
+test:
+	run_tests
+
 install: all
 	cp Gtc.pm $(INSTALLLIB)
 	cp Gtc.so $(INSTALLLIB)

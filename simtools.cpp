@@ -311,6 +311,16 @@ void commandCreate(string infile, string outfile, bool normalize, string manfile
 	sim->close();
 }
 
+//
+// Generate Illuminus output
+//
+// infile		is a filename or '-' for stdin
+// outfile		is a filename or '-' for stdout
+// manfile 		is the full path to the manifest file
+// start_pos	is the Probe number (starting from 0) to start from
+// end_pos		is the Probe number (from 0 to numProbes-1) to end at, or -1
+// verbose		if true will display progress messages to stderr
+//
 void commandIlluminus(string infile, string outfile, string manfile, int start_pos, int end_pos, bool verbose)
 {
 	Sim *sim = new Sim();
@@ -319,7 +329,7 @@ void commandIlluminus(string infile, string outfile, string manfile, int start_p
 	char *sampleName;
     vector<uint16_t> *intensity_int = new vector<uint16_t>;
     vector<float> *intensity_float = new vector<float>;
-	vector<vector<float> > SNPArray;
+	vector<vector<float> > SampleArray;
 	Manifest *manifest = new Manifest();
 
 	if (outfile == "-") {
@@ -331,6 +341,8 @@ void commandIlluminus(string infile, string outfile, string manfile, int start_p
 
 	sim->open(infile);
 
+	if (sim->numChannels != 2) throw("simtools can only handle SIM files with exactly 2 channels at present");
+
 	sampleName = new char[sim->sampleNameSize];
 
 	// We need a manifest file to sort the SNPs
@@ -338,10 +350,11 @@ void commandIlluminus(string infile, string outfile, string manfile, int start_p
 	// Sort the SNPs into position order
 	sort(manifest->snps.begin(), manifest->snps.end(), SortByPosition);
 
-	if (end_pos == -1) end_pos = sim->numProbes * sim->numChannels;
+	if (end_pos == -1) end_pos = sim->numProbes - 1;
 
 	// load the (relevant parts of) the SIM file
 	if (verbose) cerr << "Reading SIM file " << infile << endl;
+	*outStream << "SNP\tCoor\tAlleles";
 	for(unsigned int n=0; n < sim->numSamples; n++) {
 		vector<float> *s = new vector<float>; 
 		if (!s) { cerr << "new s failed" << endl; exit(1); }
@@ -349,26 +362,31 @@ void commandIlluminus(string infile, string outfile, string manfile, int start_p
 		intensity_int->clear();
 		if (sim->numberFormat == 0) sim->getNextRecord(sampleName, intensity_float);
 		else                        sim->getNextRecord(sampleName, intensity_int);
-//		for (int i=start_pos; i < start_pos+(end_pos-start_pos+1)*2; i++) {
 		for (int i=start_pos; i <= end_pos; i++) {
-			float v;
-			if (sim->numberFormat==0) v = intensity_float->at(i);
-			else                      v = intensity_int->at(i);
-			s->push_back(v);
+			for (int c=0; c < sim->numChannels; c++) {
+				float v;
+				int k = i * sim->numChannels + c;
+				if (sim->numberFormat==0) v = intensity_float->at(k);
+				else                      v = intensity_int->at(k);
+				s->push_back(v);
+			}
 		}
-		SNPArray.push_back(*s);
+		SampleArray.push_back(*s);
+		// Ooops! This is hardcoded for two channels. To Be Fixed. FIXME
 		*outStream << "\t" << sampleName << "A\t" << sampleName << "B";
 	}
 	*outStream << endl;
 
 	// Now write it out in Illuminus format
 	if (verbose) cerr << "Writing Illuminus file " << outfile << endl;
-	for (int i=start_pos, j=0; i <= end_pos; j+=sim->numChannels, i++) {
-		*outStream << manifest->snps[i].name << "\t" << manifest->snps[i].position << "\t" << manifest->snps[i].snp[0] << manifest->snps[i].snp[1];
-		for(unsigned int n=0; n < sim->numSamples; n++) {
-			vector <float> s = SNPArray[n];
-			*outStream << '\t' << setw(7) << std::fixed << setprecision(3) << s[j];
-			*outStream << '\t' << setw(7) << std::fixed << setprecision(3) << s[j+1];
+	for (int n = start_pos; n <= end_pos; n++) {
+		*outStream << manifest->snps[n].name << "\t" << manifest->snps[n].position << "\t" << manifest->snps[n].snp[0] << manifest->snps[n].snp[1];
+		for (unsigned int i = 0; i < sim->numSamples; i++) {
+			vector<float> s = SampleArray[i];
+			for (unsigned int j=0; j < sim->numChannels; j++) {
+				int k = (n - start_pos) * sim->numChannels + j;
+				*outStream << '\t' << setw(7) << std::fixed << setprecision(3) << s[k];
+			}
 		}
 		*outStream << endl;
 	}
@@ -390,11 +408,11 @@ void commandGenoSNP(string infile, string outfile, string manfile, int start_pos
 
 	sim->open(infile);
 
-	if (end_pos == -1) end_pos = sim->numSamples;
+	if (end_pos == -1) end_pos = sim->numSamples - 1;
 
 	char *sampleName = new char[sim->sampleNameSize];
     vector<uint16_t> *intensity = new vector<uint16_t>;;
-    for (int n=0; n < end_pos ; n++) {
+    for (int n=0; n <= end_pos ; n++) {
         intensity->clear();
         sim->getNextRecord(sampleName, intensity);
 	if (n < start_pos) continue;
@@ -411,8 +429,8 @@ void commandGenoSNP(string infile, string outfile, string manfile, int start_pos
 
 int main(int argc, char *argv[])
 {
-	string infile = "";
-	string outfile = "";
+	string infile = "-";
+	string outfile = "-";
 	string manfile = "";
 	bool verbose = false;
 	bool normalize = false;
@@ -458,9 +476,11 @@ int main(int argc, char *argv[])
 	}
 	} catch (const char *error_msg) {
 		cerr << error_msg << endl << endl;
+		exit(1);
 	}
 	catch (string error_msg) {
 		cerr << error_msg << endl << endl;
+		exit(1);
 	}
 	return 0;
 }
