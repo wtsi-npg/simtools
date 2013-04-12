@@ -1,0 +1,125 @@
+#!/bin/bash
+
+cd data
+
+#
+# Create tests
+#
+../simtools create --infile example.json --outfile test.sim --man_file example.bpm.csv
+if [ $? -ne 0 ]; then
+	echo simtools create: TEST FAILED
+	exit;
+fi
+
+diff test.sim example.raw.sim
+if [ $? -ne 0 ]; then
+	echo simtools create: check output file: TEST FAILED
+	exit;
+fi
+
+#
+# illuminus tests
+#
+../simtools illuminus --infile test.sim --outfile test.iln --man_file example.bpm.csv
+if [ $? -ne 0 ]; then
+	echo simtools illuminus: TEST FAILED
+	exit;
+fi
+
+diff test.iln example_1.iln
+if [ $? -ne 0 ]; then
+	echo simtools illuminus: check output file: TEST FAILED
+	exit;
+fi
+
+../simtools illuminus --end 3 --infile test.sim --outfile test.iln --man_file example.bpm.csv
+if [ $? -ne 0 ]; then
+	echo simtools illuminus2: TEST FAILED
+	exit;
+fi
+
+diff test.iln example_2.iln
+if [ $? -ne 0 ]; then
+	echo simtools illuminus2: check output file: TEST FAILED
+	exit;
+fi
+
+../simtools illuminus --start 3 --infile test.sim --outfile test.iln --man_file example.bpm.csv
+if [ $? -ne 0 ]; then
+	echo simtools illuminus3: TEST FAILED
+	exit;
+fi
+
+diff test.iln example_3.iln
+if [ $? -ne 0 ]; then
+	echo simtools illuminus3: check output file: TEST FAILED
+	exit;
+fi
+
+../simtools illuminus --end 3 --start 3 --infile test.sim --outfile test.iln --man_file example.bpm.csv
+if [ $? -ne 0 ]; then
+	echo simtools illuminus4: TEST FAILED
+	exit;
+fi
+
+diff test.iln example_4.iln
+if [ $? -ne 0 ]; then
+	echo simtools illuminus4: check output file: TEST FAILED
+	exit;
+fi
+
+
+#
+# genosnp tests
+#
+../simtools genosnp --infile test.sim --outfile test.gsn --man_file example.bpm.csv
+if [ $? -ne 0 ]; then
+	echo simtools genosnp: TEST FAILED
+	exit;
+fi
+
+diff test.gsn example_1.gsn
+if [ $? -ne 0 ]; then
+	echo simtools genosnp: check output file: TEST FAILED
+	exit;
+fi
+
+../simtools genosnp --start 1 --infile test.sim --outfile test.gsn --man_file example.bpm.csv
+if [ $? -ne 0 ]; then
+	echo simtools genosnp2: TEST FAILED
+	exit;
+fi
+
+diff test.gsn example_2.gsn
+if [ $? -ne 0 ]; then
+	echo simtools genosnp2: check output file: TEST FAILED
+	exit;
+fi
+
+../simtools genosnp --end 3 --infile test.sim --outfile test.gsn --man_file example.bpm.csv
+if [ $? -ne 0 ]; then
+	echo simtools genosnp3: TEST FAILED
+	exit;
+fi
+
+diff test.gsn example_3.gsn
+if [ $? -ne 0 ]; then
+	echo simtools genosnp3: check output file: TEST FAILED
+	exit;
+fi
+
+../simtools genosnp --end 3 --start 2 --infile test.sim --outfile test.gsn --man_file example.bpm.csv
+if [ $? -ne 0 ]; then
+	echo simtools genosnp4: TEST FAILED
+	exit;
+fi
+
+diff test.gsn example_4.gsn
+if [ $? -ne 0 ]; then
+	echo simtools genosnp4: check output file: TEST FAILED
+	exit;
+fi
+
+rm test.sim test.iln test.gsn
+
+echo All tests successful
