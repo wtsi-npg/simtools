@@ -54,7 +54,8 @@ ifeq ($(DEBUG),y)
 else
 	CFLAGS=-Wall -fPIC -O3 -ffast-math -I$(STLPORT_INC)
 endif
-LDFLAGS=-L$(STLPORT_LIB) -lstlport
+# Set runpath instead of relying on LD_LIBRARY_PATH
+LDFLAGS=-Wl,-rpath -Wl,$(STLPORT_LIB) -L$(STLPORT_LIB) -lstlport
 
 default: all
 
