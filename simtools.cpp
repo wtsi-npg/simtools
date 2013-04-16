@@ -34,6 +34,7 @@
 #include <getopt.h>
 
 #include <iostream>
+#include <sstream>
 #include <vector>
 #include <map>
 #include <iomanip>
@@ -151,6 +152,7 @@ void commandView(string infile, bool verbose)
 	cout << "Probes:    " << sim->numProbes << endl;
 	cout << "Channels:  " << (int)sim->numChannels << endl;
 	cout << "Format:    " << (int)sim->numberFormat << endl;
+	cout << "RecLength: " << (int)sim->recordLength << endl;
 	cout << endl;
 
 	char *sampleName = new char[sim->sampleNameSize];
@@ -255,6 +257,12 @@ void commandCreate(string infile, string outfile, bool normalize, string manfile
 	// For each GTC file, write the sample name and intensities to the SIM file
 	for (unsigned int n = 0; n < infiles.size(); n++) {
 		gtc->open(infiles[n], Gtc::XFORM | Gtc::INTENSITY);
+		if (manifest->snps.size() != gtc->xRawIntensity.size()) {
+			ostringstream msg;
+			msg << "Size mismatch: Manifest contains " << manifest->snps.size() << " probes, but " 
+			    << infiles[0] << " contains " << gtc->xRawIntensity.size() << " probes.";
+			throw msg.str();
+		}
 		char *buffer = new char[sim->sampleNameSize];
 		memset(buffer,0,sim->sampleNameSize);
 		// if we have a sample name from the json file, use it
