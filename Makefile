@@ -32,12 +32,13 @@
 
 INSTALLLIB=/software/varinf/lib
 INSTALLBIN=/software/varinf/bin
-STLPORT_INC=/software/varinf/lib/STLport/include/stlport
-STLPORT_LIB=/software/varinf/lib/STLport/lib
+STLPORT_INC=/software/solexa/pkg/STLport/current/stlport
+STLPORT_LIB=/software/solexa/pkg/STLport/current/build/lib/obj/gcc/so
 PERL_CORE=/usr/lib/perl/5.8.8/CORE
 PERL_CORE=/software/perl-5.8.8/lib/5.8.8/x86_64-linux-thread-multi/CORE
 
-TARGETS=gtc g2i b2i b2g gtc_process sim simtools
+#TARGETS=gtc g2i b2i b2g gtc_process sim simtools
+TARGETS=gtc g2i gtc_process sim simtools
 PERL_TARGETS=Gtc.so Sim.co
 LIBS=Gtc.o win2unix.o Sim.o
 
@@ -47,7 +48,7 @@ LIBS=Gtc.o win2unix.o Sim.o
 # For just one target, say:
 # make DEBUG='y' b2i
 
-CC=g++
+CC=/usr/bin/g++
 
 ifeq ($(DEBUG),y)
 	CFLAGS=-g -Wall -fPIC -O0 -ffast-math -I$(STLPORT_INC)
@@ -77,28 +78,28 @@ all: $(TARGETS)
 perl: $(PERL_TARGETS)
 
 gtc: gtc.o Gtc.o Manifest.o
-	$(CC) $(LDFLAGS) -o $@ $^
+	$(CC) $(LDFLAGS) -o $@ $^ -lstlport
 
 sim: sim.o Sim.o
-	$(CC) $(LDFLAGS) -o $@ $^
+	$(CC) $(LDFLAGS) -o $@ $^ -lstlport
 
 simtools: simtools.o Sim.o Gtc.o Manifest.o json/json_reader.o json/json_writer.o json/json_value.o
-	$(CC) $(LDFLAGS) -o $@ $^
+	$(CC) $(LDFLAGS) -o $@ $^ -lstlport
 
 manifest: manifest.o Manifest.o
-	$(CC) $(LDFLAGS) -o $@ $^
+	$(CC) $(LDFLAGS) -o $@ $^ -lstlport
 
 g2i: g2i.o Gtc.o Manifest.o win2unix.o Sim.o json/json_reader.o json/json_writer.o json/json_value.o
-	$(CC) $(LDFLAGS) -o $@ $^
+	$(CC) $(LDFLAGS) -o $@ $^ -lstlport
 
-b2i: b2i.o Manifest.o b2base.o             # "b2" code needs ssl library;
-	$(CC) $(LDFLAGS) -lssl  -o $@ $^       # pick this up from /usr/lib
+#b2i: b2i.o Manifest.o b2base.o             # "b2" code needs ssl library;
+#	$(CC) $(LDFLAGS) -lssl  -o $@ $^ -lstlport       # pick this up from /usr/lib
 
-b2g: b2g.o Manifest.o b2base.o
-	$(CC) $(LDFLAGS) -lssl -o $@ $^        # Ditto.
+#b2g: b2g.o Manifest.o b2base.o
+#	$(CC) $(LDFLAGS) -lssl -o $@ $^ -lstlport       # Ditto.
 
 gtc_process: Gtc.o Manifest.o gtc_process.o 
-	$(CC) $(LDFLAGS) -o $@ $^
+	$(CC) $(LDFLAGS) -o $@ $^ -lstlport
 
 gtc_process.o: gtc_process.cpp
 	$(CC) -c -DTEST $(CFLAGS) $(CPPFLAGS) -o $@ $<
