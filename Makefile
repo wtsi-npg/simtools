@@ -37,9 +37,8 @@ STLPORT_LIB=/software/solexa/pkg/STLport/current/build/lib/obj/gcc/so
 PERL_CORE=/usr/lib/perl/5.8.8/CORE
 PERL_CORE=/software/perl-5.8.8/lib/5.8.8/x86_64-linux-thread-multi/CORE
 
-#TARGETS=gtc g2i b2i b2g gtc_process sim simtools
-TARGETS=gtc g2i gtc_process sim simtools
-PERL_TARGETS=Gtc.so Sim.co
+TARGETS=libplinkbin.so gtc g2i b2i b2g gtc_process sim simtools
+PERL_TARGETS=Gtc.so Sim.so
 LIBS=Gtc.o win2unix.o Sim.o
 
 # To compile with debug information added, invoke as (say): 
@@ -89,7 +88,7 @@ simtools: simtools.o Sim.o Gtc.o Manifest.o json/json_reader.o json/json_writer.
 manifest: manifest.o Manifest.o
 	$(CC) $(LDFLAGS) -o $@ $^ -lstlport
 
-g2i: g2i.o Gtc.o Manifest.o win2unix.o Sim.o json/json_reader.o json/json_writer.o json/json_value.o
+g2i: g2i.o Gtc.o Manifest.o win2unix.o Sim.o json/json_reader.o json/json_writer.o json/json_value.o utilities.o plink_binary.o
 	$(CC) $(LDFLAGS) -o $@ $^ -lstlport
 
 #b2i: b2i.o Manifest.o b2base.o             # "b2" code needs ssl library;
@@ -120,15 +119,19 @@ Sim.so: Sim.cpp Sim.h Sim.i
 	$(CC) -shared Sim.o Sim_wrap.o -o Sim.so
 	rm Sim.o
 
+libplinkbin.so: utilities.o plink_binary.o
+	$(CXX) -shared utilities.o plink_binary.o -o $@
+
 Gtc.o: Gtc.cpp Gtc.h
 Sim.o: Sim.cpp Sim.h
 Manifest.o: Manifest.cpp Manifest.h
 gtc.o: Gtc.h Manifest.h
 sim.o: Sim.h
 simtools.o: Sim.h
-g2i.o: Gtc.h Manifest.h
+g2i.o: Gtc.h Manifest.h plink_binary.h
 b2base.o: b2base.cpp
 b2i.o: b2i.cpp Manifest.h
 b2g.o: b2g.cpp Manifest.h
 win2unix.o: win2unix.cpp win2unix.h
+plink_binary.o: plink_binary.cpp plink_binary.h
 

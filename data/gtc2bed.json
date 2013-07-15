@@ -1,0 +1,402 @@
+[
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092607",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110623/6033022112_R01C01.gtc",
+      "uri" : "urn:wtsi:190993_A01_AGGBE5092607"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092608",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110623/6033022112_R02C01.gtc",
+      "uri" : "urn:wtsi:190993_B01_AGGBE5092608"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092609",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110623/6033022112_R01C02.gtc",
+      "uri" : "urn:wtsi:190993_C01_AGGBE5092609"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092610",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110623/6033022112_R02C02.gtc",
+      "uri" : "urn:wtsi:190993_D01_AGGBE5092610"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092615",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110623/6033022099_R01C01.gtc",
+      "uri" : "urn:wtsi:190993_E01_AGGBE5092615"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092616",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110623/6033022099_R02C01.gtc",
+      "uri" : "urn:wtsi:190993_F01_AGGBE5092616"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092617",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110623/6033022099_R01C02.gtc",
+      "uri" : "urn:wtsi:190993_G01_AGGBE5092617"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092618",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110623/6033022099_R02C02.gtc",
+      "uri" : "urn:wtsi:190993_H01_AGGBE5092618"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092623",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110623/6033022069_R01C01.gtc",
+      "uri" : "urn:wtsi:190993_A02_AGGBE5092623"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092624",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110623/6033022069_R02C01.gtc",
+      "uri" : "urn:wtsi:190993_B02_AGGBE5092624"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092625",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110623/6033022069_R01C02.gtc",
+      "uri" : "urn:wtsi:190993_C02_AGGBE5092625"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092626",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110623/6033022069_R02C02.gtc",
+      "uri" : "urn:wtsi:190993_D02_AGGBE5092626"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092631",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110623/6033031003_R01C01.gtc",
+      "uri" : "urn:wtsi:190993_E02_AGGBE5092631"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092632",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110623/6033031003_R02C01.gtc",
+      "uri" : "urn:wtsi:190993_F02_AGGBE5092632"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092634",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110623/6033031003_R01C02.gtc",
+      "uri" : "urn:wtsi:190993_G02_AGGBE5092634"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092635",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110623/6033031003_R02C02.gtc",
+      "uri" : "urn:wtsi:190993_H02_AGGBE5092635"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092872",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110614/6033031145_R01C01.gtc",
+      "uri" : "urn:wtsi:187654_A01_AGGBE5092872"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092873",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110614/6033031145_R02C01.gtc",
+      "uri" : "urn:wtsi:187654_B01_AGGBE5092873"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092874",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110614/6033031145_R01C02.gtc",
+      "uri" : "urn:wtsi:187654_C01_AGGBE5092874"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092875",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110614/6033031145_R02C02.gtc",
+      "uri" : "urn:wtsi:187654_D01_AGGBE5092875"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092876",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110614/6033031056_R01C01.gtc",
+      "uri" : "urn:wtsi:187654_E01_AGGBE5092876"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092877",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110614/6033031056_R02C01.gtc",
+      "uri" : "urn:wtsi:187654_F01_AGGBE5092877"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092878",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110614/6033031056_R01C02.gtc",
+      "uri" : "urn:wtsi:187654_G01_AGGBE5092878"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092879",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110614/6033031056_R02C02.gtc",
+      "uri" : "urn:wtsi:187654_H01_AGGBE5092879"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092880",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110614/6033031085_R01C01.gtc",
+      "uri" : "urn:wtsi:187654_A02_AGGBE5092880"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092881",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110614/6033031085_R02C01.gtc",
+      "uri" : "urn:wtsi:187654_B02_AGGBE5092881"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092882",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110614/6033031085_R01C02.gtc",
+      "uri" : "urn:wtsi:187654_C02_AGGBE5092882"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092883",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110614/6033031085_R02C02.gtc",
+      "uri" : "urn:wtsi:187654_D02_AGGBE5092883"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092884",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110614/6032994028_R01C01.gtc",
+      "uri" : "urn:wtsi:187654_E02_AGGBE5092884"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092885",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110614/6032994028_R02C01.gtc",
+      "uri" : "urn:wtsi:187654_F02_AGGBE5092885"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092886",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110614/6032994028_R01C02.gtc",
+      "uri" : "urn:wtsi:187654_G02_AGGBE5092886"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092888",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110614/6032994028_R02C02.gtc",
+      "uri" : "urn:wtsi:187654_H02_AGGBE5092888"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092892",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110614/6032994030_R01C01.gtc",
+      "uri" : "urn:wtsi:187654_A03_AGGBE5092892"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092893",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110614/6032994030_R02C01.gtc",
+      "uri" : "urn:wtsi:187654_B03_AGGBE5092893"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092894",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110614/6032994030_R01C02.gtc",
+      "uri" : "urn:wtsi:187654_C03_AGGBE5092894"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092895",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110614/6032994030_R02C02.gtc",
+      "uri" : "urn:wtsi:187654_D03_AGGBE5092895"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092896",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110614/6033014089_R01C01.gtc",
+      "uri" : "urn:wtsi:187654_E03_AGGBE5092896"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092897",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110614/6033014089_R02C01.gtc",
+      "uri" : "urn:wtsi:187654_F03_AGGBE5092897"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092898",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110614/6033014089_R01C02.gtc",
+      "uri" : "urn:wtsi:187654_G03_AGGBE5092898"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092899",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110614/6033014089_R02C02.gtc",
+      "uri" : "urn:wtsi:187654_H03_AGGBE5092899"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092763",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110615/6033022164_R01C01.gtc",
+      "uri" : "urn:wtsi:187658_A01_AGGBE5092763"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092764",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110615/6033022164_R02C01.gtc",
+      "uri" : "urn:wtsi:187658_B01_AGGBE5092764"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092765",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110615/6033022164_R01C02.gtc",
+      "uri" : "urn:wtsi:187658_C01_AGGBE5092765"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092766",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110615/6033022164_R02C02.gtc",
+      "uri" : "urn:wtsi:187658_D01_AGGBE5092766"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092767",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110614/6033014105_R01C01.gtc",
+      "uri" : "urn:wtsi:187658_E01_AGGBE5092767"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092768",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110614/6033014105_R02C01.gtc",
+      "uri" : "urn:wtsi:187658_F01_AGGBE5092768"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092769",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110614/6033014105_R01C02.gtc",
+      "uri" : "urn:wtsi:187658_G01_AGGBE5092769"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092770",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110614/6033014105_R02C02.gtc",
+      "uri" : "urn:wtsi:187658_H01_AGGBE5092770"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092772",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110615/6033031047_R01C01.gtc",
+      "uri" : "urn:wtsi:187658_A02_AGGBE5092772"
+   },
+   {
+      "gender_code" : 1,
+      "gender_method" : "Supplied",
+      "sanger_sample_id" : "AGGBE5092773",
+      "gender" : "Male",
+      "result" : "/nfs/new_illumina_geno04/call/20110615/6033031047_R02C01.gtc",
+      "uri" : "urn:wtsi:187658_B02_AGGBE5092773"
+   }
+]

@@ -54,16 +54,18 @@ int main(int argc, char *argv[])
 	cout << "Corrected Pass Rate: " << gtc->correctedPassRate(.15) << endl;
 
 	cout << "Base calls:" << endl;
-	for (int i=0; i<20; i++) {
+	for (int i=85435; i<85445; i++) {
 		cout << gtc->baseCalls[i].a << gtc->baseCalls[i].b << " ";
 	}
 	cout << endl << endl;
 
+#if 0
 	cout << "Genotypes:" << endl;
 	for (int i=0; i<20; i++) {
 		cout << gtc->genotypes[i] << " ";
 	}
 	cout << endl << endl;
+#endif
 
  	cout << "XForm:" << endl;
 	cout << "idx\tversion\txOffset\tyOffset\txScale\tyScale\tshear\ttheta" << endl;

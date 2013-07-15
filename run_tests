@@ -120,6 +120,20 @@ if [ $? -ne 0 ]; then
 	exit;
 fi
 
+../g2i -v -k -b -i gtc2bed.json -o test
+if [ $? -ne 0 ]; then
+	echo g2i createBedFile: TEST FAILED
+	exit;
+fi
+
+diff test.bed gtc2bed.bed
+if [ $? -ne 0 ]; then
+	echo g2i createBedFile: check output file: TEST FAILED
+	exit;
+fi
+
+
+
 rm test.sim test.iln test.gsn
 
 echo All tests successful
