@@ -52,6 +52,7 @@
 #include "win2unix.h"
 #include "Sim.h"
 #include "json/json.h"
+#include "plink_binary.h"
 
 #define CACHESIZE 256
 #define GCCACHESIZE 32
@@ -72,6 +73,7 @@ FileMap outFile;
 FileMap::iterator pos;
 vector<string> filenameArray;
 vector<string> sampleNames;
+vector<string> gender_code;
 
 typedef hash_map<string,ios::pos_type> PosMap;
 PosMap filePos;
@@ -81,7 +83,7 @@ Gtc gtc;
 
 // command line options
 bool verbose=false;
-bool binary=false;
+bool bed=false;
 bool genoSNP=false;
 bool genoCalling = false;
 bool simOutput = false;
@@ -106,7 +108,7 @@ char * timestamp(void)
 
 void displayUsage(void)
 {
-	cout << "g2i: convert Illumina GTC files into a format suitable for loading into illuminus or genoSNP, or export genotype calls"
+	cout << "g2i: convert Illumina GTC files into a format suitable for loading into illuminus or genoSNP, or export genotype calls, or create BED files"
 	     << endl << endl
 	     << "Usage:" << endl
 	     << "g2i -o <filename> [options] <gtcfile> <gtcfile> ..." << endl
@@ -120,6 +122,7 @@ void displayUsage(void)
 	     << "-g               produce  genoSNP input rather than Illuminus" << endl
 	     << "-s               produce genotype calling data rather than Illuminus" << endl
 	     << "-m               produce SIM file rather than Illuminus" << endl
+	     << "-b               produce BED file rather than Illuminus" << endl
 	     << "-r <chromosome>  select samples for this chromosome only" << endl
 	     << "-p <project>     extract data for samples in this project ID from the Illumina LIMS" << endl
 	     << "-n               do NOT perform normalisation on intensities" << endl
@@ -149,11 +152,26 @@ void loadExclusionFile(string fname)
 // Sort function to sort SNPs by position
 bool SortByPosition(const snpClass &snp1, const snpClass &snp2)
 {
-        if (snp1.chromosome.compare(snp2.chromosome))
-            return (snp1.chromosome.compare(snp2.chromosome) < 0);
-        if (snp1.position != snp2.position)
-            return (snp1.position < snp2.position);
-        return (snp1.name.compare(snp2.name) < 0);
+	if (snp1.chromosome.compare(snp2.chromosome))
+		return (snp1.chromosome.compare(snp2.chromosome) < 0);
+	if (snp1.position != snp2.position)
+		return (snp1.position < snp2.position);
+	return (snp1.name.compare(snp2.name) < 0);
+}
+
+// Sort function to sort SNPs by position for BED file
+bool SortByPositionBED(const snpClass &snp1, const snpClass &snp2)
+{
+
+	int c1 = atoi(snp1.chromosome.c_str());
+	int c2 = atoi(snp2.chromosome.c_str());
+	if (c1 && c2 && (c1!=c2))
+		return (c1 < c2);
+	if (snp1.chromosome.compare(snp2.chromosome))
+		return (snp1.chromosome.compare(snp2.chromosome) < 0);
+	if (snp1.position != snp2.position)
+		return (snp1.position < snp2.position);
+	return (snp1.name.compare(snp2.name) < 0);
 }
 
 void flushCache(int cacheIndex)
@@ -166,18 +184,13 @@ void flushCache(int cacheIndex)
 		fstream *f = outFile[snp->chromosome];
 		f->seekp(filePos[snp->name]);
 
-		if (binary) {
-			f->write((char*)cache[snp->name], cacheIndex * sizeof(float));
-			filePos[snp->name] += cacheIndex * sizeof(float);
-		} else {
-			ostringstream os;
-			for (int i=0; i<cacheIndex; i++) {
-				if (cache[snp->name][i] < 0) cache[snp->name][i] = 0; 
-				os << '\t' << setw(7) << std::fixed << setprecision(3) << cache[snp->name][i];
-			}
-			f->write(os.str().c_str(), os.str().size());
-			filePos[snp->name] += os.str().size();
+		ostringstream os;
+		for (int i=0; i<cacheIndex; i++) {
+			if (cache[snp->name][i] < 0) cache[snp->name][i] = 0; 
+			os << '\t' << setw(7) << std::fixed << setprecision(3) << cache[snp->name][i];
 		}
+		f->write(os.str().c_str(), os.str().size());
+		filePos[snp->name] += os.str().size();
 	}
 }
 
@@ -206,14 +219,9 @@ void flushgcCache(int cacheIndex)
 void goForIt(string fname)
 {
 	int recordLength = gtcHash.size() * 10 * 2;
-	if (binary) recordLength = gtcHash.size() * sizeof(float) * 2;
 	char *buffer = new char[recordLength];
-	if (binary) {
-		memset(buffer,0,recordLength);
-	} else {
-		memset(buffer,' ',recordLength);
-		buffer[recordLength-1] = '\n';
-	}
+	memset(buffer,' ',recordLength);
+	buffer[recordLength-1] = '\n';
 
 	// Sort the SNPs into position order
 	sort(manifest->snps.begin(), manifest->snps.end(), SortByPosition);
@@ -240,8 +248,7 @@ void goForIt(string fname)
 			string fullFname = fname + "_intu_" + snp->chromosome + ".txt";
 			filenameArray.push_back("_intu_" + snp->chromosome + ".txt");
 			if (verbose) cout << timestamp() << "creating file " << fullFname << endl;
-			if (binary) f->open(fullFname.c_str(), ios::in | ios::out | ios::trunc | ios::binary);
-			else        f->open(fullFname.c_str(), ios::in | ios::out | ios::trunc);
+			f->open(fullFname.c_str(), ios::in | ios::out | ios::trunc);
 
 			*f << "SNP\tCoor\tAlleles";
 			// write sample names from all the gtc files
@@ -403,6 +410,85 @@ void getAutocallInfo(vector<string> &infiles, string project)
 		}
 	}
 	
+}
+
+void createBedFile(string fname, vector<string>infiles)
+{
+	vector<int> genotypes;
+	plink_binary *pb = new plink_binary();
+	pb->bed_mode = 0;	// specify individual major
+	pb->open(fname,1);
+
+	// Sort the SNPs into position order
+	sort(manifest->snps.begin(), manifest->snps.end(), SortByPositionBED);
+
+	// Load the SNP names into gftools
+	for (vector<snpClass>::iterator snp = manifest->snps.begin(); snp != manifest->snps.end(); snp++) {
+		gftools::snp gfsnp;
+		if (excludeCnv && snp->name.find("cnv") != string::npos) continue;
+		if (chrSelect.size() && chrSelect.compare(snp->chromosome)) continue;
+		gfsnp.name = snp->name;
+		gfsnp.chromosome = snp->chromosome;
+		if (snp->chromosome == "X") gfsnp.chromosome = "23";
+		if (snp->chromosome == "Y") gfsnp.chromosome = "24";
+		if (snp->chromosome == "XY") gfsnp.chromosome = "25";
+		if (snp->chromosome == "MT") gfsnp.chromosome = "26";
+		gfsnp.physical_position = snp->position;
+		if (snp->snp[0] == 'N') {
+			gfsnp.allele_a = '?';
+			gfsnp.allele_b = '?';
+		} else {
+			gfsnp.allele_a = snp->snp[0];
+			gfsnp.allele_b = snp->snp[1];
+		}
+		pb->snps.push_back(gfsnp);
+	}
+
+	if (verbose) cerr << "Pushed " << pb->snps.size() << " SNPs" << endl;
+	//
+	// Process each GTC file in turn
+	//
+	for (unsigned int n = 0; n < infiles.size(); n++) {
+//	for (hash_map<string,string>::iterator i = gtcHash.begin(); i != gtcHash.end(); i++) {
+		if (verbose) cout << timestamp() << "Processing GTC file " << n+1 << " of " << infiles.size() << endl << infiles[n] << endl;
+		gtc.open(infiles[n],Gtc::GENOTYPES | Gtc::BASECALLS | Gtc::SCORES);	// reload GTC file to read required arrays
+
+		gftools::individual ind;
+		if (!sampleNames.empty()) ind.name = sampleNames[n];
+		else                      ind.name = gtc.sampleName;
+		if (!gender_code.empty()) ind.sex = gender_code[n]; 
+		pb->individuals.push_back(ind);
+
+		for (vector<snpClass>::iterator snp = manifest->snps.begin(); snp != manifest->snps.end(); snp++) {
+			if (excludeCnv && snp->name.find("cnv") != string::npos) continue;
+			if (chrSelect.size() && chrSelect.compare(snp->chromosome)) continue;
+			int idx = snp->index - 1;	// index is zero based in arrays, but starts from 1 in the map file
+			char buff[3];
+		    sprintf(buff,"%c%c", gtc.baseCalls[idx].a, gtc.baseCalls[idx].b);
+			char allele_a = snp->snp[0];
+			char allele_b = snp->snp[1];
+			int call = -1;
+			if (buff[0] == '-' && buff[1] == '-') call=0;
+			if (buff[0] == allele_a && buff[1] == allele_a) call = 1;
+			if (buff[0] == allele_a && buff[1] == allele_b) call = 2;
+			if (buff[0] == allele_b && buff[1] == allele_a) call = 2;
+			if (buff[0] == allele_b && buff[1] == allele_b) call = 3;
+			if (call == -1) {
+				cerr << "malformed data: " << endl;
+				cerr << "snp = '" << allele_a << allele_b << "'" << endl;
+				cerr << "buff = '" << buff << "'" << endl;
+				cerr << "name = " << snp->name << endl;
+				cerr << "idx = " << idx << endl;
+				exit(1);
+			}
+			genotypes.push_back(call);
+		}
+		if (verbose) cerr << "SNP Count = " << pb->snps.size() << endl;
+		pb->write_individual(genotypes);
+		genotypes.clear();
+	}
+
+	pb->close();
 }
 
 void createSimFile(string fname)
@@ -672,7 +758,7 @@ int main(int argc, char *argv[])
 	while ((c = getopt (argc, argv, "neckmsvbw?hgo:i:x:p:d:r:t:")) != -1) {
 		switch (c) {
 				case 'v':	verbose=true; break;
-				case 'b':	binary=true; break;
+				case 'b':	bed=true; break;
 				case 'c':	excludeCnv=true; break;
 				case 'k':	includeCnv=true; break;
 				case 'e':	excludeExo=true; break;
@@ -690,7 +776,7 @@ int main(int argc, char *argv[])
 				case 'r':	chrSelect = optarg; break;
 				case 'i':	ifstream f; string s;
 							f.open(optarg);
-							if (strcmp(optarg,".json")) {
+							if (strstr(optarg,".json")) {
 								bool parsingSuccessful = reader.parse( f, root );
 								if ( !parsingSuccessful ) {
 									std::cout  << "Failed to parse json file\n" << reader.getFormatedErrorMessages() << endl;
@@ -698,7 +784,14 @@ int main(int argc, char *argv[])
 								}
 								for ( unsigned int index = 0; index < root.size(); ++index ) { // Iterates over the sequence elements.
 									sampleNames.push_back(root[index]["uri"].asString());
+//									cerr << "Gender Code = [" << root[index]["gender_code"] << "]" << endl;
+									char buffer[8];
+//									if (root[index]["gender_code"]) sprintf(buffer,"%d",root[index]["gender_code"].asInt());
+//									else                            strcpy(buffer,"-9");
+									sprintf(buffer,"%d",root[index]["gender_code"].asInt());
+									gender_code.push_back(buffer);
 									infiles.push_back(root[index]["result"].asString());
+cerr << root[index]["uri"].asString() << "\t" << root[index]["result"].asString() << "\t" << root[index]["gender_code"].asInt() << endl;
 								}
 							} else {
 								while (f >> s) infiles.push_back(s);
@@ -808,6 +901,7 @@ int main(int argc, char *argv[])
 	if (genoSNP)          { createGenoSNP(tmpFile); }
 	else if (genoCalling) { createGenoCalling(tmpFile);   }
 	else if (simOutput)   { createSimFile(tmpFile);   }
+	else if (bed)         { createBedFile(tmpFile,infiles);   }
 	else                  { goForIt(tmpFile);       }
 	}
 	catch (char *s) {
