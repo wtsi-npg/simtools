@@ -34,6 +34,8 @@ INSTALLLIB=/software/varinf/lib
 INSTALLBIN=/software/varinf/bin
 STLPORT_INC=/software/solexa/pkg/STLport/current/stlport
 STLPORT_LIB=/software/solexa/pkg/STLport/current/build/lib/obj/gcc/so
+#STLPORT_INC=/software/varinf/lib/STLport/include/stlport
+#STLPORT_LIB=/software/varinf/lib/STLport/lib
 PERL_CORE=/usr/lib/perl/5.8.8/CORE
 PERL_CORE=/software/perl-5.8.8/lib/5.8.8/x86_64-linux-thread-multi/CORE
 
@@ -91,11 +93,11 @@ manifest: manifest.o Manifest.o
 g2i: g2i.o Gtc.o Manifest.o win2unix.o Sim.o json/json_reader.o json/json_writer.o json/json_value.o utilities.o plink_binary.o
 	$(CC) $(LDFLAGS) -o $@ $^ -lstlport
 
-#b2i: b2i.o Manifest.o b2base.o             # "b2" code needs ssl library;
-#	$(CC) $(LDFLAGS) -lssl  -o $@ $^ -lstlport       # pick this up from /usr/lib
+b2i: b2i.o Manifest.o b2base.o             # "b2" code needs ssl library;
+	$(CC) $(LDFLAGS) -lssl  -o $@ $^ -lstlport -lssl       # pick this up from /usr/lib
 
-#b2g: b2g.o Manifest.o b2base.o
-#	$(CC) $(LDFLAGS) -lssl -o $@ $^ -lstlport       # Ditto.
+b2g: b2g.o Manifest.o b2base.o
+	$(CC) $(LDFLAGS) -lssl -o $@ $^ -lstlport -lssl      # Ditto.
 
 gtc_process: Gtc.o Manifest.o gtc_process.o 
 	$(CC) $(LDFLAGS) -o $@ $^ -lstlport
