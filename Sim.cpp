@@ -68,12 +68,13 @@ void Sim::open(string fname)
 	magic = buff;
 
 	this->filename = fname;
-	infile->read(buff,1); version = *(uint8_t*)buff;
-	infile->read(buff,2); sampleNameSize = *(uint16_t*)buff;
-	infile->read(buff,4); numSamples = *(uint32_t*)buff;
-	infile->read(buff,4); numProbes = *(uint32_t*)buff;
-	infile->read(buff,1); numChannels = *(uint8_t*)buff;
-	infile->read(buff,1); numberFormat = *(uint8_t*)buff;
+	// read SIM header
+	infile->read((char*)&version,1);
+	infile->read((char*)&sampleNameSize,2);
+	infile->read((char*)&numSamples,4);
+	infile->read((char*)&numProbes,4);
+	infile->read((char*)&numChannels,1);
+	infile->read((char*)&numberFormat,1);
 
 	// calculate and store record length
 	recordLength = numProbes * numChannels;

@@ -59,8 +59,6 @@
 
 using namespace std;
 
-Json::Value root;   // will contains the root value after parsing.
-Json::Reader reader;
 
 hash_map<string,string> gtcHash;	// <sample_name, filename>
 Manifest *manifest = new Manifest();
@@ -483,7 +481,6 @@ void createBedFile(string fname, vector<string>infiles)
 			}
 			genotypes.push_back(call);
 		}
-		if (verbose) cerr << "SNP Count = " << pb->snps.size() << endl;
 		pb->write_individual(genotypes);
 		genotypes.clear();
 	}
@@ -777,6 +774,8 @@ int main(int argc, char *argv[])
 				case 'i':	ifstream f; string s;
 							f.open(optarg);
 							if (strstr(optarg,".json")) {
+								Json::Value root;   // will contains the root value after parsing.
+								Json::Reader reader;
 								bool parsingSuccessful = reader.parse( f, root );
 								if ( !parsingSuccessful ) {
 									std::cout  << "Failed to parse json file\n" << reader.getFormatedErrorMessages() << endl;
@@ -784,14 +783,15 @@ int main(int argc, char *argv[])
 								}
 								for ( unsigned int index = 0; index < root.size(); ++index ) { // Iterates over the sequence elements.
 									sampleNames.push_back(root[index]["uri"].asString());
-//									cerr << "Gender Code = [" << root[index]["gender_code"] << "]" << endl;
 									char buffer[8];
-//									if (root[index]["gender_code"]) sprintf(buffer,"%d",root[index]["gender_code"].asInt());
-//									else                            strcpy(buffer,"-9");
 									sprintf(buffer,"%d",root[index]["gender_code"].asInt());
 									gender_code.push_back(buffer);
 									infiles.push_back(root[index]["result"].asString());
-cerr << root[index]["uri"].asString() << "\t" << root[index]["result"].asString() << "\t" << root[index]["gender_code"].asInt() << endl;
+									if (verbose) {
+										cerr << root[index]["uri"].asString() << "\t" 
+										     << root[index]["result"].asString() << "\t" 
+										     << root[index]["gender_code"].asInt() << endl;
+										}
 								}
 							} else {
 								while (f >> s) infiles.push_back(s);
