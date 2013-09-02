@@ -56,6 +56,8 @@ static struct option long_options[] = {
                    {"verbose", 0, 0, 0},
                    {"start", 1, 0, 0},
                    {"end", 1, 0, 0},
+                   {"magnitude", 1, 0, 0},
+                   {"xydiff", 1, 0, 0},
                    {0, 0, 0, 0}
                };
 
@@ -450,6 +452,11 @@ void commandQC(string infile, string magnitude, string xydiff, bool verbose)
 {
   //Sim *sim = new Sim();
   cout << "QC functionality not yet operational!" << endl;
+  if (verbose) {
+    cout << "Input: " << infile << endl;
+    cout << "Output (magnitude): " << magnitude << endl;
+    cout << "Output (xydiff): " << xydiff << endl;
+  }
 
 }
 
