@@ -18,6 +18,16 @@ if [ $? -ne 0 ]; then
 fi
 
 #
+# QC tests
+#
+
+../simtools qc --infile test.sim --magnitude mag.txt --xydiff xyd.txt
+if [ $? -ne 0 ]; then
+	echo simtools qc: TEST FAILED
+	exit;
+fi
+
+#
 # illuminus tests
 #
 ../simtools illuminus --infile test.sim --outfile test.iln --man_file example.bpm.csv
