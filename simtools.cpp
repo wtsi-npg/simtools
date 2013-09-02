@@ -120,11 +120,22 @@ void showUsage(int argc, char *argv[])
 		exit(0);
 	}
 
+	if (command == "qc") {
+		cout << "Usage:   " << argv[0] << " qc [options]" << endl << endl;
+		cout << "Compute genotyping QC metrics and write to text files" << endl<< endl;
+		cout << "Options: --infile      The name of the SIM file or '-' for STDIN" << endl;
+		cout << "         --magnitude   Output file for sample magnitude (normalised by SNP)" << endl;
+		cout << "         --xydiff      Output file for XY intensity difference" << endl;
+		cout << "         --verbose     Show progress messages to STDERR" << endl;
+		exit(0);
+	}
+
 	cout << "Usage:   " << argv[0] << " <command> [options]" << endl;
 	cout << "Command: view        Dump SIM file to screen" << endl;
 	cout << "         create      Create a SIM file from GTC files" << endl;
 	cout << "         illuminus   Produce Illuminus output" << endl;
 	cout << "         genosnp     Produce GenoSNP output" << endl;
+	cout << "         qc          Produce QC metrics" << endl;
 	cout << "         help        Display this help. Use 'help <command>' for more help" << endl;
 	exit(0);
 }
@@ -435,11 +446,20 @@ void commandGenoSNP(string infile, string outfile, string manfile, int start_pos
 	delete sim;
 }
 
+void commandQC(string infile, string magnitude, string xydiff, bool verbose)
+{
+  //Sim *sim = new Sim();
+  cout << "QC functionality not yet operational!" << endl;
+
+}
+
 int main(int argc, char *argv[])
 {
 	string infile = "-";
 	string outfile = "-";
 	string manfile = "";
+	string magnitude = "-";
+	string xydiff = "-";
 	bool verbose = false;
 	bool normalize = false;
 	int start_pos = 0;
@@ -465,6 +485,8 @@ int main(int argc, char *argv[])
 			if (option == "normalize") normalize = true;
 			if (option == "start") start_pos = atoi(optarg);
 			if (option == "end") end_pos = atoi(optarg);
+			if (option == "magnitude") magnitude = optarg;
+			if (option == "xydiff") xydiff = optarg;
 		}
 	}
 
@@ -478,6 +500,7 @@ int main(int argc, char *argv[])
 	else if (command == "create")    commandCreate(infile, outfile, normalize, manfile, verbose);
 	else if (command == "illuminus") commandIlluminus(infile, outfile, manfile, start_pos, end_pos, verbose);
 	else if (command == "genosnp")   commandGenoSNP(infile, outfile, manfile, start_pos, end_pos, verbose);
+	else if (command == "qc")        commandQC(infile, magnitude, xydiff, verbose);
 	else {
 		cerr << "Unknown command '" << command << "'" << endl;
 		showUsage(argc,argv);
