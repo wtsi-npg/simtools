@@ -38,6 +38,11 @@
 #include <stdint.h>
 #include <errno.h>
 
+// TEMPORARY extras for standalone compilation
+#include <stdlib.h> 
+#include <string.h> 
+// end of extras
+
 using namespace std;
 
 Sim::Sim(void) 
@@ -97,6 +102,17 @@ void Sim::close(void)
 void Sim::createFile(string fname)
 {
 	filename = fname;
+}
+
+void Sim::reset(void)
+{
+  // return to starting point of .sim file (immediately after header)
+  // use for multiple passes through .sim file in QC metrics
+  if (filename == "-") {
+    throw "Cannot reset file position in standard input!";
+  }
+  infile->seekg(HEADER_LENGTH);
+
 }
 
 void Sim::writeHeader(uint32_t _numSamples, uint32_t _numProbes, uint8_t _numChannels, uint8_t _numberFormat)

@@ -59,6 +59,7 @@ public:
 	void open(string filename);
 	void open(char *f);
 	void close(void);
+	void reset(void);
 	string dump(void);
 	const char *dumpc(void) { return dump().c_str(); }
 	void createFile(string filename);

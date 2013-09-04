@@ -94,7 +94,7 @@ void showUsage(int argc, char *argv[])
 	if (command == "illuminus") {
 		cout << "Usage:   " << argv[0] << " illuminus [options]" << endl << endl;
 		cout << "Create an Illuminus file from a SIM file" << endl<< endl;
-		cout << "Options: --infile <filename>    Name of SIM file to provess or '-' for STDIN" << endl;
+		cout << "Options: --infile <filename>    Name of SIM file to process or '-' for STDIN" << endl;
 		cout << "         --outfile <filename>   Name of Illuminus file to create or '-' for STDOUT" << endl;
 		cout << "         --man_file <dirname>    Directory to look for Manifest file in" << endl;
 		cout << "         --start <index>        Which SNP to start processing at (default is to start at the beginning)" << endl;
@@ -125,9 +125,9 @@ void showUsage(int argc, char *argv[])
 	if (command == "qc") {
 		cout << "Usage:   " << argv[0] << " qc [options]" << endl << endl;
 		cout << "Compute genotyping QC metrics and write to text files" << endl<< endl;
-		cout << "Options: --infile      The name of the SIM file or '-' for STDIN" << endl;
-		cout << "         --magnitude   Output file for sample magnitude (normalised by SNP)" << endl;
-		cout << "         --xydiff      Output file for XY intensity difference" << endl;
+		cout << "Options: --infile      The name of the SIM file (cannot accept STDIN)" << endl;
+		cout << "         --magnitude   Output file for sample magnitude (normalised by SNP), defaults to STDOUT" << endl;
+		cout << "         --xydiff      Output file for XY intensity difference, defaults to STDOUT" << endl;
 		cout << "         --verbose     Show progress messages to STDERR" << endl;
 		exit(0);
 	}
@@ -450,13 +450,45 @@ void commandGenoSNP(string infile, string outfile, string manfile, int start_pos
 
 void commandQC(string infile, string magnitude, string xydiff, bool verbose)
 {
-  //Sim *sim = new Sim();
+  Sim *sim = new Sim(); // TODO modify to use new QC class
+  ofstream outFmag;
+  ofstream outFxyd;
+  ostream *outStreamMag;
+  ostream *outStreamXyd;
+
+  sim->open(infile);
+  if (!sim->errorMsg.empty()) {
+    cout << sim->errorMsg << endl;
+    exit(1);
+  }
+  cout << "SIM file " << infile << " opened successfully." << endl << endl;
   cout << "QC functionality not yet operational!" << endl;
   if (verbose) {
     cout << "Input: " << infile << endl;
     cout << "Output (magnitude): " << magnitude << endl;
     cout << "Output (xydiff): " << xydiff << endl;
   }
+  if (infile == "-") {
+    // QC requires multiple passes through the .sim input
+    cerr << "Error: QC metrics require a .sim file; cannot accept standard input." << endl;
+    exit(1);
+  }
+  if (magnitude == "-") {
+    outStreamMag = &cout;
+  } else {
+    outFmag.open(magnitude.c_str(),ios::binary | ios::trunc | ios::out);
+    outStreamMag = &outFmag;
+  }
+  if (xydiff == "-") {
+    outStreamXyd = &cout;
+  } else {
+    outFxyd.open(xydiff.c_str(),ios::binary | ios::trunc | ios::out);
+    outStreamXyd = &outFxyd;
+  }
+  *outStreamMag << "Hello, magnitude!" << endl;
+  *outStreamXyd << "Hello, xydiff!" << endl;
+  // output stream as argument to "find metric" function
+  // add 'writeMagnitude' and 'writeXydiff' methods to Sim class?
 
 }
 
