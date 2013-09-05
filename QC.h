@@ -40,11 +40,13 @@
 using namespace std;
 
 class QC {
- public:
-  void writeMagnitude(string simPath, string outPath);
+ public:  
+  QC(string simPath);
+  void writeMagnitude(string outPath);
   void writeXydiff(string simPath, string outPath);
 
  private:
+  Sim *qcsim;
   void getNextMagnitudes(float magnitudes[], char* sampleName, Sim *sim);
   void magnitudeByProbe(float magByProbe[], Sim *sim);
   void magnitudeBySample(float magBySample[], float magByProbe[], 

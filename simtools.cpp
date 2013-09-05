@@ -457,10 +457,10 @@ void commandQC(string infile, string magnitude, string xydiff, bool verbose)
       "standard input." << endl;
     exit(1);
   }
-  QC *myqc = new QC();
-  myqc->writeMagnitude(infile, magnitude);
+  QC myqc = QC(infile);
+  myqc.writeMagnitude(magnitude);
   cout << "Magnitude written successfully to " << magnitude << endl;
-  delete myqc;
+  // TODO omit xydiff if output filename is empty
   cout << "Xydiff not yet implemented!" << endl;
 }
 

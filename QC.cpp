@@ -41,31 +41,39 @@
 
 using namespace std;
 
-void QC::writeMagnitude(string simPath, string outPath) {
+QC::QC(string simPath) {
+
+  qcsim = new Sim();
+  if (!qcsim->errorMsg.empty()) {
+    cout << qcsim->errorMsg << endl;
+    exit(1);
+  }
+  qcsim->open(simPath);
+  cout << "Opened .sim file " << simPath << endl;
+
+}
+
+
+void QC::writeMagnitude(string outPath) {
   // compute normalized magnitudes by sample, write to given file
   ofstream outFStream;
   ostream *outStream;
-  Sim *sim = new Sim();
-  if (!sim->errorMsg.empty()) {
-    cout << sim->errorMsg << endl;
-    exit(1);
-  }
-  sim->open(simPath);
+  qcsim->reset(); // return read position to first sample
   float *magByProbe;
-  magByProbe = (float *) calloc(sim->numProbes, sizeof(float));
-  magnitudeByProbe(magByProbe, sim);
+  magByProbe = (float *) calloc(qcsim->numProbes, sizeof(float));
+  magnitudeByProbe(magByProbe, qcsim);
   float *magBySample;
-  magBySample = (float *) calloc(sim->numSamples, sizeof(float));
-  char sampleNames[sim->numSamples][Sim::SAMPLE_NAME_SIZE+1];
-  sim->reset(); // return read position to first sample
-  magnitudeBySample(magBySample, magByProbe, sampleNames, sim);
+  magBySample = (float *) calloc(qcsim->numSamples, sizeof(float));
+  char sampleNames[qcsim->numSamples][Sim::SAMPLE_NAME_SIZE+1];
+  qcsim->reset(); 
+  magnitudeBySample(magBySample, magByProbe, sampleNames, qcsim);
   if (outPath == "-") {
     outStream = &cout;
   } else {
     outFStream.open(outPath.c_str(), ios::binary | ios::trunc | ios::out);
     outStream = &outFStream;
   }
-  for (unsigned int i=0; i<sim->numSamples; i++) {
+  for (unsigned int i=0; i<qcsim->numSamples; i++) {
     *outStream << sampleNames[i] << "\t" << magBySample[i] << endl;
   }
 }
