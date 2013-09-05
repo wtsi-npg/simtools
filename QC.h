@@ -43,21 +43,16 @@ class QC {
  public:  
   QC(string simPath);
   void writeMagnitude(string outPath);
-  void writeXydiff(string simPath, string outPath);
+  void writeXydiff(string outPath);
 
  private:
   Sim *qcsim;
   void getNextMagnitudes(float magnitudes[], char* sampleName, Sim *sim);
-  void magnitudeByProbe(float magByProbe[], Sim *sim);
+  void magnitudeByProbe(float magByProbe[]);
   void magnitudeBySample(float magBySample[], float magByProbe[], 
-			 char sampleNames[][Sim::SAMPLE_NAME_SIZE+1], 
-			 Sim *sim);
-
-
-  /*
-  void xydiffBySample(float[] xydBySample, Sim sim);
-  */
-
+			 char sampleNames[][Sim::SAMPLE_NAME_SIZE+1]);
+  void xydiffBySample(float xydBySample[], 
+		      char sampleNames[][Sim::SAMPLE_NAME_SIZE+1]);
 };
 
 #endif	// _QC_H
