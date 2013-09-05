@@ -33,6 +33,7 @@
 #include <cmath>
 #include <iostream>
 #include <stdlib.h>  
+#include <string.h>
 
 #include "QC.h"
 #include "Sim.h"
@@ -67,6 +68,9 @@ void QC::writeMagnitude(string simPath, string outPath) {
   cout << ".sim path is: " << simPath << endl;
   cout << "Magnitude path is: " << outPath << endl;
 
+  ofstream outFStream;
+  ostream *outStream;
+
   Sim *sim = new Sim();
   sim->open(simPath);
   if (sim->numChannels != 2) throw("simtools can only handle SIM files with exactly 2 channels at present");
@@ -74,17 +78,20 @@ void QC::writeMagnitude(string simPath, string outPath) {
   float *magByProbe;
   magByProbe = (float *) calloc(sim->numProbes, sizeof(float));
   magnitudeByProbe(magByProbe, sim);
-  cout << "Magnitude by probe found." << endl;
-  for (int i=0; i<sim->numProbes; i++) cout << magByProbe[i] << " ";
-  cout << endl;
   float *magBySample;
   magBySample = (float *) calloc(sim->numSamples, sizeof(float));
-  sim->reset();
-  magnitudeBySample(magBySample, magByProbe, sim);
-  cout << "Magnitude by sample found." << endl;
-  for (int i=0; i<sim->numSamples; i++) cout << magBySample[i] << " ";
-  cout << endl;
-
+  char sampleNames[sim->numSamples][Sim::SAMPLE_NAME_SIZE+1];
+  sim->reset(); // return read position to first sample
+  magnitudeBySample(magBySample, magByProbe, sampleNames, sim);
+  if (outPath == "-") {
+    outStream = &cout;
+  } else {
+    outFStream.open(outPath.c_str(), ios::binary | ios::trunc | ios::out);
+    outStream = &outFStream;
+  }
+  for (int i=0; i<sim->numSamples; i++) {
+    *outStream << sampleNames[i] << "\t" << magBySample[i] << endl;
+  }
 }
 
 void QC::getNextMagnitudes(float magnitudes[], char *sampleName, Sim *sim) {
@@ -118,7 +125,7 @@ void QC::magnitudeByProbe(float magByProbe[], Sim *sim) {
 
   float *magnitudes;
   magnitudes = (float *) calloc(sim->numProbes, sizeof(float));
-  char *sampleName; // placeholder only; sample name needed elsewhere
+  char *sampleName; // placeholder; name used in magnitudeBySample
   sampleName = new char[sim->sampleNameSize];
   for(unsigned int i=0; i < sim->numSamples; i++) {
     getNextMagnitudes(magnitudes, sampleName, sim);
@@ -132,6 +139,7 @@ void QC::magnitudeByProbe(float magByProbe[], Sim *sim) {
 }
 
 void QC::magnitudeBySample(float magBySample[], float magByProbe[], 
+			   char sampleNames[][Sim::SAMPLE_NAME_SIZE+1], 
 			   Sim *sim) {
   // find mean sample magnitude, normalized for each probe
   // also read sample names
@@ -141,6 +149,7 @@ void QC::magnitudeBySample(float magBySample[], float magByProbe[],
     char *sampleName;
     sampleName = new char[sim->sampleNameSize];
     getNextMagnitudes(magnitudes, sampleName, sim);
+    strcpy(sampleNames[i], sampleName);
     float mag = 0;
     for (int j=0; j < sim->numProbes; j++) mag += magnitudes[j]/magByProbe[j];
     magBySample[i] = mag / sim -> numProbes;

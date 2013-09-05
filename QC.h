@@ -51,7 +51,9 @@ class QC {
  private:
   void getNextMagnitudes(float magnitudes[], char* sampleName, Sim *sim);
   void magnitudeByProbe(float magByProbe[], Sim *sim);
-  void magnitudeBySample(float magBySample[], float magByProbe[], Sim *sim);
+  void magnitudeBySample(float magBySample[], float magByProbe[], 
+			 char sampleNames[][Sim::SAMPLE_NAME_SIZE+1], 
+			 Sim *sim);
 
 
   /*
