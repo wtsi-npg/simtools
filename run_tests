@@ -21,8 +21,8 @@ fi
 #
 # QC tests
 #
-mag='mag.txt'
-xyd='xyd.txt'
+mag='test.mag.txt'
+xyd='test.xyd.txt'
 ../simtools qc --infile test.sim --magnitude $mag --xydiff $xyd
 md5mag=$(md5sum ${mag} | cut -d ' ' -f 1)
 md5xyd=$(md5sum ${xyd} | cut -d ' ' -f 1)
