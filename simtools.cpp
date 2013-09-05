@@ -42,6 +42,7 @@
 
 #include "Sim.h"
 #include "Gtc.h"
+#include "QC.h"
 #include "Manifest.h"
 #include "json/json.h"
 
@@ -450,46 +451,17 @@ void commandGenoSNP(string infile, string outfile, string manfile, int start_pos
 
 void commandQC(string infile, string magnitude, string xydiff, bool verbose)
 {
-  Sim *sim = new Sim(); // TODO modify to use new QC class
-  ofstream outFmag;
-  ofstream outFxyd;
-  ostream *outStreamMag;
-  ostream *outStreamXyd;
-
-  sim->open(infile);
-  if (!sim->errorMsg.empty()) {
-    cout << sim->errorMsg << endl;
-    exit(1);
-  }
-  cout << "SIM file " << infile << " opened successfully." << endl << endl;
-  cout << "QC functionality not yet operational!" << endl;
-  if (verbose) {
-    cout << "Input: " << infile << endl;
-    cout << "Output (magnitude): " << magnitude << endl;
-    cout << "Output (xydiff): " << xydiff << endl;
-  }
   if (infile == "-") {
     // QC requires multiple passes through the .sim input
-    cerr << "Error: QC metrics require a .sim file; cannot accept standard input." << endl;
+    cerr << "Error: QC metrics require a .sim file, cannot accept "
+      "standard input." << endl;
     exit(1);
   }
-  if (magnitude == "-") {
-    outStreamMag = &cout;
-  } else {
-    outFmag.open(magnitude.c_str(),ios::binary | ios::trunc | ios::out);
-    outStreamMag = &outFmag;
-  }
-  if (xydiff == "-") {
-    outStreamXyd = &cout;
-  } else {
-    outFxyd.open(xydiff.c_str(),ios::binary | ios::trunc | ios::out);
-    outStreamXyd = &outFxyd;
-  }
-  *outStreamMag << "Hello, magnitude!" << endl;
-  *outStreamXyd << "Hello, xydiff!" << endl;
-  // output stream as argument to "find metric" function
-  // add 'writeMagnitude' and 'writeXydiff' methods to Sim class?
-
+  QC *myqc = new QC();
+  myqc->writeMagnitude(infile, magnitude);
+  cout << "Magnitude written successfully to " << magnitude << endl;
+  delete myqc;
+  cout << "Xydiff not yet implemented!" << endl;
 }
 
 int main(int argc, char *argv[])
