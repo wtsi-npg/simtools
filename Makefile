@@ -84,7 +84,7 @@ gtc: gtc.o Gtc.o Manifest.o
 sim: sim.o Sim.o
 	$(CC) $(LDFLAGS) -o $@ $^ -lstlport
 
-simtools: simtools.o Sim.o Gtc.o Manifest.o json/json_reader.o json/json_writer.o json/json_value.o
+simtools: simtools.o Sim.o Gtc.o Manifest.o QC.o json/json_reader.o json/json_writer.o json/json_value.o
 	$(CC) $(LDFLAGS) -o $@ $^ -lstlport
 
 manifest: manifest.o Manifest.o
