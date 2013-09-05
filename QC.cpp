@@ -41,33 +41,15 @@
 
 using namespace std;
 
-void QC::hello(string simPath)
-{
-  cout << "Hello, and welcome to genotyping QC!" << endl;
-  cout << ".sim path is: " << simPath << endl;
-  Sim *sim = new Sim();
-  sim->open(simPath);
-  if (!sim->errorMsg.empty()) {
-    cout << sim->errorMsg << endl;
-    exit(1);
-  }
-  cout << "Magic:     " << sim->magic << endl;
-  cout << "Version:   " << (int)sim->version << endl;
-  cout << "Name Size: " << sim->sampleNameSize << endl;
-  cout << "Samples:   " << sim->numSamples << endl;
-  cout << "Probes:    " << sim->numProbes << endl;
-  cout << "Channels:  " << (int)sim->numChannels << endl;
-  cout << "Format:    " << (int)sim->numberFormat << endl;
-  cout << "RecLength: " << (int)sim->recordLength << endl;
-  cout << endl;
-  
-}
-
 void QC::writeMagnitude(string simPath, string outPath) {
   // compute normalized magnitudes by sample, write to given file
   ofstream outFStream;
   ostream *outStream;
   Sim *sim = new Sim();
+  if (!sim->errorMsg.empty()) {
+    cout << sim->errorMsg << endl;
+    exit(1);
+  }
   sim->open(simPath);
   float *magByProbe;
   magByProbe = (float *) calloc(sim->numProbes, sizeof(float));
@@ -87,6 +69,12 @@ void QC::writeMagnitude(string simPath, string outPath) {
     *outStream << sampleNames[i] << "\t" << magBySample[i] << endl;
   }
 }
+
+void QC::writeXydiff(string simPath, string outPath) {
+  // compute XY intensity difference by sample, write to given file
+  cout << "XYdiff not yet implemented!" << endl;
+}
+
 
 void QC::getNextMagnitudes(float magnitudes[], char *sampleName, Sim *sim) {
   // compute magnitudes for each probe from next sample in .sim input
@@ -148,9 +136,4 @@ void QC::magnitudeBySample(float magBySample[], float magByProbe[],
     magBySample[i] = mag / sim -> numProbes;
   }
 }
-
-
-
-
-
 

@@ -41,12 +41,8 @@ using namespace std;
 
 class QC {
  public:
-
-  void hello(string simPath);
-
   void writeMagnitude(string simPath, string outPath);
-
-  //void writeXydiff(FILE outfile, Sim sim);
+  void writeXydiff(string simPath, string outPath);
 
  private:
   void getNextMagnitudes(float magnitudes[], char* sampleName, Sim *sim);
