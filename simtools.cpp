@@ -127,8 +127,8 @@ void showUsage(int argc, char *argv[])
 		cout << "Usage:   " << argv[0] << " qc [options]" << endl << endl;
 		cout << "Compute genotyping QC metrics and write to text files" << endl<< endl;
 		cout << "Options: --infile      The name of the SIM file (cannot accept STDIN)" << endl;
-		cout << "         --magnitude   Output file for sample magnitude (normalised by SNP), defaults to STDOUT" << endl;
-		cout << "         --xydiff      Output file for XY intensity difference, defaults to STDOUT" << endl;
+		cout << "         --magnitude   Output file for sample magnitude (normalised by SNP); cannot use STDOUT" << endl;
+		cout << "         --xydiff      Output file for XY intensity difference; cannot use STDOUT" << endl;
 		cout << "         --verbose     Show progress messages to STDERR" << endl;
 		exit(0);
 	}
@@ -456,12 +456,23 @@ void commandQC(string infile, string magnitude, string xydiff, bool verbose)
     cerr << "Error: QC metrics require a .sim file, cannot accept "
       "standard input." << endl;
     exit(1);
+  } else if (magnitude == "" && xydiff == "") {
+    cerr << "Error: Must specify at least one of "
+      "--magnitude, --xydiff for QC" << endl;
+    exit(1);
   }
   QC myqc = QC(infile);
-  myqc.writeMagnitude(magnitude);
-  cout << "Magnitude written successfully to " << magnitude << endl;
-  // TODO omit xydiff if output filename is empty
-  myqc.writeXydiff(xydiff);
+  if (magnitude!="") {
+    if (verbose) cerr << "Writing magnitude of intensity" << endl;
+    myqc.writeMagnitude(magnitude);
+    if (verbose) cerr << "Magnitude written to " << magnitude << endl;
+  }
+  if (xydiff!="") {
+    if (verbose) cerr << "Writing XY intensity difference" << endl;
+    myqc.writeXydiff(xydiff);
+    if (verbose) cerr << "Xydiff written to " << xydiff << endl;
+  }
+
 }
 
 int main(int argc, char *argv[])
@@ -469,8 +480,8 @@ int main(int argc, char *argv[])
 	string infile = "-";
 	string outfile = "-";
 	string manfile = "";
-	string magnitude = "-";
-	string xydiff = "-";
+	string magnitude = "";
+	string xydiff = "";
 	bool verbose = false;
 	bool normalize = false;
 	int start_pos = 0;
