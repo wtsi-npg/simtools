@@ -63,15 +63,3 @@ class QC {
 };
 
 #endif	// _QC_H
-
-int main() {
-
-  QC myqc;
-  string sp = "data/example.raw.sim";
-  string mag = "/tmp/mag.txt";
-  myqc.hello(sp);
-  myqc.writeMagnitude(sp, mag);
-
-}
-
-
