@@ -59,17 +59,17 @@ void QC::writeMagnitude(string outPath) {
   // compute normalized magnitudes by sample, write to given file
   FILE *outFile = fopen(outPath.c_str(), "w");
   qcsim->reset(); // return read position to first sample
-  float *magByProbe;
-  magByProbe = (float *) calloc(qcsim->numProbes, sizeof(float));
-  magnitudeByProbe(magByProbe);
-  float *magBySample;
-  magBySample = (float *) calloc(qcsim->numSamples, sizeof(float));
+  float *probeMagArray;
+  probeMagArray = (float *) calloc(qcsim->numProbes, sizeof(float));
+  magnitudeByProbe(probeMagArray);
+  float *sampleMagArray;
+  sampleMagArray = (float *) calloc(qcsim->numSamples, sizeof(float));
   char sampleNames[qcsim->numSamples][Sim::SAMPLE_NAME_SIZE+1];
   qcsim->reset(); 
-  magnitudeBySample(magBySample, magByProbe, sampleNames);
+  magnitudeBySample(sampleMagArray, probeMagArray, sampleNames);
   for (unsigned int i=0; i<qcsim->numSamples; i++) {
     // use fprintf to control number of decimal places
-    fprintf(outFile, "%s\t%.6f\n", sampleNames[i], magBySample[i]);
+    fprintf(outFile, "%s\t%.6f\n", sampleNames[i], sampleMagArray[i]);
   }
   fclose(outFile);
 }
@@ -83,13 +83,13 @@ void QC::writeXydiff(string outPath) {
   }
   FILE *outFile = fopen(outPath.c_str(), "w");
   qcsim->reset(); // return read position to first sample
-  float *xydBySample;
-  xydBySample = (float *) calloc(qcsim->numSamples, sizeof(float));
+  float *xydArray;
+  xydArray = (float *) calloc(qcsim->numSamples, sizeof(float));
   char sampleNames[qcsim->numSamples][Sim::SAMPLE_NAME_SIZE+1];
-  xydiffBySample(xydBySample, sampleNames);
+  xydiffBySample(xydArray, sampleNames);
   for (unsigned int i=0; i<qcsim->numSamples; i++) {
     // use fprintf to control number of decimal places
-    fprintf(outFile, "%s\t%.6f\n", sampleNames[i], magBySample[i]);
+    fprintf(outFile, "%s\t%.6f\n", sampleNames[i], xydArray[i]);
   }
   fclose(outFile);
 }
