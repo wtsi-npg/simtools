@@ -83,7 +83,7 @@ void QC::writeMagnitude(string simPath, string outPath) {
     outFStream.open(outPath.c_str(), ios::binary | ios::trunc | ios::out);
     outStream = &outFStream;
   }
-  for (int i=0; i<sim->numSamples; i++) {
+  for (unsigned int i=0; i<sim->numSamples; i++) {
     *outStream << sampleNames[i] << "\t" << magBySample[i] << endl;
   }
 }
@@ -98,7 +98,7 @@ void QC::getNextMagnitudes(float magnitudes[], char *sampleName, Sim *sim) {
   } else {
     sim->getNextRecord(sampleName, intensity_int);
   }
-  for (int i=0; i < sim->numProbes; i++) {
+  for (unsigned int i=0; i < sim->numProbes; i++) {
     float total = 0.0; // running total of squared intensities
     for (int j=0; j<sim->numChannels; j++) {
       int index = i*sim->numChannels + j;
@@ -120,11 +120,11 @@ void QC::magnitudeByProbe(float magByProbe[], Sim *sim) {
   sampleName = new char[sim->sampleNameSize];
   for(unsigned int i=0; i < sim->numSamples; i++) {
     getNextMagnitudes(magnitudes, sampleName, sim);
-    for (int j=0; j < sim->numProbes; j++) {
+    for (unsigned int j=0; j < sim->numProbes; j++) {
       magByProbe[j] += magnitudes[j];
     }
   }
-  for (int i=0; i < sim->numProbes; i++) {
+  for (unsigned int i=0; i < sim->numProbes; i++) {
     magByProbe[i] = magByProbe[i] / sim->numSamples;
   }
 }
@@ -142,7 +142,9 @@ void QC::magnitudeBySample(float magBySample[], float magByProbe[],
     getNextMagnitudes(magnitudes, sampleName, sim);
     strcpy(sampleNames[i], sampleName);
     float mag = 0;
-    for (int j=0; j < sim->numProbes; j++) mag += magnitudes[j]/magByProbe[j];
+    for (unsigned int j=0; j < sim->numProbes; j++) {
+      mag += magnitudes[j]/magByProbe[j];
+    }
     magBySample[i] = mag / sim -> numProbes;
   }
 }
