@@ -64,17 +64,11 @@ void QC::hello(string simPath)
 }
 
 void QC::writeMagnitude(string simPath, string outPath) {
-
-  cout << ".sim path is: " << simPath << endl;
-  cout << "Magnitude path is: " << outPath << endl;
-
+  // compute normalized magnitudes by sample, write to given file
   ofstream outFStream;
   ostream *outStream;
-
   Sim *sim = new Sim();
   sim->open(simPath);
-  if (sim->numChannels != 2) throw("simtools can only handle SIM files with exactly 2 channels at present");
-
   float *magByProbe;
   magByProbe = (float *) calloc(sim->numProbes, sizeof(float));
   magnitudeByProbe(magByProbe, sim);
@@ -96,7 +90,7 @@ void QC::writeMagnitude(string simPath, string outPath) {
 
 void QC::getNextMagnitudes(float magnitudes[], char *sampleName, Sim *sim) {
   // compute magnitudes for each probe from next sample in .sim input
-  // also reads sample name
+  // can handle arbitrarily many intensity channels; also reads sample name
   vector<uint16_t> *intensity_int = new vector<uint16_t>;
   vector<float> *intensity_float = new vector<float>;
   if (sim->numberFormat == 0) {
@@ -104,25 +98,22 @@ void QC::getNextMagnitudes(float magnitudes[], char *sampleName, Sim *sim) {
   } else {
     sim->getNextRecord(sampleName, intensity_int);
   }
-  float a, b;
   for (int i=0; i < sim->numProbes; i++) {
-    int index = i*sim->numChannels;
-    // hard-coded to find magnitude in first two channels only
-    if (sim->numberFormat == 0) {
-      a = intensity_float->at(index);
-      b = intensity_float->at(index+1);
-    } else {
-      a = intensity_int->at(index);
-      b = intensity_int->at(index+1);
+    float total = 0.0; // running total of squared intensities
+    for (int j=0; j<sim->numChannels; j++) {
+      int index = i*sim->numChannels + j;
+      float signal;
+      if (sim->numberFormat == 0) signal = intensity_float->at(index);
+      else signal = intensity_int->at(index);
+      total += signal * signal;
     }
-    magnitudes[i] = sqrt(a*a + b*b);
+    magnitudes[i] = sqrt(total);
   }
 }
 
 void QC::magnitudeByProbe(float magByProbe[], Sim *sim) {
   // iterate over samples; update running totals of magnitude by probe
   // then divide to find mean for each probe
-
   float *magnitudes;
   magnitudes = (float *) calloc(sim->numProbes, sizeof(float));
   char *sampleName; // placeholder; name used in magnitudeBySample
