@@ -32,6 +32,7 @@
 
 #include <cmath>
 #include <cstdio>
+#include <ctime>
 #include <iostream>
 #include <stdlib.h>  
 #include <string.h>
@@ -42,55 +43,59 @@
 
 using namespace std;
 
-QC::QC(string simPath) {
-
+QC::QC(string simPath, bool verbose=false) {
   qcsim = new Sim();
   if (!qcsim->errorMsg.empty()) {
     cout << qcsim->errorMsg << endl;
     exit(1);
   }
   qcsim->open(simPath);
-  cout << "Opened .sim file " << simPath << endl;
-
+  if (verbose) cout << "Opened .sim file " << simPath << endl;
 }
 
-
-void QC::writeMagnitude(string outPath) {
+void QC::writeMagnitude(string outPath, bool verbose) {
   // compute normalized magnitudes by sample, write to given file
-  FILE *outFile = fopen(outPath.c_str(), "w");
   qcsim->reset(); // return read position to first sample
   float *probeMagArray;
   probeMagArray = (float *) calloc(qcsim->numProbes, sizeof(float));
-  magnitudeByProbe(probeMagArray);
+  magnitudeByProbe(probeMagArray, verbose);
   float *sampleMagArray;
   sampleMagArray = (float *) calloc(qcsim->numSamples, sizeof(float));
   char sampleNames[qcsim->numSamples][Sim::SAMPLE_NAME_SIZE+1];
   qcsim->reset(); 
-  magnitudeBySample(sampleMagArray, probeMagArray, sampleNames);
+  magnitudeBySample(sampleMagArray, probeMagArray, sampleNames, verbose);
+  if (verbose) cerr << "Writing results" << endl;
+  FILE *outFile = fopen(outPath.c_str(), "w");
   for (unsigned int i=0; i<qcsim->numSamples; i++) {
     // use fprintf to control number of decimal places
     fprintf(outFile, "%s\t%.6f\n", sampleNames[i], sampleMagArray[i]);
   }
   fclose(outFile);
+  free(probeMagArray);
+  free(sampleMagArray);
+  if (verbose) cerr << "Finished magnitude" << endl;
 }
 
-void QC::writeXydiff(string outPath) {
+void QC::writeXydiff(string outPath, bool verbose) {
   // compute XY intensity difference by sample, write to given file
   if (qcsim->numChannels!=2) {
     cerr << "Error: XY intensity difference is only defined for exactly "
       "two intensity channels." << endl;
     exit(1);
   }
-  FILE *outFile = fopen(outPath.c_str(), "w");
+  if (verbose) cerr << "Computing XY intensity difference" << endl;
   qcsim->reset(); // return read position to first sample
   float *xydArray;
   xydArray = (float *) calloc(qcsim->numSamples, sizeof(float));
   char sampleNames[qcsim->numSamples][Sim::SAMPLE_NAME_SIZE+1];
   xydiffBySample(xydArray, sampleNames);
+  if (verbose) cerr << "Writing results" << endl;
+  FILE *outFile = fopen(outPath.c_str(), "w");
   for (unsigned int i=0; i<qcsim->numSamples; i++) {
     // use fprintf to control number of decimal places
     fprintf(outFile, "%s\t%.6f\n", sampleNames[i], xydArray[i]);
   }
+  if (verbose) cerr << "Finished xydiff" << endl;
   fclose(outFile);
 }
 
@@ -115,11 +120,14 @@ void QC::getNextMagnitudes(float magnitudes[], char *sampleName, Sim *sim) {
     }
     magnitudes[i] = sqrt(total);
   }
+  delete intensity_int;
+  delete intensity_float;
 }
 
-void QC::magnitudeByProbe(float magByProbe[]) {
+void QC::magnitudeByProbe(float magByProbe[], bool verbose=false) {
   // iterate over samples; update running totals of magnitude by probe
   // then divide to find mean for each probe
+  if (verbose) cerr << "Finding mean magnitude by probe" << endl; 
   float *magnitudes;
   magnitudes = (float *) calloc(qcsim->numProbes, sizeof(float));
   char *sampleName; // placeholder; name used in magnitudeBySample
@@ -129,16 +137,27 @@ void QC::magnitudeByProbe(float magByProbe[]) {
     for (unsigned int j=0; j < qcsim->numProbes; j++) {
       magByProbe[j] += magnitudes[j];
     }
+    if (verbose && i % QC::VERBOSE_FREQ == 0) {
+      char *t;
+      t = new char[QC::TIME_BUFFER];
+      timeText(t);
+      cerr << t << " Sample " << i+1 << " of " << qcsim->numSamples << endl;
+      delete t;
+    }
   }
   for (unsigned int i=0; i < qcsim->numProbes; i++) {
     magByProbe[i] = magByProbe[i] / qcsim->numSamples;
   }
+  free(magnitudes);
+  if (verbose) cerr << "Completed mean magnitude by probe" << endl;
 }
 
 void QC::magnitudeBySample(float magBySample[], float magByProbe[], 
-			   char sampleNames[][Sim::SAMPLE_NAME_SIZE+1]) {
+			   char sampleNames[][Sim::SAMPLE_NAME_SIZE+1],
+			   bool verbose=false) {
   // find mean sample magnitude, normalized for each probe
   // also read sample names
+  if (verbose) cerr << "Finding normalized mean magnitude by sample" << endl; 
   float *magnitudes;
   magnitudes = (float *) calloc(qcsim->numProbes, sizeof(float));
   for(unsigned int i=0; i < qcsim->numSamples; i++) {
@@ -151,7 +170,16 @@ void QC::magnitudeBySample(float magBySample[], float magByProbe[],
       mag += magnitudes[j]/magByProbe[j];
     }
     magBySample[i] = mag / qcsim -> numProbes;
+    if (verbose && i % QC::VERBOSE_FREQ == 0) {
+      char *t;
+      t = new char[QC::TIME_BUFFER];
+      timeText(t);
+      cerr << t << " Sample " << i+1 << " of " << qcsim->numSamples << endl;
+      delete t;
+    }
   }
+  free(magnitudes);
+  if (verbose) cerr << "Completed mean magnitude by sample" << endl;
 }
 
 void QC::xydiffBySample(float xydBySample[], 
@@ -181,8 +209,16 @@ void QC::xydiffBySample(float xydBySample[],
       xydTotal += xyd;
     }
     xydBySample[i] = xydTotal / qcsim->numProbes;
+    delete intensity_int;
+    delete intensity_float;
   }
 }
 
+void QC::timeText(char *buffer) {
+  // get current time in format 06-09-2013_09:01:58
+  time_t rawtime;
+  time(&rawtime);
+  strftime(buffer, QC::TIME_BUFFER, "%d-%m-%Y_%H:%M:%S", localtime(&rawtime));
+}
 
 

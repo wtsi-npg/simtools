@@ -461,16 +461,12 @@ void commandQC(string infile, string magnitude, string xydiff, bool verbose)
       "--magnitude, --xydiff for QC" << endl;
     exit(1);
   }
-  QC myqc = QC(infile);
+  QC myqc = QC(infile, verbose);
   if (magnitude!="") {
-    if (verbose) cerr << "Writing magnitude of intensity" << endl;
-    myqc.writeMagnitude(magnitude);
-    if (verbose) cerr << "Magnitude written to " << magnitude << endl;
+    myqc.writeMagnitude(magnitude, verbose);
   }
   if (xydiff!="") {
-    if (verbose) cerr << "Writing XY intensity difference" << endl;
-    myqc.writeXydiff(xydiff);
-    if (verbose) cerr << "Xydiff written to " << xydiff << endl;
+    myqc.writeXydiff(xydiff, verbose);
   }
 
 }

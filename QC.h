@@ -32,6 +32,7 @@
 #define _QC_H
 
 #include <cmath>
+#include <ctime>
 #include <iostream>
 #include <stdlib.h>  
 
@@ -41,18 +42,24 @@ using namespace std;
 
 class QC {
  public:  
-  QC(string simPath);
-  void writeMagnitude(string outPath);
-  void writeXydiff(string outPath);
+  static const int VERBOSE_FREQ = 100; // frequency of verbose output
+  static const int TIME_BUFFER = 100; // max size in bytes of timestamp string
+
+  QC(string simPath, bool verbose);
+  void writeMagnitude(string outPath, bool verbose);
+  void writeXydiff(string outPath, bool verbose);
 
  private:
   Sim *qcsim;
   void getNextMagnitudes(float magnitudes[], char* sampleName, Sim *sim);
-  void magnitudeByProbe(float magByProbe[]);
+  void magnitudeByProbe(float magByProbe[], bool verbose);
   void magnitudeBySample(float magBySample[], float magByProbe[], 
-			 char sampleNames[][Sim::SAMPLE_NAME_SIZE+1]);
+			 char sampleNames[][Sim::SAMPLE_NAME_SIZE+1],
+			 bool verbose);
   void xydiffBySample(float xydBySample[], 
 		      char sampleNames[][Sim::SAMPLE_NAME_SIZE+1]);
+  void timeText(char *buffer);
+
 };
 
 #endif	// _QC_H
