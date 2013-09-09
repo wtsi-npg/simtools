@@ -51,6 +51,9 @@ class QC {
 
  private:
   Sim *qcsim;
+  vector<uint16_t> *intensity_int;
+  vector<float> *intensity_float;
+
   void getNextMagnitudes(float magnitudes[], char* sampleName, Sim *sim);
   void magnitudeByProbe(float magByProbe[], bool verbose);
   void magnitudeBySample(float magBySample[], float magByProbe[], 

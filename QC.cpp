@@ -50,7 +50,17 @@ QC::QC(string simPath, bool verbose=false) {
     exit(1);
   }
   qcsim->open(simPath);
-  if (verbose) cout << "Opened .sim file " << simPath << endl;
+  if (verbose) cerr << "Opened .sim file " << simPath << endl;
+  // define vector objects to hold intensities
+  intensity_int = new vector<uint16_t>();
+  intensity_float = new vector<float>();
+  if (verbose) cerr << "Created intensity vectors" << endl;
+  int vectorSize = qcsim->numProbes * qcsim->numChannels;
+  if (verbose) cerr << "Reserving space for " << vectorSize << 
+		 " intensities... ";
+  intensity_int->reserve(vectorSize);
+  intensity_float->reserve(vectorSize);
+  if (verbose) cerr << "done." << endl;
 }
 
 void QC::writeMagnitude(string outPath, bool verbose) {
@@ -102,8 +112,10 @@ void QC::writeXydiff(string outPath, bool verbose) {
 void QC::getNextMagnitudes(float magnitudes[], char *sampleName, Sim *sim) {
   // compute magnitudes for each probe from next sample in .sim input
   // can handle arbitrarily many intensity channels; also reads sample name
-  vector<uint16_t> *intensity_int = new vector<uint16_t>;
-  vector<float> *intensity_float = new vector<float>;
+  //vector<uint16_t> *intensity_int = new vector<uint16_t>;
+  //vector<float> *intensity_float = new vector<float>;
+  intensity_float->clear();
+  intensity_int->clear();
   if (sim->numberFormat == 0) {
     sim->getNextRecord(sampleName, intensity_float);
   } else {
@@ -120,8 +132,6 @@ void QC::getNextMagnitudes(float magnitudes[], char *sampleName, Sim *sim) {
     }
     magnitudes[i] = sqrt(total);
   }
-  delete intensity_int;
-  delete intensity_float;
 }
 
 void QC::magnitudeByProbe(float magByProbe[], bool verbose=false) {
