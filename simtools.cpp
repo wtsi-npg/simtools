@@ -170,8 +170,12 @@ void commandView(string infile, bool verbose)
 	cout << endl;
 
 	char *sampleName = new char[sim->sampleNameSize];
+	int vectorSize = sim->numSamples * sim->numProbes;
 	vector<uint16_t> *intensity_int = new vector<uint16_t>;
 	vector<float> *intensity_float = new vector<float>;
+	intensity_int->reserve(vectorSize);
+	intensity_float->reserve(vectorSize);
+
 	for (unsigned int n = 0; n < sim->numSamples; n++) {
 		intensity_int->clear();
 		intensity_float->clear();
