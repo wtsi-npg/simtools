@@ -112,8 +112,6 @@ void QC::writeXydiff(string outPath, bool verbose) {
 void QC::getNextMagnitudes(float magnitudes[], char *sampleName, Sim *sim) {
   // compute magnitudes for each probe from next sample in .sim input
   // can handle arbitrarily many intensity channels; also reads sample name
-  //vector<uint16_t> *intensity_int = new vector<uint16_t>;
-  //vector<float> *intensity_float = new vector<float>;
   intensity_float->clear();
   intensity_int->clear();
   if (sim->numberFormat == 0) {
@@ -121,14 +119,21 @@ void QC::getNextMagnitudes(float magnitudes[], char *sampleName, Sim *sim) {
   } else {
     sim->getNextRecord(sampleName, intensity_int);
   }
-  for (unsigned int i=0; i < sim->numProbes; i++) {
-    float total = 0.0; // running total of squared intensities
-    for (int j=0; j<sim->numChannels; j++) {
-      int index = i*sim->numChannels + j;
-      float signal;
-      if (sim->numberFormat == 0) signal = intensity_float->at(index);
-      else signal = intensity_int->at(index);
-      total += signal * signal;
+  // define pointer to first intensity element (depending on format)
+  // pointer is used for fast access to vector contents
+  float *intensityf;
+  uint16_t *intensityi;
+  unsigned int i, j, index;
+  float intensity, total;
+  if (sim->numberFormat == 0) intensityf = &(intensity_float->front());
+  else intensityi = &(intensity_int->front());
+  for (i=0; i < sim->numProbes; i++) {
+    total = 0.0; // running total of squared intensities
+    for (j=0; j<sim->numChannels; j++) {
+      index = i*sim->numChannels + j;
+      if (sim->numberFormat == 0) intensity = *(intensityf+index);
+      else intensity = *(intensityi+index);
+      total += intensity * intensity;
     }
     magnitudes[i] = sqrt(total);
   }
@@ -207,16 +212,24 @@ void QC::xydiffBySample(float xydBySample[],
       qcsim->getNextRecord(sampleName, intensity_int);
     }
     strcpy(sampleNames[i], sampleName);
+    // define pointer to first intensity element (depending on format)
+    // pointer is used for fast access to vector contents
+    float *intensityf;
+    uint16_t *intensityi;
+    if (qcsim->numberFormat == 0) intensityf = &(intensity_float->front());
+    else intensityi = &(intensity_int->front());
     for (unsigned int j=0; j<qcsim->numProbes; j++) {
       int index = j*qcsim->numChannels;
-      float xyd;
+      float x, y;
       if (qcsim->numberFormat == 0) {
-	xyd = intensity_float->at(index+1) - intensity_float->at(index);
+	x = *(intensityf+index);
+	y = *(intensityf+index+1);
       }
       else {
-	xyd = intensity_int->at(index+1) - intensity_int->at(index);
+	x = *(intensityi+index);
+	y = *(intensityi+index+1);
       }
-      xydTotal += xyd;
+      xydTotal += (y-x);
     }
     xydBySample[i] = xydTotal / qcsim->numProbes;
     delete intensity_int;
