@@ -6,6 +6,7 @@ cd data
 # Create tests
 #
 ../simtools create --infile example.json --outfile test.sim --man_file example.bpm.csv
+
 if [ $? -ne 0 ]; then
 	echo simtools create: TEST FAILED
 	exit;
@@ -23,6 +24,7 @@ fi
 #
 mag='test.mag.txt'
 xyd='test.xyd.txt'
+rm -f $mag $xyd
 ../simtools qc --infile test.sim --magnitude $mag --xydiff $xyd
 md5mag=$(md5sum ${mag} | cut -d ' ' -f 1)
 md5xyd=$(md5sum ${xyd} | cut -d ' ' -f 1)
@@ -50,49 +52,66 @@ fi
 #
 # illuminus tests
 #
-../simtools illuminus --infile test.sim --outfile test.iln --man_file example.bpm.csv
+ilntest="test.iln"
+rm -f $ilntest
+../simtools illuminus --infile test.sim --outfile $ilntest --man_file example.bpm.csv
 if [ $? -ne 0 ]; then
-	echo simtools illuminus: TEST FAILED
+	echo simtools illuminus [file]: TEST FAILED
 	exit;
 fi
 
 diff test.iln example_1.iln
 if [ $? -ne 0 ]; then
-	echo simtools illuminus: check output file: TEST FAILED
+	echo simtools illuminus file: check output file: TEST FAILED
 	exit;
 fi
 
-../simtools illuminus --end 3 --infile test.sim --outfile test.iln --man_file example.bpm.csv
+# test again from standard input
+rm -f $ilntest
+cat test.sim | ../simtools illuminus --infile - --outfile $ilntest --man_file example.bpm.csv
+if [ $? -ne 0 ]; then
+	echo simtools illuminus stdin: TEST FAILED
+	exit;
+fi
+
+diff $ilntest example_1.iln
+if [ $? -ne 0 ]; then
+	echo simtools illuminus stdin: check output file: TEST FAILED
+	exit;
+fi
+
+
+../simtools illuminus --end 3 --infile test.sim --outfile $ilntest --man_file example.bpm.csv
 if [ $? -ne 0 ]; then
 	echo simtools illuminus2: TEST FAILED
 	exit;
 fi
 
-diff test.iln example_2.iln
+diff $ilntest example_2.iln
 if [ $? -ne 0 ]; then
 	echo simtools illuminus2: check output file: TEST FAILED
 	exit;
 fi
 
-../simtools illuminus --start 3 --infile test.sim --outfile test.iln --man_file example.bpm.csv
+../simtools illuminus --start 3 --infile test.sim --outfile $ilntest --man_file example.bpm.csv
 if [ $? -ne 0 ]; then
 	echo simtools illuminus3: TEST FAILED
 	exit;
 fi
 
-diff test.iln example_3.iln
+diff $ilntest example_3.iln
 if [ $? -ne 0 ]; then
 	echo simtools illuminus3: check output file: TEST FAILED
 	exit;
 fi
 
-../simtools illuminus --end 3 --start 3 --infile test.sim --outfile test.iln --man_file example.bpm.csv
+../simtools illuminus --end 3 --start 3 --infile test.sim --outfile $ilntest --man_file example.bpm.csv
 if [ $? -ne 0 ]; then
 	echo simtools illuminus4: TEST FAILED
 	exit;
 fi
 
-diff test.iln example_4.iln
+diff $ilntest example_4.iln
 if [ $? -ne 0 ]; then
 	echo simtools illuminus4: check output file: TEST FAILED
 	exit;
@@ -104,13 +123,27 @@ fi
 #
 ../simtools genosnp --infile test.sim --outfile test.gsn --man_file example.bpm.csv
 if [ $? -ne 0 ]; then
-	echo simtools genosnp: TEST FAILED
+	echo simtools genosnp file: TEST FAILED
 	exit;
 fi
 
 diff test.gsn example_1.gsn
 if [ $? -ne 0 ]; then
-	echo simtools genosnp: check output file: TEST FAILED
+	echo simtools genosnp file: check output file: TEST FAILED
+	exit;
+fi
+
+# test again from standard input
+
+cat test.sim | ../simtools genosnp --infile - --outfile test.gsn --man_file example.bpm.csv
+if [ $? -ne 0 ]; then
+	echo simtools genosnp stdin: TEST FAILED
+	exit;
+fi
+
+diff test.gsn example_1.gsn
+if [ $? -ne 0 ]; then
+	echo simtools genosnp stdin: check output file: TEST FAILED
 	exit;
 fi
 
