@@ -170,34 +170,32 @@ void commandView(string infile, bool verbose)
 	cout << endl;
 
 	char *sampleName = new char[sim->sampleNameSize];
-	int vectorSize = sim->numSamples * sim->numProbes;
-	vector<uint16_t> *intensity_int = new vector<uint16_t>;
-	vector<float> *intensity_float = new vector<float>;
-	intensity_int->reserve(vectorSize);
-	intensity_float->reserve(vectorSize);
+	uint16_t *intensity_int = 
+	  (uint16_t *) calloc(sim->sampleIntensityTotal, sizeof(uint16_t));
+	float *intensity_float = 
+	  (float *) calloc(sim->sampleIntensityTotal, sizeof(float));
 
+	int i;
 	for (unsigned int n = 0; n < sim->numSamples; n++) {
-		intensity_int->clear();
-		intensity_float->clear();
 		if (sim->numberFormat == 0) sim->getNextRecord(sampleName,intensity_float);
 		else                        sim->getNextRecord(sampleName,intensity_int);
 		cout << sampleName << "\t: ";
 		if (verbose) {	// dump intensities as well as sample names
 			// there *must* be a better way of doing this...
 			if (sim->numberFormat == 0) {
-				for (vector<float>::iterator i = intensity_float->begin(); i != intensity_float->end(); i++) {
-					cout << *i << " ";
-				}
+			  for (i=0; i<sim->sampleIntensityTotal; i++) {
+			    cout << intensity_float[i] << " ";
+			  }
 			} else {
-				for (vector<uint16_t>::iterator i = intensity_int->begin(); i != intensity_int->end(); i++) {
-					cout << *i << " ";
-				}
+			  for (i=0; i<sim->sampleIntensityTotal; i++) {
+			    cout << intensity_int[i] << " ";
+			  }
 			}
 		}
 		cout << endl;
 	}
-	delete intensity_int;
-	delete intensity_float;
+	free(intensity_int);
+	free(intensity_float);
 	delete sampleName;
 }
 
@@ -269,7 +267,9 @@ void commandCreate(string infile, string outfile, bool normalize, string manfile
 	sort(manifest->snps.begin(), manifest->snps.end(), SortByPosition);
 
 	// Create the SIM file and write the header
+	cerr << "Ready to create .sim file." << endl;
 	sim->createFile(outfile);
+	cerr << "Writing header." << endl;
 	sim->writeHeader(infiles.size(),gtc->numSnps, 2, numberFormat);
 
 	// For each GTC file, write the sample name and intensities to the SIM file
@@ -333,7 +333,7 @@ void commandCreate(string infile, string outfile, bool normalize, string manfile
 		}
 
 	}
-
+	cerr << "Closing sim file" << endl;
 	sim->close();
 }
 
@@ -353,8 +353,6 @@ void commandIlluminus(string infile, string outfile, string manfile, int start_p
 	ofstream outFStream;
 	ostream *outStream;
 	char *sampleName;
-    vector<uint16_t> *intensity_int = new vector<uint16_t>;
-    vector<float> *intensity_float = new vector<float>;
 	vector<vector<float> > SampleArray;
 	Manifest *manifest = new Manifest();
 
@@ -368,7 +366,10 @@ void commandIlluminus(string infile, string outfile, string manfile, int start_p
 	sim->open(infile);
 
 	if (sim->numChannels != 2) throw("simtools can only handle SIM files with exactly 2 channels at present");
-
+	uint16_t *intensity_int = 
+	  (uint16_t *) calloc(sim->sampleIntensityTotal, sizeof(uint16_t));
+	float *intensity_float = 
+	  (float *) calloc(sim->sampleIntensityTotal, sizeof(float));
 	sampleName = new char[sim->sampleNameSize];
 
 	// We need a manifest file to sort the SNPs
@@ -384,16 +385,14 @@ void commandIlluminus(string infile, string outfile, string manfile, int start_p
 	for(unsigned int n=0; n < sim->numSamples; n++) {
 		vector<float> *s = new vector<float>; 
 		if (!s) { cerr << "new s failed" << endl; exit(1); }
-		intensity_float->clear();
-		intensity_int->clear();
 		if (sim->numberFormat == 0) sim->getNextRecord(sampleName, intensity_float);
 		else                        sim->getNextRecord(sampleName, intensity_int);
 		for (int i=start_pos; i <= end_pos; i++) {
 			for (int c=0; c < sim->numChannels; c++) {
 				float v;
 				int k = i * sim->numChannels + c;
-				if (sim->numberFormat==0) v = intensity_float->at(k);
-				else                      v = intensity_int->at(k);
+				if (sim->numberFormat==0) v = intensity_float[k];
+				else                      v = intensity_int[k];
 				s->push_back(v);
 			}
 		}
@@ -416,7 +415,8 @@ void commandIlluminus(string infile, string outfile, string manfile, int start_p
 		}
 		*outStream << endl;
 	}
-
+	free(intensity_int);
+	free(intensity_float);
 }
 
 void commandGenoSNP(string infile, string outfile, string manfile, int start_pos, int end_pos, bool verbose)
@@ -437,20 +437,22 @@ void commandGenoSNP(string infile, string outfile, string manfile, int start_pos
 	if (end_pos == -1) end_pos = sim->numSamples - 1;
 
 	char *sampleName = new char[sim->sampleNameSize];
-    vector<uint16_t> *intensity = new vector<uint16_t>;;
+	uint16_t *intensity = (uint16_t *) calloc(sim->sampleIntensityTotal, 
+						  sizeof(uint16_t));
     for (int n=0; n <= end_pos ; n++) {
-        intensity->clear();
         sim->getNextRecord(sampleName, intensity);
 	if (n < start_pos) continue;
-		*outStream << sampleName << "\t" << sampleName;
-		for (vector<uint16_t>::iterator i = intensity->begin(); i != intensity->end(); i+=2) {
-			*outStream << "\t" << std::fixed << setprecision(3) << *i;
-			*outStream << " " << std::fixed << setprecision(3) << *(i+1);
-		}
-		*outStream << endl;
+	*outStream << sampleName << "\t" << sampleName;
+	for (int i=0; i<sim->sampleIntensityTotal; i+=2) {
+	  *outStream << "\t" << std::fixed << setprecision(3) << intensity[i];
+	  *outStream << " " << std::fixed << setprecision(3) << intensity[i+1];
 	}
+	*outStream << endl;
+    }
 
-	delete sim;
+    free(sampleName);
+    free(intensity);
+    delete sim;
 }
 
 void commandQC(string infile, string magnitude, string xydiff, bool verbose)
