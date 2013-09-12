@@ -45,6 +45,7 @@ Sim::Sim(void)
 {
 	version=0;
 	filename = "";
+	errorMsg="";
 }
 
 void Sim::open(string fname) 
@@ -53,10 +54,9 @@ void Sim::open(string fname)
         char *f = new char[fname.length()+1];
 	strcpy(f, fname.c_str());
         openLowLevel(f);
-
+	
 	this->filename = fname;
 	_openFile(fname);
-	infile->seekg(HEADER_LENGTH);
 
 	// calculate and store record length
 	switch (numberFormat) {
@@ -74,7 +74,9 @@ void Sim::open(string fname)
 }
 
 void Sim::openLowLevel(char *fname) {
-  inFileRaw = fopen(fname, "r");
+  // open C-style file descriptor and read header data
+  if (strcmp(fname, "-")==0) inFileRaw = stdin;
+  else inFileRaw = fopen(fname, "r");
   char *magicChars = (char *) calloc(4, sizeof(char));
   int size_t;
   size_t = fread(magicChars, 1, 3, inFileRaw);
@@ -94,16 +96,20 @@ void Sim::openLowLevel(char *fname) {
   size_t = fread(&numChannels, 1, 1, inFileRaw);
   if (size_t != 1) throw("Error reading .sim file header channels");
   size_t = fread(&numberFormat, 1, 1, inFileRaw);
-  if (size_t != 1) throw("Error reading .sim file header format");
+  if (size_t != 1) throw("Error reading .sim file header numeric format");
 
   if (ferror(inFileRaw)!=0) {
     throw("Error reading header from .sim file: [" + string(fname) + "]");
   }
 }
 
-void Sim::close(void)
-{
-	if (filename != "-") fout.close();	// don't close stdout!	
+void Sim::close(void) {
+  if (filename != "-") {	// don't close stdout!	
+    // TODO is check on filename appropriate here?
+    fout.close();
+    int status = fclose(inFileRaw);
+    if (status!=0) throw("Error closing input file!");
+  }
 }
 
 void Sim::createFile(string fname)
@@ -118,7 +124,6 @@ void Sim::reset(void)
   if (filename == "-") {
     throw "Cannot reset file position in standard input!";
   }
-  infile->seekg(HEADER_LENGTH);
   fseek(inFileRaw, HEADER_LENGTH, 0);
 
 }
@@ -158,10 +163,12 @@ string Sim::dump(void)
 	return s.str();
 }
 
+
 void Sim::__openin(istream &f) 
 {
 	infile = &f;
 }
+
 
 void Sim::__openout(ostream &f) 
 {
@@ -170,9 +177,11 @@ void Sim::__openout(ostream &f)
 
 void Sim::_openFile(string filename, bool writing)
 {
+
+
 	if (filename == "-") {
 		if (writing) { __openout(cout); }
-		else         { __openin(cin); }
+		else         { __openin(cin); } // read from inFileRaw
 	} else {
 		if (writing) { fout.open(filename.c_str(),ios::binary | ios::trunc | ios::in | ios::out); __openout(fout); }
 		else         { 
@@ -192,35 +201,6 @@ void Sim::_closeFile(void)
 {
 //	file.close();
 //	file.clear();
-}
-
-void Sim::getNextRecord(char *sampleName, vector<uint16_t> *intensity)
-{
-	unsigned int n;
-	char *p;
-	char *buff = new char[recordLength];
-
-	infile->read(buff,recordLength);
-	memcpy(sampleName,buff,sampleNameSize);
-	for (n=0, p=buff+sampleNameSize; n < numProbes*numChannels; n++, p+=2) {
-		uint16_t v = *(uint16_t*)p;
-		intensity->push_back(v);
-	}
-	delete buff;
-}
-
-void Sim::getNextRecord(char *sampleName, vector<float> *intensity)
-{
-	unsigned int n;
-	char *p;
-	char *buff = new char[recordLength];
-	infile->read(buff,recordLength);
-	memcpy(sampleName,buff,sampleNameSize);
-	for (n=0, p=buff+sampleNameSize; n < numProbes*numChannels; n++, p+=4) {
-		float v = *(float*)p;
-		intensity->push_back(v);
-	}
-	delete buff;
 }
 
 void Sim::getNextRecord(char *sampleName, uint16_t *intensity) {

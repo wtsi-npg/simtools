@@ -84,8 +84,6 @@ public:
 	int getVersion(void) { return version; }
 	const char *getMagic(void) { return magic.c_str(); }
 
-	void getNextRecord(char *sampleName, vector<uint16_t> *intensity);
-	void getNextRecord(char *sampleName, vector<float> *intensity);
 	void getNextRecord(char *sampleName, uint16_t *intensity);
 	void getNextRecord(char *sampleName, float *intensity);
 
