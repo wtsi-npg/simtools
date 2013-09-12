@@ -54,27 +54,9 @@ void Sim::open(string fname)
 	strcpy(f, fname.c_str());
         openLowLevel(f);
 
-	char buff[256];
-
-	errorMsg = "";
-
 	this->filename = fname;
 	_openFile(fname);
-	infile->get(buff,4);
-
-	if (strcmp(buff,"sim")) {
-		throw("File " + filename + " has invalid header [" + buff + "]");
-	}
-	magic = buff;
-
-	this->filename = fname;
-	// read SIM header
-	infile->read((char*)&version,1);
-	infile->read((char*)&sampleNameSize,2);
-	infile->read((char*)&numSamples,4);
-	infile->read((char*)&numProbes,4);
-	infile->read((char*)&numChannels,1);
-	infile->read((char*)&numberFormat,1);
+	infile->seekg(HEADER_LENGTH);
 
 	// calculate and store record length
 	switch (numberFormat) {
@@ -93,10 +75,29 @@ void Sim::open(string fname)
 
 void Sim::openLowLevel(char *fname) {
   inFileRaw = fopen(fname, "r");
-  fseek(inFileRaw, HEADER_LENGTH, 0);
+  char *magicChars = (char *) calloc(4, sizeof(char));
+  int size_t;
+  size_t = fread(magicChars, 1, 3, inFileRaw);
+  magic = string(magicChars);
+  if (strcmp(magicChars, "sim") || size_t != 3) {
+    throw("File " + string(fname) + " has invalid header [" 
+	  + string(magic) + "]");
+  }
+  size_t = fread(&version, 1, 1, inFileRaw);
+  if (size_t != 1) throw("Error reading .sim file header version");
+  size_t = fread(&sampleNameSize, 2, 1, inFileRaw);
+  if (size_t != 1) throw("Error reading .sim file header name size");
+  size_t = fread(&numSamples, 4, 1, inFileRaw);
+  if (size_t != 1) throw("Error reading .sim file header samples");
+  size_t = fread(&numProbes, 4, 1, inFileRaw);
+  if (size_t != 1) throw("Error reading .sim file header probes");
+  size_t = fread(&numChannels, 1, 1, inFileRaw);
+  if (size_t != 1) throw("Error reading .sim file header channels");
+  size_t = fread(&numberFormat, 1, 1, inFileRaw);
+  if (size_t != 1) throw("Error reading .sim file header format");
+
   if (ferror(inFileRaw)!=0) {
-    cerr << "Error positioning low-level file stream to:" << fname << endl;
-    exit(1);
+    throw("Error reading header from .sim file: [" + string(fname) + "]");
   }
 }
 
