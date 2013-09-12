@@ -37,11 +37,7 @@
 #include <vector>
 #include <stdint.h>
 #include <errno.h>
-
-// TEMPORARY extras for standalone compilation
-#include <stdlib.h> 
-#include <string.h> 
-// end of extras
+#include <stdio.h> // added for low-level file reading by ib5
 
 using namespace std;
 
@@ -51,14 +47,13 @@ Sim::Sim(void)
 	filename = "";
 }
 
-void Sim::open(char *f)
-{
-	string fname = f;
-	open(fname);
-}
-
 void Sim::open(string fname) 
 {
+
+        char *f = new char[fname.length()+1];
+	strcpy(f, fname.c_str());
+        openLowLevel(f);
+
 	char buff[256];
 
 	errorMsg = "";
@@ -82,16 +77,27 @@ void Sim::open(string fname)
 	infile->read((char*)&numberFormat,1);
 
 	// calculate and store record length
-	recordLength = numProbes * numChannels;
 	switch (numberFormat) {
-		case FLOAT:				recordLength *= 4;	break;
-		case INTEGER:			recordLength *= 2; break;
-		case SCALED_INTEGER:	recordLength *= 2; break;
-		default:	cerr << "Invalid number format " << numberFormat;
+	case FLOAT:	      numericBytes= 4;	break;
+	case INTEGER:	      numericBytes = 2; break;
+	case SCALED_INTEGER:  numericBytes = 2; break;
+	default:	cerr << "Invalid number format " << numberFormat;
 					exit(1);
 	}
+	sampleIntensityTotal = numProbes * numChannels;
+	recordLength = numProbes * numChannels;
+	recordLength *= numericBytes;
 	recordLength += sampleNameSize;
 	_closeFile();
+}
+
+void Sim::openLowLevel(char *fname) {
+  inFileRaw = fopen(fname, "r");
+  fseek(inFileRaw, HEADER_LENGTH, 0);
+  if (ferror(inFileRaw)!=0) {
+    cerr << "Error positioning low-level file stream to:" << fname << endl;
+    exit(1);
+  }
 }
 
 void Sim::close(void)
@@ -112,6 +118,7 @@ void Sim::reset(void)
     throw "Cannot reset file position in standard input!";
   }
   infile->seekg(HEADER_LENGTH);
+  fseek(inFileRaw, HEADER_LENGTH, 0);
 
 }
 
@@ -213,6 +220,24 @@ void Sim::getNextRecord(char *sampleName, vector<float> *intensity)
 		intensity->push_back(v);
 	}
 	delete buff;
+}
+
+void Sim::getNextRecord(char *sampleName, uint16_t *intensity) {
+  char *status = fgets(sampleName, sampleNameSize+1, inFileRaw);
+  if (status==NULL) throw("Error reading sample name from .sim file!");
+  int items = fread(intensity, numericBytes, sampleIntensityTotal, inFileRaw);
+  if (items != sampleIntensityTotal || ferror(inFileRaw)) {
+    throw("Error reading intensities from .sim file!");
+  }
+}
+
+void Sim::getNextRecord(char *sampleName, float *intensity) {
+  char *status = fgets(sampleName, sampleNameSize+1, inFileRaw);
+  if (status==NULL) throw("Error reading sample name from .sim file!");
+  int items = fread(intensity, numericBytes, sampleIntensityTotal, inFileRaw);
+  if (items != sampleIntensityTotal || ferror(inFileRaw)) {
+    throw("Error reading intensities from .sim file!");
+  }
 }
 
 void Sim::write(void *buffer, int length)

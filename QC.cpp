@@ -49,18 +49,12 @@ QC::QC(string simPath, bool verbose=false) {
     cout << qcsim->errorMsg << endl;
     exit(1);
   }
-  qcsim->open(simPath);
+  qcsim->open(simPath.c_str());
   if (verbose) cerr << "Opened .sim file " << simPath << endl;
-  // define vector objects to hold intensities
-  intensity_int = new vector<uint16_t>();
-  intensity_float = new vector<float>();
-  if (verbose) cerr << "Created intensity vectors" << endl;
-  int vectorSize = qcsim->numProbes * qcsim->numChannels;
-  if (verbose) cerr << "Reserving space for " << vectorSize << 
-		 " intensities... ";
-  intensity_int->reserve(vectorSize);
-  intensity_float->reserve(vectorSize);
-  if (verbose) cerr << "done." << endl;
+  intensity_int_array = (uint16_t *) calloc(qcsim->sampleIntensityTotal, 
+					    sizeof(uint16_t));
+  intensity_float_array = (float *) calloc(qcsim->sampleIntensityTotal, 
+					   sizeof(float));
 }
 
 void QC::writeMagnitude(string outPath, bool verbose) {
@@ -112,12 +106,10 @@ void QC::writeXydiff(string outPath, bool verbose) {
 void QC::getNextMagnitudes(float magnitudes[], char *sampleName, Sim *sim) {
   // compute magnitudes for each probe from next sample in .sim input
   // can handle arbitrarily many intensity channels; also reads sample name
-  intensity_float->clear();
-  intensity_int->clear();
   if (sim->numberFormat == 0) {
-    sim->getNextRecord(sampleName, intensity_float);
+    sim->getNextRecord(sampleName, intensity_float_array);
   } else {
-    sim->getNextRecord(sampleName, intensity_int);
+    sim->getNextRecord(sampleName, intensity_int_array);
   }
   // define pointer to first intensity element (depending on format)
   // pointer is used for fast access to vector contents
@@ -125,8 +117,8 @@ void QC::getNextMagnitudes(float magnitudes[], char *sampleName, Sim *sim) {
   uint16_t *intensityi;
   unsigned int i, j, index;
   float intensity, total;
-  if (sim->numberFormat == 0) intensityf = &(intensity_float->front());
-  else intensityi = &(intensity_int->front());
+  intensityf = &(intensity_float_array[0]);
+  intensityi = &(intensity_int_array[0]);
   for (i=0; i < sim->numProbes; i++) {
     total = 0.0; // running total of squared intensities
     for (j=0; j<sim->numChannels; j++) {
@@ -146,7 +138,8 @@ void QC::magnitudeByProbe(float magByProbe[], bool verbose=false) {
   float *magnitudes;
   magnitudes = (float *) calloc(qcsim->numProbes, sizeof(float));
   char *sampleName; // placeholder; name used in magnitudeBySample
-  sampleName = new char[qcsim->sampleNameSize];
+  sampleName = (char*) malloc(qcsim->sampleNameSize+1);
+  //sampleName = new char[qcsim->sampleNameSize];
   for(unsigned int i=0; i < qcsim->numSamples; i++) {
     getNextMagnitudes(magnitudes, sampleName, qcsim);
     for (unsigned int j=0; j < qcsim->numProbes; j++) {
@@ -204,20 +197,18 @@ void QC::xydiffBySample(float xydBySample[],
     char *sampleName;
     sampleName = new char[qcsim->sampleNameSize];
     float xydTotal = 0.0; // running total of xy difference
-    vector<uint16_t> *intensity_int = new vector<uint16_t>;
-    vector<float> *intensity_float = new vector<float>;
     if (qcsim->numberFormat == 0) {
-      qcsim->getNextRecord(sampleName, intensity_float);
+      qcsim->getNextRecord(sampleName, intensity_float_array);
     } else {
-      qcsim->getNextRecord(sampleName, intensity_int);
+      qcsim->getNextRecord(sampleName, intensity_int_array);
     }
     strcpy(sampleNames[i], sampleName);
     // define pointer to first intensity element (depending on format)
     // pointer is used for fast access to vector contents
     float *intensityf;
     uint16_t *intensityi;
-    if (qcsim->numberFormat == 0) intensityf = &(intensity_float->front());
-    else intensityi = &(intensity_int->front());
+    intensityf = &(intensity_float_array[0]);
+    intensityi = &(intensity_int_array[0]);
     for (unsigned int j=0; j<qcsim->numProbes; j++) {
       int index = j*qcsim->numChannels;
       float x, y;
@@ -232,8 +223,6 @@ void QC::xydiffBySample(float xydBySample[],
       xydTotal += (y-x);
     }
     xydBySample[i] = xydTotal / qcsim->numProbes;
-    delete intensity_int;
-    delete intensity_float;
   }
 }
 

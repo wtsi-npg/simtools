@@ -42,7 +42,7 @@ using namespace std;
 
 class QC {
  public:  
-  static const int VERBOSE_FREQ = 100; // frequency of verbose output
+  static const int VERBOSE_FREQ = 1000; // frequency of verbose output
   static const int TIME_BUFFER = 100; // max size in bytes of timestamp string
 
   QC(string simPath, bool verbose);
@@ -51,8 +51,8 @@ class QC {
 
  private:
   Sim *qcsim;
-  vector<uint16_t> *intensity_int;
-  vector<float> *intensity_float;
+  uint16_t *intensity_int_array;
+  float *intensity_float_array;
 
   void getNextMagnitudes(float magnitudes[], char* sampleName, Sim *sim);
   void magnitudeByProbe(float magByProbe[], bool verbose);

@@ -57,7 +57,7 @@ public:
 public:
 	Sim();
 	void open(string filename);
-	void open(char *f);
+	void openLowLevel(char *f);
 	void close(void);
 	void reset(void);
 	string dump(void);
@@ -75,6 +75,9 @@ public:
 	uint8_t numChannels;
 	uint8_t numberFormat;
 	int recordLength;		// calculated when file opened and header read
+	int numericBytes; // record size of each number in file
+	int sampleIntensityTotal; // number of intensities for each sample
+	FILE *inFileRaw; // low-level file access for greater speed
 
 	// These inline functions are for the use of SWIG and Perl
 	const char *getFilename(void) { return filename.c_str(); }
@@ -84,6 +87,9 @@ public:
 
 	void getNextRecord(char *sampleName, vector<uint16_t> *intensity);
 	void getNextRecord(char *sampleName, vector<float> *intensity);
+	void getNextRecord(char *sampleName, uint16_t *intensity);
+	void getNextRecord(char *sampleName, float *intensity);
+
 
 private:
 	istream *infile;
