@@ -77,7 +77,6 @@ public:
 	int recordLength;		// calculated when file opened and header read
 	int numericBytes; // record size of each number in file
 	int sampleIntensityTotal; // number of intensities for each sample
-	FILE *inFileRaw; // low-level file access for greater speed
 
 	// These inline functions are for the use of SWIG and Perl
 	const char *getFilename(void) { return filename.c_str(); }
@@ -96,6 +95,7 @@ private:
 	ostream *outfile;
 	ifstream fin;
 	ofstream fout;
+	FILE *inFileRaw; // low-level file access for greater speed
 	map<string,long> sampleIndex;
 	string readString(ifstream &f, int offset);
 	string _readString(ifstream &f);
