@@ -197,6 +197,8 @@ void commandView(string infile, bool verbose)
 	free(intensity_int);
 	free(intensity_float);
 	delete sampleName;
+	sim->close();
+	delete sim;
 }
 
 //
@@ -332,6 +334,7 @@ void commandCreate(string infile, string outfile, bool normalize, string manfile
 
 	}
 	sim->close();
+	delete sim;
 }
 
 //
@@ -414,6 +417,8 @@ void commandIlluminus(string infile, string outfile, string manfile, int start_p
 	}
 	free(intensity_int);
 	free(intensity_float);
+	sim->close();
+	delete sim;
 }
 
 void commandGenoSNP(string infile, string outfile, string manfile, int start_pos, int end_pos, bool verbose)
@@ -449,6 +454,7 @@ void commandGenoSNP(string infile, string outfile, string manfile, int start_pos
 
     free(sampleName);
     free(intensity);
+    sim->close();
     delete sim;
 }
 
@@ -464,14 +470,15 @@ void commandQC(string infile, string magnitude, string xydiff, bool verbose)
       "--magnitude, --xydiff for QC" << endl;
     exit(1);
   }
-  QC myqc = QC(infile, verbose);
+  QC *qc = new QC(infile, verbose);
   if (magnitude!="") {
-    myqc.writeMagnitude(magnitude, verbose);
+    qc->writeMagnitude(magnitude, verbose);
   }
   if (xydiff!="") {
-    myqc.writeXydiff(xydiff, verbose);
+    qc->writeXydiff(xydiff, verbose);
   }
-  myqc.close();
+  qc->close();
+  delete qc;
 
 }
 
