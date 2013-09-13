@@ -56,7 +56,7 @@ public:
 	
 public:
 	Sim();
-	void open(string filename);
+	void openInput(string filename);
 	void openLowLevel(char *f);
 	void close(void);
 	void reset(void);

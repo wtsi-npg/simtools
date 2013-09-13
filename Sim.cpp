@@ -49,7 +49,7 @@ Sim::Sim(void)
 	errorMsg="";
 }
 
-void Sim::open(string fname) 
+void Sim::openInput(string fname) 
 {
         inPath = fname;
         char *f = new char[fname.length()+1];

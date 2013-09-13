@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
 	Sim *sim = new Sim();
 	string m;
 	cout << endl << "Reading SIM file: " << argv[1] << endl;
-	try { sim->open(argv[1]); } 
+	try { sim->openInput(argv[1]); } 
 	catch (string m) { cout << m << endl; }
 
 	int maxDisplay;

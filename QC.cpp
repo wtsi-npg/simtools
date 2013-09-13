@@ -49,7 +49,7 @@ QC::QC(string simPath, bool verbose=false) {
     cout << qcsim->errorMsg << endl;
     exit(1);
   }
-  qcsim->open(simPath.c_str());
+  qcsim->openInput(simPath.c_str());
   if (verbose) cerr << "Opened .sim file " << simPath << endl;
   intensity_int_array = (uint16_t *) calloc(qcsim->sampleIntensityTotal, 
 					    sizeof(uint16_t));

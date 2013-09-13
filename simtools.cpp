@@ -154,7 +154,7 @@ void commandView(string infile, bool verbose)
 	Sim *sim = new Sim();
 
 	cout << endl << "Reading SIM file: " << infile << endl;
-	sim->open(infile);
+	sim->openInput(infile);
 	if (!sim->errorMsg.empty()) {
 		cout << sim->errorMsg << endl;
 		exit(1);
@@ -360,7 +360,7 @@ void commandIlluminus(string infile, string outfile, string manfile, int start_p
 		outStream = &outFStream;
 	}
 
-	sim->open(infile);
+	sim->openInput(infile);
 
 	if (sim->numChannels != 2) throw("simtools can only handle SIM files with exactly 2 channels at present");
 	uint16_t *intensity_int = 
@@ -429,7 +429,7 @@ void commandGenoSNP(string infile, string outfile, string manfile, int start_pos
 		outStream = &outFStream;
 	}
 
-	sim->open(infile);
+	sim->openInput(infile);
 
 	if (end_pos == -1) end_pos = sim->numSamples - 1;
 
