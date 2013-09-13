@@ -89,18 +89,12 @@ public:
 
 
 private:
-	istream *infile;
 	ostream *outfile;
-	ifstream fin;
 	ofstream fout;
 	FILE *inFileRaw; // low-level file access for greater speed
 	map<string,long> sampleIndex;
-	string readString(ifstream &f, int offset);
-	string _readString(ifstream &f);
-	void __openin(istream &f);
 	void __openout(ostream &f);
-	void _openFile(string fname, bool writing=false);
-	void _closeFile(void);
+	void _openOut(string fname);
 };
 #endif	// _SIM_H
 

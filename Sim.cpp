@@ -50,27 +50,10 @@ Sim::Sim(void)
 
 void Sim::open(string fname) 
 {
-
+	this->filename = fname;
         char *f = new char[fname.length()+1];
 	strcpy(f, fname.c_str());
         openLowLevel(f);
-	
-	this->filename = fname;
-	_openFile(fname);
-
-	// calculate and store record length
-	switch (numberFormat) {
-	case FLOAT:	      numericBytes= 4;	break;
-	case INTEGER:	      numericBytes = 2; break;
-	case SCALED_INTEGER:  numericBytes = 2; break;
-	default:	cerr << "Invalid number format " << numberFormat;
-					exit(1);
-	}
-	sampleIntensityTotal = numProbes * numChannels;
-	recordLength = numProbes * numChannels;
-	recordLength *= numericBytes;
-	recordLength += sampleNameSize;
-	_closeFile();
 }
 
 void Sim::openLowLevel(char *fname) {
@@ -101,6 +84,19 @@ void Sim::openLowLevel(char *fname) {
   if (ferror(inFileRaw)!=0) {
     throw("Error reading header from .sim file: [" + string(fname) + "]");
   }
+
+  // calculate and store record length
+  switch (numberFormat) {
+  case FLOAT:	      numericBytes= 4;	break;
+  case INTEGER:	      numericBytes = 2; break;
+  case SCALED_INTEGER:  numericBytes = 2; break;
+  default:	cerr << "Invalid number format " << numberFormat;
+    exit(1);
+  }
+  sampleIntensityTotal = numProbes * numChannels;
+  recordLength = numProbes * numChannels;
+  recordLength *= numericBytes;
+  recordLength += sampleNameSize;
 }
 
 void Sim::close(void) {
@@ -126,7 +122,8 @@ void Sim::reset(void)
 
 }
 
-void Sim::writeHeader(uint32_t _numSamples, uint32_t _numProbes, uint8_t _numChannels, uint8_t _numberFormat)
+void Sim::writeHeader(uint32_t _numSamples, uint32_t _numProbes, 
+		      uint8_t _numChannels, uint8_t _numberFormat)
 {
 	version = VERSION;
 	sampleNameSize = SAMPLE_NAME_SIZE;
@@ -135,7 +132,7 @@ void Sim::writeHeader(uint32_t _numSamples, uint32_t _numProbes, uint8_t _numCha
 	numChannels = _numChannels;
 	numberFormat = _numberFormat;
 
-	_openFile(filename,true);
+	_openOut(filename);
 	outfile->write("sim", 3);
 	outfile->write((char*)&version, sizeof(version));
 	outfile->write((char*)&sampleNameSize, sizeof(sampleNameSize));
@@ -162,43 +159,25 @@ string Sim::dump(void)
 }
 
 
-void Sim::__openin(istream &f) 
-{
-	infile = &f;
-}
-
-
 void Sim::__openout(ostream &f) 
 {
 	outfile = &f;
 }
 
-void Sim::_openFile(string filename, bool writing)
+void Sim::_openOut(string filename)
 {
-
-
-	if (filename == "-") {
-		if (writing) { __openout(cout); }
-		else         { __openin(cin); } // read from inFileRaw
-	} else {
-		if (writing) { fout.open(filename.c_str(),ios::binary | ios::trunc | ios::in | ios::out); __openout(fout); }
-		else         { 
-			fin.open(filename.c_str(),ios::binary | ios::in); 
-			__openin(fin); 
-		}
-	}
-	if (!writing && (!infile || !fin)) {
-		cerr << "Can't open " << filename << " for reading : " << strerror(errno) << endl;
-	}
-	if (writing && (!outfile || !fout)) {
-		cerr << "Can't open " << filename << " for writing : " << strerror(errno) << endl;
-	}
-}
-
-void Sim::_closeFile(void)
-{
-//	file.close();
-//	file.clear();
+  // open filestream for output
+  if (filename == "-") {
+    __openout(cout); 
+  } else {
+    fout.open(filename.c_str(),
+	      ios::binary | ios::trunc | ios::in | ios::out); 
+    __openout(fout); 
+  }
+  if (!outfile || !fout) {
+    cerr << "Can't open " << filename << " for writing : " 
+	 << strerror(errno) << endl;
+  }
 }
 
 void Sim::getNextRecord(char *sampleName, uint16_t *intensity) {
