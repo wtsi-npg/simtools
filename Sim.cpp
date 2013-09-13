@@ -44,13 +44,14 @@ using namespace std;
 Sim::Sim(void) 
 {
 	version=0;
+	inPath = "";
 	filename = "";
 	errorMsg="";
 }
 
 void Sim::open(string fname) 
 {
-	this->filename = fname;
+        inPath = fname;
         char *f = new char[fname.length()+1];
 	strcpy(f, fname.c_str());
         openLowLevel(f);

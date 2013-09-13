@@ -91,6 +91,7 @@ public:
 private:
 	ostream *outfile;
 	ofstream fout;
+	string inPath;
 	FILE *inFile; // low-level file access for greater speed
 	map<string,long> sampleIndex;
 	void __openout(ostream &f);
