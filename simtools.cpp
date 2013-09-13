@@ -367,7 +367,7 @@ void commandIlluminus(string infile, string outfile, string manfile, int start_p
 	  (uint16_t *) calloc(sim->sampleIntensityTotal, sizeof(uint16_t));
 	float *intensity_float = 
 	  (float *) calloc(sim->sampleIntensityTotal, sizeof(float));
-	sampleName = new char[sim->sampleNameSize];
+	sampleName = new char[sim->sampleNameSize+1];
 
 	// We need a manifest file to sort the SNPs
 	loadManifest(manifest, manfile);
