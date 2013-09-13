@@ -269,7 +269,7 @@ void commandCreate(string infile, string outfile, bool normalize, string manfile
 	sort(manifest->snps.begin(), manifest->snps.end(), SortByPosition);
 
 	// Create the SIM file and write the header
-	sim->createFile(outfile);
+	sim->openOutput(outfile);
 	sim->writeHeader(infiles.size(),gtc->numSnps, 2, numberFormat);
 
 	// For each GTC file, write the sample name and intensities to the SIM file

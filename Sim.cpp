@@ -110,7 +110,7 @@ void Sim::close(void) {
       cerr << "Input file is in error state!" << endl;
       exit(1);
     }
-    int status =0;
+    int status;
     status = fclose(inFile);
     if (status!=0) { 
       cerr << "Failed to close input file" << endl;
@@ -119,9 +119,10 @@ void Sim::close(void) {
   }
 }
 
-void Sim::createFile(string fname)
-{
-	filename = fname;
+void Sim::openOutput(string fname) {
+  filename = fname;
+  _openOut(filename);
+
 }
 
 void Sim::reset(void)
@@ -138,6 +139,10 @@ void Sim::reset(void)
 void Sim::writeHeader(uint32_t _numSamples, uint32_t _numProbes, 
 		      uint8_t _numChannels, uint8_t _numberFormat)
 {
+        if (filename=="") {
+	  cerr << "Output not defined; need to call Sim::openOutput()" << endl;
+	  exit(1);
+	}
 	version = VERSION;
 	sampleNameSize = SAMPLE_NAME_SIZE;
 	numSamples = _numSamples;
@@ -145,7 +150,6 @@ void Sim::writeHeader(uint32_t _numSamples, uint32_t _numProbes,
 	numChannels = _numChannels;
 	numberFormat = _numberFormat;
 
-	_openOut(filename);
 	outfile->write("sim", 3);
 	outfile->write((char*)&version, sizeof(version));
 	outfile->write((char*)&sampleNameSize, sizeof(sampleNameSize));
@@ -213,6 +217,10 @@ void Sim::getNextRecord(char *sampleName, float *intensity) {
 
 void Sim::write(void *buffer, int length)
 {
+        if (filename=="") {
+	  cerr << "Output not defined; need to call Sim::openOutput()" << endl;
+	  exit(1);
+	}
 	outfile->write((const char*)buffer,length);
 }
 

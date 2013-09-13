@@ -62,19 +62,19 @@ public:
 	void reset(void);
 	string dump(void);
 	const char *dumpc(void) { return dump().c_str(); }
-	void createFile(string filename);
+	void openOutput(string filename);
 	void writeHeader(uint32_t _numSamples, uint32_t _numProbes, uint8_t _numChannels=2, uint8_t _numberFormat=INTEGER);
 	void write(void *buffer, int length);
 	string errorMsg;
 	string filename;
-	string magic;			// expected to be "sim"
-	uint8_t version;			// file version (expected to be 1)
-	uint16_t sampleNameSize;		// sample name
+	string magic;		 // expected to be "sim"
+	uint8_t version;	 // file version (expected to be 1)
+	uint16_t sampleNameSize;
 	uint32_t numSamples;
 	uint32_t numProbes;
 	uint8_t numChannels;
 	uint8_t numberFormat;
-	int recordLength;		// calculated when file opened and header read
+	int recordLength; // calculated when file opened and header read
 	int numericBytes; // record size of each number in file
 	int sampleIntensityTotal; // number of intensities for each sample
 
