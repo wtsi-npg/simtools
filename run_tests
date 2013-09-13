@@ -18,6 +18,14 @@ if [ $? -ne 0 ]; then
 	exit;
 fi
 
+#
+# "sim" test
+#
+../sim test.sim 20 > /dev/null
+if [ $? -ne 0 ]; then
+	echo sim executable: TEST FAILED
+	exit;
+fi
 
 #
 # QC tests
