@@ -331,7 +331,6 @@ void commandCreate(string infile, string outfile, bool normalize, string manfile
 		}
 
 	}
-	cerr << "Closing sim file" << endl;
 	sim->close();
 }
 
