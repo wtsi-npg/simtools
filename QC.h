@@ -46,6 +46,7 @@ class QC {
   static const int TIME_BUFFER = 100; // max size in bytes of timestamp string
 
   QC(string simPath, bool verbose);
+  void close(void);
   void writeMagnitude(string outPath, bool verbose);
   void writeXydiff(string outPath, bool verbose);
 

@@ -57,6 +57,10 @@ QC::QC(string simPath, bool verbose=false) {
 					   sizeof(float));
 }
 
+void QC::close(void) {
+  qcsim -> close();
+}
+
 void QC::writeMagnitude(string outPath, bool verbose) {
   // compute normalized magnitudes by sample, write to given file
   qcsim->reset(); // return read position to first sample

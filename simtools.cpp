@@ -471,6 +471,7 @@ void commandQC(string infile, string magnitude, string xydiff, bool verbose)
   if (xydiff!="") {
     myqc.writeXydiff(xydiff, verbose);
   }
+  myqc.close();
 
 }
 
