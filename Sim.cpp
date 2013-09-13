@@ -101,9 +101,21 @@ void Sim::openLowLevel(char *fname) {
 }
 
 void Sim::close(void) {
-  if (filename != "-") {	// don't close stdout!	
-    // TODO is check on filename appropriate here? should we close infile?
+  // close input and output files (if open, and not equal to stdin or stdout)
+  if (filename != "" && filename !="-") {
     fout.close();
+  }
+  if (inPath !="" && inPath!="-") { 
+    if (ferror(inFile)) {
+      cerr << "Input file is in error state!" << endl;
+      exit(1);
+    }
+    int status =0;
+    status = fclose(inFile);
+    if (status!=0) { 
+      cerr << "Failed to close input file" << endl;
+      exit(1);
+    }
   }
 }
 
