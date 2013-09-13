@@ -34,19 +34,30 @@
 #include <iostream>
 #include <vector>
 #include <map>
+#include "stdlib.h" 
 
 #include "Sim.h"
-#include "Manifest.h"
 
 using namespace std;
 
 int main(int argc, char *argv[])
 {
+  // Simple executable to demonstrate use of the .sim class
+  // Similar functionality to "simtools view"
+
+        if (argc!=3) {
+	  cout << "Usage: " << argv[0] << " [path to .sim file] " 
+	       << "[max intensities to display per sample]" << endl;
+	  exit(1);
+	}
 	Sim *sim = new Sim();
-string m;
-		cout << endl << "Reading SIM file: " << argv[1] << endl;
-try { sim->open(argv[1]); } 
-catch (string m) { cout << m << endl; }
+	string m;
+	cout << endl << "Reading SIM file: " << argv[1] << endl;
+	try { sim->open(argv[1]); } 
+	catch (string m) { cout << m << endl; }
+
+	int maxDisplay;
+	maxDisplay = atoi(argv[2]);
 
 	cout << "Magic:     " << sim->magic << endl;
 	cout << "Version:   " << (int)sim->version << endl;
@@ -58,17 +69,33 @@ catch (string m) { cout << m << endl; }
 
 	cout << endl;
 	char *sampleName = new char[sim->sampleNameSize+1];
-	vector<uint16_t> *intensity = new vector<uint16_t>;;
-	for (unsigned int n=0; n < sim->numSamples; n++) {
-		intensity->clear();
-		sim->getNextRecord(sampleName, intensity);
+	
+	uint16_t *intensity_int = 
+	  (uint16_t *) calloc(sim->sampleIntensityTotal, sizeof(uint16_t));
+	float *intensity_float = 
+	  (float *) calloc(sim->sampleIntensityTotal, sizeof(float));
+
+	unsigned int i;
+	int j;
+	int displayTotal = min(sim->sampleIntensityTotal, maxDisplay);
+	for (i=0; i < sim->numSamples; i++) {
+		if (sim->numberFormat == 0) {
+		  sim->getNextRecord(sampleName, intensity_float);
+		} else { 
+		  sim->getNextRecord(sampleName, intensity_int);
+		}
 		cout << sampleName << "\t: ";
-		for (vector<uint16_t>::iterator i = intensity->begin(); i != intensity->end(); i++) {
-			cout << *i << " ";
+		for (j=0; j<displayTotal; j++) {
+		  if (sim->numberFormat == 0) {
+		    cout << intensity_float[j] << " "; 
+		  } else {
+		    cout << intensity_int[j] << " ";
+		  }
 		}
 		cout << endl;
 	}
-
+	free(intensity_int);
+	free(intensity_float);
 	return 0;
 }
 
