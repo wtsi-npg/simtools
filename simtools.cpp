@@ -169,12 +169,11 @@ void commandView(string infile, bool verbose)
 	cout << "RecLength: " << (int)sim->recordLength << endl;
 	cout << endl;
 
-	char *sampleName = new char[sim->sampleNameSize];
+	char *sampleName = new char[sim->sampleNameSize+1];
 	uint16_t *intensity_int = 
 	  (uint16_t *) calloc(sim->sampleIntensityTotal, sizeof(uint16_t));
 	float *intensity_float = 
 	  (float *) calloc(sim->sampleIntensityTotal, sizeof(float));
-
 	int i;
 	for (unsigned int n = 0; n < sim->numSamples; n++) {
 		if (sim->numberFormat == 0) sim->getNextRecord(sampleName,intensity_float);
@@ -194,6 +193,7 @@ void commandView(string infile, bool verbose)
 		}
 		cout << endl;
 	}
+	sim->reportNonNumeric();
 	free(intensity_int);
 	free(intensity_float);
 	delete sampleName;
@@ -281,7 +281,7 @@ void commandCreate(string infile, string outfile, bool normalize, string manfile
 			    << infiles[0] << " contains " << gtc->xRawIntensity.size() << " probes.";
 			throw msg.str();
 		}
-		char *buffer = new char[sim->sampleNameSize];
+		char *buffer = new char[sim->sampleNameSize+1];
 		memset(buffer,0,sim->sampleNameSize);
 		// if we have a sample name from the json file, use it
 		if (n < sampleNames.size()) { strcpy(buffer, sampleNames[n].c_str()); }
@@ -415,6 +415,7 @@ void commandIlluminus(string infile, string outfile, string manfile, int start_p
 		}
 		*outStream << endl;
 	}
+	if (verbose) sim->reportNonNumeric();
 	free(intensity_int);
 	free(intensity_float);
 	sim->close();
@@ -438,7 +439,7 @@ void commandGenoSNP(string infile, string outfile, string manfile, int start_pos
 
 	if (end_pos == -1) end_pos = sim->numSamples - 1;
 
-	char *sampleName = new char[sim->sampleNameSize];
+	char *sampleName = new char[sim->sampleNameSize+1];
 	uint16_t *intensity = (uint16_t *) calloc(sim->sampleIntensityTotal, 
 						  sizeof(uint16_t));
     for (int n=0; n <= end_pos ; n++) {
@@ -451,7 +452,7 @@ void commandGenoSNP(string infile, string outfile, string manfile, int start_pos
 	}
 	*outStream << endl;
     }
-
+    if (verbose) sim->reportNonNumeric();
     free(sampleName);
     free(intensity);
     sim->close();
