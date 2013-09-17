@@ -21,19 +21,19 @@ fi
 #
 # "sim" test
 #
-../sim test.sim 20 > /dev/null
+../sim test.sim 20 &> /dev/null
 if [ $? -ne 0 ]; then
 	echo sim executable: TEST FAILED
 	exit;
 fi
 
 #
-# QC tests
+# QC tests; uses slightly larger input containing NaN & infinity values
 #
 mag='test.mag.txt'
 xyd='test.xyd.txt'
-rm -f $mag $xyd
-../simtools qc --infile test.sim --magnitude $mag --xydiff $xyd
+cp example.larger_with_inf.sim qctest.sim
+../simtools qc --infile qctest.sim --magnitude $mag --xydiff $xyd
 md5mag=$(md5sum ${mag} | cut -d ' ' -f 1)
 md5xyd=$(md5sum ${xyd} | cut -d ' ' -f 1)
 
@@ -41,10 +41,10 @@ pass=1
 if [ $? -ne 0 ]; then
     echo "Non-zero exit status in QC mode"
     pass=0
-elif [ $md5mag != 'faefbd6f032a68df2423a24034472a90' ]; then
+elif [ $md5mag != '59547e67a4a2c442639bf79c32db64ff' ]; then
     echo "Incorrect checksum for magnitude output"
     pass=0
-elif [ $md5xyd != 'ee10d4e61aa491bdeeb31327a39f3262' ]; then
+elif [ $md5xyd != '1bd5056c2ed5fe7fd5eec9299ba2581c' ]; then
     echo "Incorrect checksum for xydiff output"
     pass=0
 else
@@ -55,7 +55,7 @@ if [ $pass -eq 0 ]; then
     echo simtools qc: TEST FAILED
     exit;
 fi
-
+rm -f $mag $xyd qctest.sim
 
 #
 # illuminus tests
