@@ -31,13 +31,15 @@
 //
 //
 #include "Sim.h"
+#include <cmath>
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <vector>
 #include <stdint.h>
 #include <errno.h>
-#include <stdio.h> // added for low-level file reading by ib5
+#include <stdio.h>
+
 
 using namespace std;
 
@@ -47,6 +49,8 @@ Sim::Sim(void)
 	inPath = "";
 	filename = "";
 	errorMsg="";
+	nanCount = 0;
+	infCount = 0;
 }
 
 void Sim::openInput(string fname) 
@@ -133,7 +137,8 @@ void Sim::reset(void)
     throw "Cannot reset file position in standard input!";
   }
   fseek(inFile, HEADER_LENGTH, 0);
-
+  nanCount = 0;
+  infCount = 0;
 }
 
 void Sim::writeHeader(uint32_t _numSamples, uint32_t _numProbes, 
@@ -198,6 +203,8 @@ void Sim::_openOut(string filename)
 }
 
 void Sim::getNextRecord(char *sampleName, uint16_t *intensity) {
+  // read array of intensity intensities
+  // no need to check for NaN/inf values, as these can't be integers
   char *status = fgets(sampleName, sampleNameSize+1, inFile);
   if (status==NULL) throw("Error reading sample name from .sim file!");
   int items = fread(intensity, numericBytes, sampleIntensityTotal, inFile);
@@ -206,13 +213,31 @@ void Sim::getNextRecord(char *sampleName, uint16_t *intensity) {
   }
 }
 
-void Sim::getNextRecord(char *sampleName, float *intensity) {
+void Sim::getNextRecord(char *sampleName, float *intensity, 
+			bool cleanup) {
+  // read array of float intensities & check for NaN/infinite values
+  // if cleanup=true, reset all NaN/infinite values to zero
   char *status = fgets(sampleName, sampleNameSize+1, inFile);
   if (status==NULL) throw("Error reading sample name from .sim file!");
   int items = fread(intensity, numericBytes, sampleIntensityTotal, inFile);
   if (items != sampleIntensityTotal || ferror(inFile)) {
     throw("Error reading intensities from .sim file!");
   }
+  for (int i=0;i<sampleIntensityTotal;i++) {
+    if (isnan(intensity[i])) {
+      nanCount++;
+      if (cleanup) intensity[i] = 0;
+    } else if (isinf(intensity[i])) {
+      infCount++;
+      if (cleanup) intensity[i] = 0;
+    }
+  } 
+}
+
+void Sim::reportNonNumeric(void) {
+  // check infinity/nan counts and report to standard output
+  cerr << "Total NaN values found: " << nanCount << endl;
+  cerr << "Total INF values found: " << infCount << endl;
 }
 
 void Sim::write(void *buffer, int length)

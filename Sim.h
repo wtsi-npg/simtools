@@ -59,12 +59,14 @@ public:
 	void openInput(string filename);
 	void openLowLevel(char *f);
 	void close(void);
-	void reset(void);
 	string dump(void);
 	const char *dumpc(void) { return dump().c_str(); }
 	void openOutput(string filename);
+	void reportNonNumeric(void);
+	void reset(void);
 	void writeHeader(uint32_t _numSamples, uint32_t _numProbes, uint8_t _numChannels=2, uint8_t _numberFormat=INTEGER);
 	void write(void *buffer, int length);
+	
 	string errorMsg;
 	string filename;
 	string magic;		 // expected to be "sim"
@@ -74,6 +76,9 @@ public:
 	uint32_t numProbes;
 	uint8_t numChannels;
 	uint8_t numberFormat;
+	long nanCount; // count NaN entries in input
+	long infCount; // count +/- INF entries in input
+	bool cleanInput; 
 	int recordLength; // calculated when file opened and header read
 	int numericBytes; // record size of each number in file
 	int sampleIntensityTotal; // number of intensities for each sample
@@ -85,7 +90,8 @@ public:
 	const char *getMagic(void) { return magic.c_str(); }
 
 	void getNextRecord(char *sampleName, uint16_t *intensity);
-	void getNextRecord(char *sampleName, float *intensity);
+	void getNextRecord(char *sampleName, float *intensity,
+			   bool cleanup=false);
 
 
 private:
