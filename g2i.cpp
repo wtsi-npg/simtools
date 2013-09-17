@@ -494,7 +494,7 @@ void createSimFile(string fname)
 
 	hash_map<string,string>::iterator i = gtcHash.begin();
 	gtc.open(i->second, Gtc::INTENSITY);
-	sim->createFile(fname);
+	sim->openOutput(fname);
 	sim->writeHeader(gtcHash.size(), gtc.xRawIntensity.size());
 
 	//
