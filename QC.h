@@ -31,7 +31,6 @@
 #ifndef _QC_H
 #define _QC_H
 
-#include <cmath>
 #include <ctime>
 #include <iostream>
 #include <stdlib.h>  
@@ -44,6 +43,7 @@ class QC {
  public:  
   static const int VERBOSE_FREQ = 1000; // frequency of verbose output
   static const int TIME_BUFFER = 100; // max size in bytes of timestamp string
+  static const bool CLEANUP = true; // reset all Nan/infinity inputs to zero
 
   QC(string simPath, bool verbose);
   void close(void);
