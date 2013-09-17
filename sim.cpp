@@ -35,7 +35,6 @@
 #include <vector>
 #include <map>
 #include "stdlib.h" 
-
 #include "Sim.h"
 
 using namespace std;
@@ -94,8 +93,11 @@ int main(int argc, char *argv[])
 		}
 		cout << endl;
 	}
+	sim -> reportNonNumeric();
 	free(intensity_int);
 	free(intensity_float);
+	sim->close();
+	delete sim;
 	return 0;
 }
 
