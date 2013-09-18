@@ -56,24 +56,32 @@ public:
 	
 public:
 	Sim();
-	void open(string filename);
-	void open(char *f);
+	void openInput(string filename);
+	void openLowLevel(char *f);
 	void close(void);
 	string dump(void);
 	const char *dumpc(void) { return dump().c_str(); }
-	void createFile(string filename);
+	void openOutput(string filename);
+	void reportNonNumeric(void);
+	void reset(void);
 	void writeHeader(uint32_t _numSamples, uint32_t _numProbes, uint8_t _numChannels=2, uint8_t _numberFormat=INTEGER);
 	void write(void *buffer, int length);
+	
 	string errorMsg;
 	string filename;
-	string magic;			// expected to be "sim"
-	uint8_t version;			// file version (expected to be 1)
-	uint16_t sampleNameSize;		// sample name
+	string magic;		 // expected to be "sim"
+	uint8_t version;	 // file version (expected to be 1)
+	uint16_t sampleNameSize;
 	uint32_t numSamples;
 	uint32_t numProbes;
 	uint8_t numChannels;
 	uint8_t numberFormat;
-	int recordLength;		// calculated when file opened and header read
+	long nanCount; // count NaN entries in input
+	long infCount; // count +/- INF entries in input
+	bool cleanInput; 
+	int recordLength; // calculated when file opened and header read
+	int numericBytes; // record size of each number in file
+	int sampleIntensityTotal; // number of intensities for each sample
 
 	// These inline functions are for the use of SWIG and Perl
 	const char *getFilename(void) { return filename.c_str(); }
@@ -81,21 +89,19 @@ public:
 	int getVersion(void) { return version; }
 	const char *getMagic(void) { return magic.c_str(); }
 
-	void getNextRecord(char *sampleName, vector<uint16_t> *intensity);
-	void getNextRecord(char *sampleName, vector<float> *intensity);
+	void getNextRecord(char *sampleName, uint16_t *intensity);
+	void getNextRecord(char *sampleName, float *intensity,
+			   bool cleanup=false);
+
 
 private:
-	istream *infile;
 	ostream *outfile;
-	ifstream fin;
 	ofstream fout;
+	string inPath;
+	FILE *inFile; // low-level file access for greater speed
 	map<string,long> sampleIndex;
-	string readString(ifstream &f, int offset);
-	string _readString(ifstream &f);
-	void __openin(istream &f);
 	void __openout(ostream &f);
-	void _openFile(string fname, bool writing=false);
-	void _closeFile(void);
+	void _openOut(string fname);
 };
 #endif	// _SIM_H
 

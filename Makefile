@@ -51,13 +51,14 @@ LIBS=Gtc.o win2unix.o Sim.o
 
 CC=/usr/bin/g++
 
+# do NOT use -ffast-math, as it causes errors in infinity/NaN handling
 ifeq ($(DEBUG),y)
-	CFLAGS=-g -Wall -fPIC -O0 -ffast-math -I$(STLPORT_INC)
+	CFLAGS=-g -Wall -fPIC -O0 -I$(STLPORT_INC)
 else
-	CFLAGS=-Wall -fPIC -O3 -ffast-math -I$(STLPORT_INC)
+	CFLAGS=-Wall -fPIC -O3 -I$(STLPORT_INC)
 endif
 # Set runpath instead of relying on LD_LIBRARY_PATH
-LDFLAGS=-Wl,-rpath -Wl,$(STLPORT_LIB) -L$(STLPORT_LIB) -lstlport
+LDFLAGS=-Wl,-rpath -Wl,$(STLPORT_LIB) -L$(STLPORT_LIB) -lstlport -lm
 
 default: all
 
@@ -84,7 +85,7 @@ gtc: gtc.o Gtc.o Manifest.o
 sim: sim.o Sim.o
 	$(CC) $(LDFLAGS) -o $@ $^ -lstlport
 
-simtools: simtools.o Sim.o Gtc.o Manifest.o json/json_reader.o json/json_writer.o json/json_value.o
+simtools: simtools.o Sim.o Gtc.o Manifest.o QC.o json/json_reader.o json/json_writer.o json/json_value.o
 	$(CC) $(LDFLAGS) -o $@ $^ -lstlport
 
 manifest: manifest.o Manifest.o
