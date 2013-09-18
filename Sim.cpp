@@ -223,15 +223,22 @@ void Sim::getNextRecord(char *sampleName, float *intensity,
   if (items != sampleIntensityTotal || ferror(inFile)) {
     throw("Error reading intensities from .sim file!");
   }
-  for (int i=0;i<sampleIntensityTotal;i++) {
-    if (isnan(intensity[i])) {
-      nanCount++;
-      if (cleanup) intensity[i] = 0;
-    } else if (isinf(intensity[i])) {
-      infCount++;
-      if (cleanup) intensity[i] = 0;
-    }
-  } 
+  // check for nan/inf values in input
+  // looking at sum is faster than calling isnan/isinf on everything
+  // nan/inf tend to be concentrated in a few samples
+  float sum = 0.0;
+  for (int i=0;i<sampleIntensityTotal;i++) sum += intensity[i];
+  if (isinf(sum) || isnan(sum)) { // one or more INF/NaN values present
+    for (int i=0;i<sampleIntensityTotal;i++) {
+      if (isinf(intensity[i])) {
+	infCount++;
+	if (cleanup) intensity[i] = 0;
+      } else if (isnan(intensity[i])) {
+	nanCount++;
+	if (cleanup) intensity[i] = 0;
+      }
+    } 
+  }
 }
 
 void Sim::reportNonNumeric(void) {
