@@ -59,19 +59,25 @@ class snpClass {
 	cStrand = '?';
 	normId = -1;
 	BeadSetID = -1;
+	converted = false;
 
   };
+
+  string toString();
+  string strandToString(char strand, bool converted);
 
   int index;
   string name;
   string chromosome;
   long position;
   float score;
-  char snp [2];		// 'GT' or 'AG' for example. Defined to be A/B for TOP strand.
+  char snp [2];		// 'GT' or 'AG' for example. Defined to be A/B for TOP strand. 
   char iStrand;		// Illumina Strand: B (Bottom) or T (Top)
   char cStrand;		// Customer Strand: B (Bottom) or T (Top)
   int normId;		    // index into normalisation table
   int BeadSetID;      // Only available from "wide format" manifest files (.csv not .bpm.csv)
+
+  bool converted; // has SNP been converted from original to ILMN top strand?
 
 };
 
@@ -114,6 +120,8 @@ public:
 	int snp2idx(char *snp) { return snpNames.find(snp) == snpNames.end() ? -1 : snpNames[snp]; }
 
 	void exclude_cnvs();
+
+	void write(string outpath); // write normalized .bpm.csv to file
 
 
  protected:

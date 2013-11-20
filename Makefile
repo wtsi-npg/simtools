@@ -82,6 +82,9 @@ perl: $(PERL_TARGETS)
 gtc: gtc.o Gtc.o Manifest.o
 	$(CC) $(LDFLAGS) -o $@ $^ -lstlport
 
+normalize_manifest: normalize_manifest.o Manifest.o
+	$(CC) $(LDFLAGS) -o $@ $^ -lstlport
+
 sim: sim.o Sim.o
 	$(CC) $(LDFLAGS) -o $@ $^ -lstlport
 
