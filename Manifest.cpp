@@ -6,7 +6,7 @@
 // $Id: Manifest.cpp 1354 2010-11-11 16:20:09Z js10 $
 //
 #include "Manifest.h"
-// Author: Jennifer Liddle <js10@sanger.ac.uk, jennifer@jsquared.co.uk>
+// Author: Jennifer Liddle <js10@sanger.ac.uk, jennifer@jsquared.co.uk>, Iain Bancarz <ib5@sanger.ac.uk>
 //
 // Redistribution and use in source and binary forms, with or without modification, 
 // are permitted provided that the following conditions are met:
@@ -51,6 +51,7 @@ Manifest::Manifest(void)
   filename = "";
 
   EXCLUDE_CNVS = false;
+  hasBeadSetID = false;
 
 #ifdef _DEBUG      // compile with g++ -D_DEBUG Manifest.cpp ...
   test_convert();
@@ -169,6 +170,8 @@ void Manifest::open(string filename, bool wide)
 	  NORMID_COL = 8; 
 	  BEADSETID_COL = -1; 
 	}
+
+	if (BEADSETID_COL != -1) { hasBeadSetID = true; } // instance variable
 
 	//
 	// OK, now ready to acquire data
@@ -736,25 +739,20 @@ void Manifest::dump(void)
 
 void Manifest::write(string outPath) {
 
+
+  string header = "Index,Name,Chromosome,Position,GenTrain Score,SNP,ILMN Strand,Customer Strand,NormID";
+  if (this->hasBeadSetID) { header += ",BeadSetID"; }
   ofstream outFile;
   outFile.open(outPath.c_str());
 
-
-  outFile << "BPM output goes here.\n";
-
-  // Write SNP data to file
-  int snpTotal = snps.size(); // Number of elements.
-
+  outFile << header << endl;
   // TODO ensure SNPs are output in sorted order?
+  int snpTotal = snps.size();
   for (int i = 0; i < snpTotal; i++) {
 	snpClass s = snps[i];
 	outFile << s.toString().c_str() << endl;
-
   }
-
-
   outFile.close();
-
 
 }
 
@@ -950,60 +948,50 @@ int Manifest::get_map_value (map<string, int>& mymap, const char* const treasure
 string snpClass::toString() {
 
   // placeholders for char array to C++ string conversion
-  char buffer[100];
+  int bufSize = 1000;
+  char buffer[bufSize];
   int n;
 
   // index
-  n = sprintf(buffer, "%d", index);
+  n = snprintf(buffer, bufSize, "%d", index);
   string i = string(buffer, n);
 
   // position
-  n = sprintf(buffer, "%ld", position);
+  n = snprintf(buffer, bufSize, "%ld", position);
   string p = string(buffer, n);
 
   // score
-  n = sprintf(buffer, "%f", score);
+  n = snprintf(buffer, bufSize, "%f", score);
   string s = string(buffer, n);
-
 
   // generate the allele string
   string a = string(1, snp[0]); // this constructor makes 1 copy of snp[0]
   string b = string(1, snp[1]);
-  string alleles;
-  if (a=="?" or b=="?") {
-    alleles = "[N/N]";
-  } else {
-    alleles = "["+a+"/"+b+"]";
-  }
+  if (a=="?") { a = "N"; }
+  if (b=="?") { b = "N"; }
+  string alleles = "["+a+"/"+b+"]";
   
   // strands after normalization
-  string iStrandNorm, cStrandNorm; 
-  iStrandNorm = strandToString(iStrand, converted);
-  cStrandNorm = strandToString(cStrand, converted);
+  string iStrandNorm = strandToString(iStrand, converted);
+  string cStrandNorm = strandToString(cStrand, converted);
 
   // norm ID
-  n = sprintf(buffer, "%d", normId);
+  n = snprintf(buffer, bufSize, "%d", normId);
   string nid = string(buffer, n);
 
   string snpString = i+","+name+","+chromosome+","+s+","+alleles+\
     ","+p+","+iStrandNorm+","+cStrandNorm+","+nid;
 
-  /*
-    TODO work out why compiler complains:  no member named ‘BeadSetId’
-
   if (this->BeadSetID != -1) {
-     n = sprintf(buffer, "%d", this->BeadSetId);
-     string bsid = string(buffer, n);
-     snpString = snpString+","+bsid;
+    n = snprintf(buffer, bufSize, "%d", this->BeadSetID);
+    string bsid = string(buffer, n);
+    snpString = snpString+","+bsid;
   }
 
-  */
-
-  cout << snpString << endl;
-  exit(1);
+  //cout << snpString << endl;
+  //exit(1);
 
   return snpString;
-
 }
 
 
@@ -1018,17 +1006,22 @@ string snpClass::toString() {
 
 
 string snpClass::strandToString(char strand, bool converted) {
-  // generate string to represent strand
-  // may be normalized to Illumina top strand
+  // generate string representation; may be normalized to Illumina top strand
   string normStrand;
-  if (converted && strand=='B') { strand='T'; }
+  if (converted) {  
+    // Reverse the single-character strand representation
+    // T->B, B->T, otherwise unchanged
+    if (strand=='T') { strand = 'B'; }
+    else if (strand=='B') { strand = 'T'; }
+  }
   if (strand=='T') { normStrand = "TOP"; }
   else if (strand=='B') { normStrand = "BOT"; }
   else if (strand=='M') { normStrand = "MINUS"; }
   else if (strand=='P') { normStrand = "PLUS"; }
-  else { normStrand = "UNKNOWN"; }
+  else { normStrand = "?"; }
   return normStrand;
 }
+
 
 
 // EOF
