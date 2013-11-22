@@ -43,11 +43,9 @@ int main(int argc, char *argv[])
 
   string manfile = "/nfs/new_illumina_geno04/call/HumanOmniExpress-12v1_A.bpm.csv";
   string outpath = "normalized.bpm.csv";
-  cout << "Hello, world!" << endl;
   Manifest *manifest = new Manifest();
   manifest->open(manfile);
-  cout << "Finished reading manifest!" << endl;
-  cout << manifest->get_chromosome_for_SNP("rs10000049") << endl;
+  cout << "Finished reading manifest: " << manfile << endl;
   manifest->write(outpath);
 
 }
