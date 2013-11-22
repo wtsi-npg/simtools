@@ -101,6 +101,7 @@ public:
 	void order_by_position();
 
 	string filename;
+
 	vector<snpClass> snps; // If your code removes elements from this vector after
 		 		// it's been populated, for now you must not use code
 				// which uses the hash_map snpNames for lookup.
@@ -123,7 +124,6 @@ public:
 
 	void write(string outpath); // write normalized .bpm.csv to file
 
-
  protected:
    void populate_hashmap();
 	void convert (snpClass* snip, std::string input_snp); // Convert BOT SNPs to TOP format. 
@@ -143,6 +143,8 @@ public:
 	string selectedChromosome; // Used if we are only concerned with a specific chromosome.
 
 	bool EXCLUDE_CNVS;
+
+	bool hasBeadSetID; // is extra BeadSetID column present?
 
 };
 
