@@ -35,6 +35,7 @@
 #include <map>
 #include <vector>
 #include <cstdio>
+#include <string> 
 
 
 using namespace std;
@@ -947,22 +948,39 @@ int Manifest::get_map_value (map<string, int>& mymap, const char* const treasure
 
 string snpClass::toString() {
 
-  // placeholders for char array to C++ string conversion
   int bufSize = 1000;
   char buffer[bufSize];
   int n;
+  string i, s, p, nid, bsid;
 
-  // index
-  n = snprintf(buffer, bufSize, "%d", index);
-  string i = string(buffer, n);
+  try { // attempt to convert other data types to strings
 
-  // position
-  n = snprintf(buffer, bufSize, "%ld", position);
-  string p = string(buffer, n);
+    n = snprintf(buffer, bufSize, "%d", index);        // index
+    if (n >= bufSize) { throw 1; }
+    i = string(buffer, n);
 
-  // score
-  n = snprintf(buffer, bufSize, "%f", score);
-  string s = string(buffer, n);
+    n = snprintf(buffer, bufSize, "%ld", position);    // position
+    if (n >= bufSize) { throw 1; }
+    p = string(buffer, n);
+
+    n = snprintf(buffer, bufSize, "%f", score);        // score
+    if (n >= bufSize) { throw 1; }
+    s = string(buffer, n);
+
+    n = snprintf(buffer, bufSize, "%d", normId);       // norm ID
+    if (n >= bufSize) { throw 1; }
+    nid = string(buffer, n);
+
+    if (this->BeadSetID != -1) { // BeadSetID, if any
+      n = snprintf(buffer, bufSize, "%d", this->BeadSetID);
+      if (n >= bufSize) { throw 1; }
+      bsid = string(buffer, n);
+    }
+
+  } catch (int param) {
+    cerr << "Error: String representation of SNP variable is too large for conversion buffer. Bad input or corrupt data in manifest?" << endl;
+    throw;
+  }
 
   // generate the allele string
   string a = string(1, snp[0]); // this constructor makes 1 copy of snp[0]
@@ -975,21 +993,10 @@ string snpClass::toString() {
   string iStrandNorm = strandToString(iStrand, converted);
   string cStrandNorm = strandToString(cStrand, converted);
 
-  // norm ID
-  n = snprintf(buffer, bufSize, "%d", normId);
-  string nid = string(buffer, n);
-
   string snpString = i+","+name+","+chromosome+","+s+","+alleles+\
     ","+p+","+iStrandNorm+","+cStrandNorm+","+nid;
 
-  if (this->BeadSetID != -1) {
-    n = snprintf(buffer, bufSize, "%d", this->BeadSetID);
-    string bsid = string(buffer, n);
-    snpString = snpString+","+bsid;
-  }
-
-  //cout << snpString << endl;
-  //exit(1);
+  if (this->BeadSetID != -1) { snpString = snpString+","+bsid; }
 
   return snpString;
 }
