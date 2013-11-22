@@ -53,12 +53,12 @@ CC=/usr/bin/g++
 
 # do NOT use -ffast-math, as it causes errors in infinity/NaN handling
 ifeq ($(DEBUG),y)
-	CFLAGS=-g -Wall -fPIC -O0 -I$(STLPORT_INC)
+	CFLAGS=-g -Wall -fPIC -O0 -I$(STLPORT_INC) -std=c++0x
 else
-	CFLAGS=-Wall -fPIC -O3 -I$(STLPORT_INC)
+	CFLAGS=-Wall -fPIC -O3 -I$(STLPORT_INC) -std=c++0x
 endif
 # Set runpath instead of relying on LD_LIBRARY_PATH
-LDFLAGS=-Wl,-rpath -Wl,$(STLPORT_LIB) -L$(STLPORT_LIB) -lstlport -lm -std=c++0x
+LDFLAGS=-Wl,-rpath -Wl,$(STLPORT_LIB) -L$(STLPORT_LIB) -lstlport -lm 
 
 default: all
 
