@@ -58,7 +58,7 @@ else
 	CFLAGS=-Wall -fPIC -O3 -I$(STLPORT_INC)
 endif
 # Set runpath instead of relying on LD_LIBRARY_PATH
-LDFLAGS=-Wl,-rpath -Wl,$(STLPORT_LIB) -L$(STLPORT_LIB) -lstlport -lm
+LDFLAGS=-Wl,-rpath -Wl,$(STLPORT_LIB) -L$(STLPORT_LIB) -lstlport -lm -std=c++0x
 
 default: all
 
