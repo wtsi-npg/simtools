@@ -32,20 +32,76 @@
 // Executable to normalize a .bpm.csv manifest to the Illumina TOP strand
 // Write normalized manifest to given output
 
+// Example: /nfs/new_illumina_geno04/call/HumanOmniExpress-12v1_A.bpm.csv
+
 #include <getopt.h>
 #include <iostream>
 #include "Manifest.h"
 
 using namespace std;
 
-int main(int argc, char *argv[])
-{
+static struct option long_options[] = {
+                   {"infile", 1, 0, 0},
+                   {"outfile", 1, 0, 0},
+                   {"verbose", 0, 0, 0},
+                   {"help", 0, 0, 0},
+                   {0, 0, 0, 0}
+               };
 
-  string manfile = "/nfs/new_illumina_geno04/call/HumanOmniExpress-12v1_A.bpm.csv";
-  string outpath = "normalized.bpm.csv";
-  Manifest *manifest = new Manifest();
-  manifest->open(manfile);
-  cout << "Finished reading manifest: " << manfile << endl;
-  manifest->write(outpath);
+
+void showUsage(char *argv[]) {
+
+  cout << "Usage:   " << argv[0] << " [options]" << endl << endl;
+
+  cout << "Options: --infile <filename>    Input path to raw (unnormalized) .bpm.csv manifest" << endl;
+  cout << "         --outfile <filename>   Output path for normalized .bpm.csv manifest" << endl;
+  cout << "         --verbose              Show progress messages to STDERR" << endl;
+  cout << "         --help                 Display this help text and exit" << endl;
+
+  exit(0);
 
 }
+
+
+int main(int argc, char *argv[])
+{
+  string infile = ""; 
+  string outfile = "";
+  bool verbose = false;
+  bool help = false;
+  int option_index = -1;
+  int c;
+
+  // check command array
+  if (argc < 2) showUsage(argv);
+
+  // Get options
+  while ( (c=getopt_long(argc,argv,"h?",long_options,&option_index)) != -1) {
+    if (c == '?') showUsage(argv);	// unknown option
+    if (option_index > -1) {
+      string option = long_options[option_index].name;
+      if (option == "infile") infile = optarg;
+      if (option == "outfile") outfile = optarg;
+      if (option == "verbose") verbose = true;
+      if (option == "help") help = true;
+    }
+  }
+
+  if (help) {
+    showUsage(argv);
+  } else if (infile == "") {
+    cerr << "Must specify an input file!" << endl;
+    exit(1);
+  } else if (outfile == "") {
+    cerr << "Must specify an output file!" << endl;
+    exit(1);
+  }
+
+  Manifest *manifest = new Manifest();
+  manifest->open(infile);
+  if (verbose) cerr << "Finished reading manifest: " << infile << endl;
+  manifest->write(outfile);
+  if (verbose) cerr << "Finished writing normalized manifest: " << outfile << endl;
+
+}
+
