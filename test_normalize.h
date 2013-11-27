@@ -55,7 +55,8 @@ class NormalizeTest : public CxxTest::TestSuite
   {
     // this is called after every test (successful or not)
     string cmd = "rm -Rf " + tempdir;
-    int result = system(cmd.c_str());
+    //int result = system(cmd.c_str());
+    int result = 0;
     cerr << cmd << " " << result << endl;
 
   }
@@ -70,12 +71,14 @@ class NormalizeTest : public CxxTest::TestSuite
     TS_ASSERT_THROWS_NOTHING(manifest->open(infile, "1", false)); // chr1 only
     TS_ASSERT_EQUALS(manifest->snps.size(), 59785);
     TS_TRACE("Read manifest for chromosome 1 only");
+    delete manifest;
     manifest = new Manifest();
     TS_ASSERT_THROWS_NOTHING(manifest->open(infile));
     TS_ASSERT_EQUALS(manifest->snps.size(), 733202);
     TS_ASSERT_THROWS_NOTHING(manifest->write(outfile));
     TS_TRACE("Read manifest and write normalized for all chromosomes");
     // TODO validate contents of output file
+    // md5sum not very convenient in C++, instead can create a toy manifest and use TS_ASSERT_SAME_DATA with a benchmark file
     delete manifest;
     TS_TRACE("Finished manifest test");
   }
