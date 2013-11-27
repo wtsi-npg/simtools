@@ -71,7 +71,7 @@ clean:
 
 cxxtest: runner.o Manifest.o
 	$(CC) $(LDFLAGS) $(CXXFLAGS) -o runner $^ -lstlport
-	./runner
+	./runner # run ./runner -v to print trace information
 
 runner.o:
 	cxxtestgen --error-printer -o runner.cpp test_normalize.h
