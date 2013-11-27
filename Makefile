@@ -30,6 +30,8 @@
 # THE POSSIBILITY OF SUCH DAMAGE.
 #
 
+.PHONY: test cxxtest # always run, regardless of timestamps
+
 INSTALLLIB=/software/varinf/lib
 INSTALLBIN=/software/varinf/bin
 STLPORT_INC=/software/solexa/pkg/STLport/current/stlport
@@ -39,8 +41,7 @@ STLPORT_LIB=/software/solexa/pkg/STLport/current/build/lib/obj/gcc/so
 PERL_CORE=/usr/lib/perl/5.8.8/CORE
 PERL_CORE=/software/perl-5.8.8/lib/5.8.8/x86_64-linux-thread-multi/CORE
 
-### b2i, b2g do not compile on farm3! TODO Debug or remove these applications
-#TARGETS=libplinkbin.so gtc g2i b2i b2g gtc_process sim simtools normalize_manifest 
+
 TARGETS=libplinkbin.so gtc g2i gtc_process sim simtools normalize_manifest
 PERL_TARGETS=Gtc.so Sim.so
 LIBS=Gtc.o win2unix.o Sim.o
@@ -49,7 +50,7 @@ LIBS=Gtc.o win2unix.o Sim.o
 # make DEBUG='y'
 # to build all targets with debug info. 
 # For just one target, say:
-# make DEBUG='y' b2i
+# make DEBUG='y' simtools
 
 CC=/usr/bin/g++
 
@@ -74,10 +75,11 @@ cxxtest:  runner.o Manifest.o
 	./runner
 
 runner.o: runner.cpp
+	cxxtestgen --error-printer -o runner.cpp test_normalize.h
 	$(CC) -c $(CFLAGS) $(CPPFLAGS) $(CXXFLAGS)  -o $@ $<
 
 test:
-	bash run_tests
+	./run_tests
 
 install: all
 	cp Gtc.pm $(INSTALLLIB)
@@ -107,12 +109,6 @@ manifest: manifest.o Manifest.o
 
 g2i: g2i.o Gtc.o Manifest.o win2unix.o Sim.o json/json_reader.o json/json_writer.o json/json_value.o utilities.o plink_binary.o
 	$(CC) $(LDFLAGS) -o $@ $^ -lstlport
-
-b2i: b2i.o Manifest.o b2base.o             # "b2" code needs ssl library;
-	$(CC) $(LDFLAGS) -lssl  -o $@ $^ -lstlport -lssl       # pick this up from /usr/lib
-
-b2g: b2g.o Manifest.o b2base.o
-	$(CC) $(LDFLAGS) -lssl -o $@ $^ -lstlport -lssl      # Ditto.
 
 gtc_process: Gtc.o Manifest.o gtc_process.o 
 	$(CC) $(LDFLAGS) -o $@ $^ -lstlport
@@ -146,9 +142,6 @@ gtc.o: Gtc.h Manifest.h
 sim.o: Sim.h
 simtools.o: Sim.h
 g2i.o: Gtc.h Manifest.h plink_binary.h
-b2base.o: b2base.cpp
-b2i.o: b2i.cpp Manifest.h
-b2g.o: b2g.cpp Manifest.h
 win2unix.o: win2unix.cpp win2unix.h
 plink_binary.o: plink_binary.cpp plink_binary.h
 
