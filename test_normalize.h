@@ -38,42 +38,47 @@ class NormalizeTest : public CxxTest::TestSuite
 {
  public:
 
-  char *tempdir;
+  string tempdir;
 
   void setUp() 
   {
     // called before every test
     cerr << endl;
-    tempdir = new char[20]; 
-    strcpy(tempdir,  "test_XXXXXX"); // template string for directory name
-    tempdir = mkdtemp(tempdir); // returns name of new directory
-    cerr << tempdir << endl;
+    char *_template = new char[20]; 
+    strcpy(_template,  "test_XXXXXX"); // template string for directory name
+    tempdir = string(mkdtemp(_template)); // returns name of new directory
+    TS_TRACE("TEMPDIR:"+tempdir);
     
   }
-
 
   void tearDown()
   {
     // this is called after every test (successful or not)
-    string cmd = "rm -Rf " + string(tempdir);
+    string cmd = "rm -Rf " + tempdir;
     int result = system(cmd.c_str());
     cerr << cmd << " " << result << endl;
 
   }
   
-  // example tests taken from Cxxtest docs
-
-  void testAddition(void)
+  void testManifest(void)
   {
-    TS_ASSERT(1 + 1 > 1);
-    TS_ASSERT_EQUALS(1 + 1, 2);
+    string infile = "/nfs/new_illumina_geno04/call/HumanOmniExpress-12v1_A.bpm.csv";
+    string outfile = tempdir+"/normalized.bpm.csv";
+    Manifest *manifest;
+    TS_TRACE("Starting manifest test");
+    manifest = new Manifest();
+    TS_ASSERT_THROWS_NOTHING(manifest->open(infile, "1", false)); // chr1 only
+    TS_ASSERT_EQUALS(manifest->snps.size(), 59785);
+    TS_TRACE("Read manifest for chromosome 1 only");
+    manifest = new Manifest();
+    TS_ASSERT_THROWS_NOTHING(manifest->open(infile));
+    TS_ASSERT_EQUALS(manifest->snps.size(), 733202);
+    TS_ASSERT_THROWS_NOTHING(manifest->write(outfile));
+    TS_TRACE("Read manifest and write normalized for all chromosomes");
+    // TODO validate contents of output file
+    delete manifest;
+    TS_TRACE("Finished manifest test");
   }
 
 
-  void testMultiplication(void)
-  {
-    TS_TRACE("Starting multiplication test");
-    TS_ASSERT_EQUALS(2 * 2, 5);
-    TS_TRACE("Finishing multiplication test");
-  }
 };
