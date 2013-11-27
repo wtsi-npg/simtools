@@ -39,7 +39,9 @@ STLPORT_LIB=/software/solexa/pkg/STLport/current/build/lib/obj/gcc/so
 PERL_CORE=/usr/lib/perl/5.8.8/CORE
 PERL_CORE=/software/perl-5.8.8/lib/5.8.8/x86_64-linux-thread-multi/CORE
 
-TARGETS=libplinkbin.so gtc g2i b2i b2g gtc_process sim simtools
+### b2i, b2g do not compile on farm3! TODO Debug or remove these applications
+#TARGETS=libplinkbin.so gtc g2i b2i b2g gtc_process sim simtools normalize_manifest 
+TARGETS=libplinkbin.so gtc g2i gtc_process sim simtools normalize_manifest
 PERL_TARGETS=Gtc.so Sim.so
 LIBS=Gtc.o win2unix.o Sim.o
 
@@ -59,14 +61,23 @@ else
 endif
 # Set runpath instead of relying on LD_LIBRARY_PATH
 LDFLAGS=-Wl,-rpath -Wl,$(STLPORT_LIB) -L$(STLPORT_LIB) -lstlport -lm 
+CXXFLAGS=-Wno-deprecated -I/software/gapi/pkg/cxxtest/4.2.1/
 
 default: all
 
 clean:
 	rm -f *.o Gtc_wrap.cxx Gtc.pm Sim_wrap.cxx Sim.pm $(TARGETS)
 
+cxxtest:  runner.o Manifest.o
+	cxxtestgen --error-printer -o runner.cpp test_normalize.h
+	$(CC) $(LDFLAGS) $(CXXFLAGS) -o runner $^ -lstlport
+	./runner
+
+runner.o: runner.cpp
+	$(CC) -c $(CFLAGS) $(CPPFLAGS) $(CXXFLAGS)  -o $@ $<
+
 test:
-	run_tests
+	bash run_tests
 
 install: all
 	cp Gtc.pm $(INSTALLLIB)
