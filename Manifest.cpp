@@ -80,7 +80,9 @@ Manifest::Manifest(void)
 
 void Manifest::open (string filename, string chromosome, bool wide) {
 
+#ifdef _DEBUG  
   cout << "\nDEBUG: in chrom-specific open()..\n\n";
+#endif
 
   this->selectedChromosome = chromosome;
   open (filename, wide);
