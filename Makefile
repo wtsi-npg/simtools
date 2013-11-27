@@ -67,16 +67,15 @@ CXXFLAGS=-Wno-deprecated -I/software/gapi/pkg/cxxtest/4.2.1/
 default: all
 
 clean:
-	rm -f *.o Gtc_wrap.cxx Gtc.pm Sim_wrap.cxx Sim.pm $(TARGETS)
+	rm -f *.o Gtc_wrap.cxx Gtc.pm Sim_wrap.cxx Sim.pm runner.cpp runner $(TARGETS)
 
-cxxtest:  runner.o Manifest.o
-	cxxtestgen --error-printer -o runner.cpp test_normalize.h
+cxxtest: runner.o Manifest.o
 	$(CC) $(LDFLAGS) $(CXXFLAGS) -o runner $^ -lstlport
 	./runner
 
-runner.o: runner.cpp
+runner.o:
 	cxxtestgen --error-printer -o runner.cpp test_normalize.h
-	$(CC) -c $(CFLAGS) $(CPPFLAGS) $(CXXFLAGS)  -o $@ $<
+	$(CC) -c $(CFLAGS) $(CPPFLAGS) $(CXXFLAGS)  -o $@ runner.cpp
 
 test:
 	./run_tests
