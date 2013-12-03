@@ -65,21 +65,17 @@ class NormalizeTest : public CxxTest::TestSuite
   void testManifest(void)
   {
     // test creation of Manifest objects
-    //string infile = "/nfs/new_illumina_geno04/call/HumanOmniExpress-12v1_A.bpm.csv";
     string infile = "data/mock_1000.bpm.csv";
     string outfile = tempdir+"/normalized.bpm.csv";
     Manifest *manifest;
-
     TS_TRACE("Starting manifest test");
     manifest = new Manifest();
     TS_ASSERT_THROWS_NOTHING(manifest->open(infile, "1", false)); // chr1 only
-    //TS_ASSERT_EQUALS(manifest->snps.size(), 59785);
     TS_ASSERT_EQUALS(manifest->snps.size(), 500);
     TS_TRACE("Read manifest for chromosome 1 only");
     delete manifest;
     manifest = new Manifest();
     TS_ASSERT_THROWS_NOTHING(manifest->open(infile));
-    //TS_ASSERT_EQUALS(manifest->snps.size(), 733202);
     TS_ASSERT_EQUALS(manifest->snps.size(), 1000);
     TS_ASSERT_THROWS_NOTHING(manifest->write(outfile));
     TS_TRACE("Read manifest and write normalized for all chromosomes");
@@ -98,6 +94,7 @@ class NormalizeTest : public CxxTest::TestSuite
     TS_ASSERT_THROWS_NOTHING(manifest->open(infile));
     TS_ASSERT_THROWS_NOTHING(manifest->write(outfile));
 
+    // read test output
     ifstream testStream;
     TS_ASSERT_THROWS_NOTHING(testStream.open(outfile.c_str()));
     int size = 1275; // expected file size
@@ -109,7 +106,8 @@ class NormalizeTest : public CxxTest::TestSuite
     char *testBuf = new char[size];   
     testStream.read(testBuf, size);
     testStream.close();
-       
+
+    // read master normalized file
     ifstream normStream;
     normStream.open(normfile.c_str());
     char *normBuf = new char[size];   
