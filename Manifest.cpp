@@ -995,8 +995,9 @@ string snpClass::toString() {
   string iStrandNorm = strandToString(iStrand, converted);
   string cStrandNorm = strandToString(cStrand, converted);
 
-  string snpString = i+","+name+","+chromosome+","+s+","+alleles+\
-    ","+p+","+iStrandNorm+","+cStrandNorm+","+nid;
+  // .bpm.csv fields: "Index,Name,Chromosome,Position,GenTrain Score,SNP,ILMN Strand,Customer Strand,NormID"
+  string snpString = i+","+name+","+chromosome+","+p+","+s+","+alleles+\
+    ","+iStrandNorm+","+cStrandNorm+","+nid;
 
   if (this->BeadSetID != -1) { snpString = snpString+","+bsid; }
 
