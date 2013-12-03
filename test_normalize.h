@@ -25,8 +25,9 @@
 // THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <fstream>
+#include <cstdio>
+#include <cstdlib>
 
 #include <cxxtest/TestSuite.h>
 #include "Manifest.h"
@@ -45,7 +46,7 @@ class NormalizeTest : public CxxTest::TestSuite
     // called before every test
     cerr << endl;
     char *_template = new char[20]; 
-    strcpy(_template,  "test_XXXXXX"); // template string for directory name
+    strcpy(_template,  "temp_XXXXXX"); // template string for directory name
     tempdir = string(mkdtemp(_template)); // returns name of new directory
     TS_TRACE("TEMPDIR:"+tempdir);
     
@@ -63,9 +64,11 @@ class NormalizeTest : public CxxTest::TestSuite
   
   void testManifest(void)
   {
+    // test creation of Manifest objects
     string infile = "/nfs/new_illumina_geno04/call/HumanOmniExpress-12v1_A.bpm.csv";
     string outfile = tempdir+"/normalized.bpm.csv";
     Manifest *manifest;
+
     TS_TRACE("Starting manifest test");
     manifest = new Manifest();
     TS_ASSERT_THROWS_NOTHING(manifest->open(infile, "1", false)); // chr1 only
@@ -77,10 +80,41 @@ class NormalizeTest : public CxxTest::TestSuite
     TS_ASSERT_EQUALS(manifest->snps.size(), 733202);
     TS_ASSERT_THROWS_NOTHING(manifest->write(outfile));
     TS_TRACE("Read manifest and write normalized for all chromosomes");
-    // TODO validate contents of output file
-    // md5sum not very convenient in C++, instead can create a toy manifest and use TS_ASSERT_SAME_DATA with a benchmark file
     delete manifest;
     TS_TRACE("Finished manifest test");
+  }
+
+  void testNormalize(void)
+  {
+    // compare normalized output with reference file
+    string infile = "data/mock.bpm.csv";
+    string normfile = "data/mock_normalized.bpm.csv";
+    string outfile = tempdir+"/mock_normalized.bpm.csv";
+    Manifest *manifest = new Manifest();
+    TS_ASSERT_THROWS_NOTHING(manifest->open(infile));
+    TS_ASSERT_THROWS_NOTHING(manifest->write(outfile));
+
+    ifstream testStream;
+    TS_ASSERT_THROWS_NOTHING(testStream.open(outfile.c_str()));
+    int size = 1275; // expected file size
+    testStream.seekg(0, testStream.end);
+    int testSize = testStream.tellg();
+    testStream.seekg(0, testStream.beg);
+    TS_ASSERT_EQUALS(size, testSize);
+    TS_TRACE("Normalized .csv file is of correct length");
+    char *testBuf = new char[size];   
+    testStream.read(testBuf, size);
+    testStream.close();
+       
+    ifstream normStream;
+    normStream.open(normfile.c_str());
+    char *normBuf = new char[size];   
+    normStream.read(normBuf, size);
+    TS_ASSERT_SAME_DATA(testBuf, normBuf, size);
+    TS_TRACE("Normalized .csv file is identical to master");
+    normStream.close();
+
+    delete manifest;
   }
 
 
