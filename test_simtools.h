@@ -119,5 +119,28 @@ class NormalizeTest : public CxxTest::TestSuite
     delete manifest;
   }
 
+};
+
+
+class SimtoolsTest : public CxxTest::TestSuite
+{
+
+
+ public:
+
+  void testTrace(void) {
+    // simple "Hello world" test of tests
+    TS_TRACE("Testing simtools");
+    int foo = 0;
+    TS_ASSERT_EQUALS(foo, 0);
+
+  }
+
+
 
 };
+
+
+// Putting TestSuite classes in separate files appears not to work
+// See Cxx manual section 4.4
+// May be an issue with compiler options for simtools?

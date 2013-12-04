@@ -74,7 +74,7 @@ cxxtest: runner.o Manifest.o
 	./runner # run "./runner -v" to print trace information
 
 runner.o:
-	cxxtestgen --error-printer -o runner.cpp test_normalize.h
+	cxxtestgen --error-printer -o runner.cpp test_simtools.h
 	$(CC) -c $(CFLAGS) $(CPPFLAGS) $(CXXFLAGS)  -o $@ runner.cpp
 
 test:
