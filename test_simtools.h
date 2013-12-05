@@ -25,12 +25,14 @@
 // THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
+
+// Test classes for simtools in cxxtest framework
+
 #include <fstream>
 #include <cstdio>
 #include <cstdlib>
 
 #include <cxxtest/TestSuite.h>
-#include "Manifest.h"
 
 // include statements from simtools
 #include "Sim.h"
