@@ -32,11 +32,20 @@
 #include <cxxtest/TestSuite.h>
 #include "Manifest.h"
 
+// include statements from simtools
+#include "Sim.h"
+#include "Gtc.h"
+#include "QC.h"
+#include "Manifest.h"
+#include "json/json.h"
+
 using namespace std;
 
 
-class NormalizeTest : public CxxTest::TestSuite
+class TestBase :  public CxxTest::TestSuite
 {
+  // base class with shared setup and teardown methods
+
  public:
 
   string tempdir;
@@ -59,9 +68,17 @@ class NormalizeTest : public CxxTest::TestSuite
     //int result = 0;
     int result = system(cmd.c_str());
     cerr << cmd << " " << result << endl;
+    TS_TRACE("Removed tempdir: "+tempdir);
 
   }
-  
+
+};
+
+
+class NormalizeTest : public TestBase
+{
+ public:
+
   void testManifest(void)
   {
     // test creation of Manifest objects
@@ -122,17 +139,20 @@ class NormalizeTest : public CxxTest::TestSuite
 };
 
 
-class SimtoolsTest : public CxxTest::TestSuite
+class SimtoolsTest : public TestBase
 {
 
 
  public:
 
-  void testTrace(void) {
-    // simple "Hello world" test of tests
-    TS_TRACE("Testing simtools");
-    int foo = 0;
-    TS_ASSERT_EQUALS(foo, 0);
+  void testSim(void) {
+    // duplicate ../simtools create --infile example.json --outfile test.sim --man_file example.bpm.csv
+    TS_TRACE("Testing .sim file creation");
+    Sim *sim = new Sim();
+    TS_TRACE("Sim object created");
+    bool foo = true;
+    TS_ASSERT(foo);
+    delete sim;
 
   }
 
@@ -142,5 +162,4 @@ class SimtoolsTest : public CxxTest::TestSuite
 
 
 // Putting TestSuite classes in separate files appears not to work
-// See Cxx manual section 4.4
-// May be an issue with compiler options for simtools?
+// See Cxx manual section 4.4; possible issue with compiler options
