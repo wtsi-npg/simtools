@@ -100,8 +100,11 @@ normalize_manifest: normalize_manifest.o Manifest.o
 sim: sim.o Sim.o
 	$(CC) $(LDFLAGS) -o $@ $^ -lstlport
 
-simtools: simtools.o Sim.o Gtc.o Manifest.o QC.o json/json_reader.o json/json_writer.o json/json_value.o
+simtools: simtools.o commands.o Sim.o Gtc.o Manifest.o QC.o json/json_reader.o json/json_writer.o json/json_value.o
 	$(CC) $(LDFLAGS) -o $@ $^ -lstlport
+
+commands.o: commands.cpp
+	$(CC) -c  $(CFLAGS) $(CPPFLAGS) -o $@ $<
 
 manifest: manifest.o Manifest.o
 	$(CC) $(LDFLAGS) -o $@ $^ -lstlport
