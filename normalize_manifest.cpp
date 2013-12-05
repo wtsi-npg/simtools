@@ -87,6 +87,8 @@ int main(int argc, char *argv[])
     }
   }
 
+  // TODO add an option to warn of any non-canonical SNPs (eg. T/C on TOP)
+
   if (help) {
     showUsage(argv);
   } else if (infile == "") {
