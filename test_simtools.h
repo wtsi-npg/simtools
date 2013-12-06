@@ -35,6 +35,7 @@
 #include <cxxtest/TestSuite.h>
 
 // include statements from simtools
+#include "commands.h"
 #include "Sim.h"
 #include "Gtc.h"
 #include "QC.h"
@@ -149,12 +150,30 @@ class SimtoolsTest : public TestBase
 
   void testSim(void) {
     // duplicate ../simtools create --infile example.json --outfile test.sim --man_file example.bpm.csv
+    // TODO revise example.json to have absolute, or correct relative, paths
+
     TS_TRACE("Testing .sim file creation");
-    Sim *sim = new Sim();
-    TS_TRACE("Sim object created");
-    bool foo = true;
-    TS_ASSERT(foo);
-    delete sim;
+
+    Commander *commander = new Commander();
+
+    string infile = "data/example.json";
+    string outfile = "/tmp/test.sim";
+    bool normalize = false;
+    string manfile = "data/example.bpm.csv";
+    bool verbose = true;
+
+    TS_TRACE("Infile="+infile);
+    TS_TRACE("Outfile="+outfile);
+
+    TS_TRACE("Calling view command");
+    string simfile = "./data/example.raw.sim";
+    TS_ASSERT_THROWS_NOTHING(commander->commandView(simfile, verbose));
+
+
+    //commander->commandCreate(infile, outfile, normalize, manfile, verbose);
+
+    delete commander;
+      
 
   }
 
