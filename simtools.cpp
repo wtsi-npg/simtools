@@ -35,22 +35,9 @@
 
 // TODO Keep command line parsing in this file; move analysis logic into a separate class. Tidies up code and enables testing.
 
-
 #include <getopt.h>
-
 #include <iostream>
-#include <sstream>
-#include <vector>
-#include <map>
-#include <iomanip>
-#include <algorithm>
-
 #include "commands.h"
-#include "Sim.h"
-#include "Gtc.h"
-#include "QC.h"
-#include "Manifest.h"
-#include "json/json.h"
 
 using namespace std;
 
@@ -152,9 +139,6 @@ int main(int argc, char *argv[])
 	int option_index = -1;
 	int c;
 
-	// placeholder -- create Commander object
-	Commander *commander = new Commander();
-
 	// Get command
 	if (argc < 2) showUsage(argc,argv);
 	string command = argv[1];
@@ -182,6 +166,7 @@ int main(int argc, char *argv[])
 	if (infile == "stdin") infile = "-";
 	if (outfile == "stdout") outfile = "-";
 
+	Commander *commander = new Commander();
 	// Process the command
 	try {
 	  if (command == "view") {
