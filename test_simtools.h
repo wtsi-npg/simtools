@@ -47,7 +47,7 @@ using namespace std;
 
 class TestBase :  public CxxTest::TestSuite
 {
-  // base class with shared setup and teardown methods
+  // base class with shared methods
 
  public:
 
@@ -74,6 +74,35 @@ class TestBase :  public CxxTest::TestSuite
     TS_TRACE("Removed tempdir: "+tempdir);
 
   }
+
+  void assertFilesIdentical(string path1, string path2, int size)
+  {
+    // check if given files contain same data; size = expected size in bytes
+    char *buf1 = new char[size];   
+    char *buf2 = new char[size];   
+    ifstream stream1;
+    ifstream stream2;
+    stream1.open(path1.c_str());
+    stream1.read(buf1, size);
+    stream1.close();
+    stream2.open(path2.c_str());
+    stream2.read(buf2, size);
+    stream2.close();
+    TS_ASSERT_SAME_DATA(buf1, buf2, size);
+    delete buf1;
+    delete buf2;
+  }
+
+  void assertFileSize(string path, int size)
+  {
+    ifstream testStream;
+    testStream.open(path.c_str());
+    testStream.seekg(0, testStream.end);
+    int testSize = testStream.tellg();
+    testStream.close();
+    TS_ASSERT_EQUALS(size, testSize);
+  }
+
 
 };
 
@@ -114,27 +143,13 @@ class NormalizeTest : public TestBase
     TS_ASSERT_THROWS_NOTHING(manifest->open(infile));
     TS_ASSERT_THROWS_NOTHING(manifest->write(outfile));
 
-    // read test output
-    ifstream testStream;
-    TS_ASSERT_THROWS_NOTHING(testStream.open(outfile.c_str()));
     int size = 1275; // expected file size
-    testStream.seekg(0, testStream.end);
-    int testSize = testStream.tellg();
-    testStream.seekg(0, testStream.beg);
-    TS_ASSERT_EQUALS(size, testSize);
+    assertFileSize(outfile, size);
     TS_TRACE("Normalized .csv file is of correct length");
-    char *testBuf = new char[size];   
-    testStream.read(testBuf, size);
-    testStream.close();
 
-    // read master normalized file
-    ifstream normStream;
-    normStream.open(normfile.c_str());
-    char *normBuf = new char[size];   
-    normStream.read(normBuf, size);
-    TS_ASSERT_SAME_DATA(testBuf, normBuf, size);
+    // compare output data
+    assertFilesIdentical(normfile, outfile, size);
     TS_TRACE("Normalized .csv file is identical to master");
-    normStream.close();
 
     delete manifest;
   }
@@ -148,32 +163,41 @@ class SimtoolsTest : public TestBase
 
  public:
 
-  void testSim(void) {
+
+  void testCreate(void) {
     // duplicate ../simtools create --infile example.json --outfile test.sim --man_file example.bpm.csv
     // TODO revise example.json to have absolute, or correct relative, paths
 
-    TS_TRACE("Testing .sim file creation");
 
-    Commander *commander = new Commander();
+    TS_TRACE("Testing .sim create command");
 
-    string infile = "data/example.json";
-    string outfile = "/tmp/test.sim";
+    string infile = "data/example_with_dir.json";
+    string expected = "data/example.raw.sim";
+    string outfile = tempdir+"/test.sim";
     bool normalize = false;
     string manfile = "data/example.bpm.csv";
-    bool verbose = true;
+    bool verbose = false;
 
-    TS_TRACE("Infile="+infile);
-    TS_TRACE("Outfile="+outfile);
-
-    TS_TRACE("Calling view command");
-    string simfile = "./data/example.raw.sim";
-    TS_ASSERT_THROWS_NOTHING(commander->commandView(simfile, verbose));
-
-
-    //commander->commandCreate(infile, outfile, normalize, manfile, verbose);
-
+    Commander *commander = new Commander();
+    TS_ASSERT_THROWS_NOTHING(commander->commandCreate(infile, outfile, normalize, manfile, verbose));
+    TS_TRACE("SIM file successfully created from GTC");
+    int size = 1491; // expected file size
+    assertFileSize(outfile, size);
+    TS_TRACE("SIM file created from GTC is of expected length");
+    assertFilesIdentical(outfile, expected, size);
+    TS_TRACE("SIM file created from GTC is identical to master");
     delete commander;
-      
+
+  }
+
+  void testView(void) {
+    TS_TRACE("Testing .sim view command");
+    Commander *commander = new Commander();
+    string simfile = "./data/example.raw.sim";
+    bool verbose = false;
+    TS_ASSERT_THROWS_NOTHING(commander->commandView(simfile, verbose));
+    delete commander;
+    TS_TRACE("View command test finished");
 
   }
 
