@@ -69,7 +69,7 @@ default: all
 clean:
 	rm -f *.o Gtc_wrap.cxx Gtc.pm Sim_wrap.cxx Sim.pm runner.cpp runner $(TARGETS)
 
-cxxtest: runner.o Sim.o Gtc.o Manifest.o QC.o json/json_reader.o json/json_writer.o json/json_value.o
+cxxtest: runner.o Sim.o Gtc.o Manifest.o QC.o json/json_reader.o json/json_writer.o json/json_value.o commands.o
 	$(CC) $(CFLAGS) $(LDFLAGS) $(CXXFLAGS) -o runner $^ -lstlport
 	./runner # run "./runner -v" to print trace information
 
