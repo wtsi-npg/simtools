@@ -51,7 +51,7 @@ class TestBase :  public CxxTest::TestSuite
 
  public:
 
-  static const int sim_size = 1491;
+  static const int sim_size = 1491; // size of data/example.raw.sim 
   string tempdir;
   string sim_raw;
   string manfile;
@@ -66,7 +66,12 @@ class TestBase :  public CxxTest::TestSuite
     tempdir = string(mkdtemp(_template)); // returns name of new directory
     TS_TRACE("TEMPDIR:"+tempdir);
     string cmd = "cp data/example.raw.sim data/example.bpm.csv "+tempdir;
-    TS_ASSERT_EQUALS(system(cmd.c_str()), 0);
+    int status = system(cmd.c_str());
+    if (status!=0) { // test assertions are not allowed in setup
+      cerr << "Failed to copy test data to temporary directory: ";
+      cerr << tempdir << endl;
+      throw 1;
+    }
     sim_raw = tempdir+"/example.raw.sim";
     manfile = tempdir+"/example.bpm.csv";
     verbose = false;    
@@ -255,7 +260,6 @@ class SimtoolsTest : public TestBase
     TS_ASSERT_THROWS_NOTHING(commander->commandView(simfile, verbose));
     delete commander;
     TS_TRACE("View command test finished");
-
   }
 
 
