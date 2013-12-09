@@ -51,7 +51,11 @@ class TestBase :  public CxxTest::TestSuite
 
  public:
 
+  static const int sim_size = 1491;
   string tempdir;
+  string sim_raw;
+  string manfile;
+  bool verbose;
 
   void setUp() 
   {
@@ -61,7 +65,11 @@ class TestBase :  public CxxTest::TestSuite
     strcpy(_template,  "temp_XXXXXX"); // template string for directory name
     tempdir = string(mkdtemp(_template)); // returns name of new directory
     TS_TRACE("TEMPDIR:"+tempdir);
-    
+    string cmd = "cp data/example.raw.sim data/example.bpm.csv "+tempdir;
+    TS_ASSERT_EQUALS(system(cmd.c_str()), 0);
+    sim_raw = tempdir+"/example.raw.sim";
+    manfile = tempdir+"/example.bpm.csv";
+    verbose = false;    
   }
 
   void tearDown()
@@ -160,34 +168,83 @@ class NormalizeTest : public TestBase
 class SimtoolsTest : public TestBase
 {
 
-
  public:
 
-
   void testCreate(void) {
-    // duplicate ../simtools create --infile example.json --outfile test.sim --man_file example.bpm.csv
-    // TODO revise example.json to have absolute, or correct relative, paths
-
-
     TS_TRACE("Testing .sim create command");
-
     string infile = "data/example_with_dir.json";
     string expected = "data/example.raw.sim";
     string outfile = tempdir+"/test.sim";
     bool normalize = false;
-    string manfile = "data/example.bpm.csv";
-    bool verbose = false;
-
     Commander *commander = new Commander();
     TS_ASSERT_THROWS_NOTHING(commander->commandCreate(infile, outfile, normalize, manfile, verbose));
     TS_TRACE("SIM file successfully created from GTC");
-    int size = 1491; // expected file size
-    assertFileSize(outfile, size);
+    //int size = 1491; // expected file size
+    assertFileSize(outfile, sim_size);
     TS_TRACE("SIM file created from GTC is of expected length");
-    assertFilesIdentical(outfile, expected, size);
+    assertFilesIdentical(outfile, sim_raw, sim_size);
     TS_TRACE("SIM file created from GTC is identical to master");
     delete commander;
+  }
 
+  void testIlluminus(void) {
+    // Tests of Illuminus mode:
+    // 1. Input from file, output all SNPs
+    // 2. Input from stdin, output all SNPs
+    // 3. Input from file, output subset of SNPs
+    int size;
+    Commander *commander = new Commander();
+    int start_pos = 0;
+    int end_pos = -1;
+    string outfile1 = tempdir+"/illuminus01.iln";
+    string expected = "data/illuminus_all.iln";
+    TS_ASSERT_THROWS_NOTHING(commander->commandIlluminus(sim_raw, outfile1, manfile, start_pos, end_pos, verbose));
+    size = 1268;
+    assertFileSize(outfile1, size);
+    assertFilesIdentical(outfile1, expected, size);
+    // now try with standard input
+    string outfile2 = tempdir+"/illuminus02.iln";
+    // TODO Would be cleaner to run test without the system call
+    TS_TRACE("Testing Illuminus command with .sim from STDIN");
+    string cmd = "cat "+sim_raw+" | ./simtools illuminus --infile - "+
+      "--outfile "+outfile2+" --man_file "+manfile;
+    TS_ASSERT_EQUALS(system(cmd.c_str()), 0);
+    assertFileSize(outfile2, size);
+    assertFilesIdentical(outfile2, expected, size);
+    // input a subset of SNPs
+    start_pos = 3;
+    end_pos = 3;
+    string outfile3 = tempdir+"/illuminus03.iln";
+    expected = "data/illuminus_snp03.iln";
+    TS_ASSERT_THROWS_NOTHING(commander->commandIlluminus(sim_raw, outfile3, manfile, start_pos, end_pos, verbose));
+    size = 349;
+    assertFileSize(outfile3, size);
+    assertFilesIdentical(outfile3, expected, size);
+    delete commander;
+  }
+
+  void testQC(void) {
+    TS_TRACE("Testing QC command");
+    string infile = "data/example.larger_with_inf.sim";
+    string mag = tempdir+"/mag.txt";
+    string xyd = tempdir+"/xyd.txt";
+    string mag_expected = "data/mag.txt";
+    string xyd_expected = "data/xyd.txt";
+    bool verbose = false;
+    Commander *commander = new Commander();
+    TS_ASSERT_THROWS_NOTHING(commander->commandQC(infile, mag, xyd, verbose));
+    TS_TRACE("QC files successfully created from SIM");
+    int mag_size = 4500;
+    assertFileSize(mag, mag_size);
+    TS_TRACE("QC magnitude output is of expected size");
+    assertFilesIdentical(mag, mag_expected, mag_size);
+    TS_TRACE("QC magnitude output is identical to master");
+    int xyd_size = 4599;
+    assertFileSize(xyd, xyd_size);
+    TS_TRACE("QC xydiff output is of expected size");
+    assertFilesIdentical(xyd, xyd_expected, xyd_size);
+    TS_TRACE("QC xydiff output is identical to master");
+    delete commander;
   }
 
   void testView(void) {
