@@ -1,0 +1,20 @@
+
+Commander::commandView
+
+Reading SIM file: ./data/example.raw.sim
+Magic:     sim
+Version:   1
+Name Size: 255
+Samples:   5
+Probes:    10
+Channels:  2
+Format:    1
+RecLength: 295
+
+urn:wtsi:example_0000	: 
+urn:wtsi:example_0001	: 
+urn:wtsi:example_0002	: 
+urn:wtsi:example_0003	: 
+urn:wtsi:example_0004	: 
+Total NaN values found: 0
+Total INF values found: 0
