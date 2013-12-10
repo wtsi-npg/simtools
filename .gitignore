@@ -14,3 +14,6 @@
 *.lai
 *.la
 *.a
+
+# Temporary test directories
+temp*
