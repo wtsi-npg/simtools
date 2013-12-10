@@ -243,8 +243,8 @@ void Sim::getNextRecord(char *sampleName, float *intensity,
 
 void Sim::reportNonNumeric(void) {
   // check infinity/nan counts and report to standard output
-  cerr << "Total NaN values found: " << nanCount << endl;
-  cerr << "Total INF values found: " << infCount << endl;
+  cout << "Total NaN values found: " << nanCount << endl;
+  cout << "Total INF values found: " << infCount << endl;
 }
 
 void Sim::write(void *buffer, int length)
