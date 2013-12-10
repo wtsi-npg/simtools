@@ -60,11 +60,10 @@ class TestBase :  public CxxTest::TestSuite
   void setUp() 
   {
     // called before every test
-    cerr << endl;
     char *_template = new char[20]; 
     strcpy(_template,  "temp_XXXXXX"); // template string for directory name
     tempdir = string(mkdtemp(_template)); // returns name of new directory
-    TS_TRACE("TEMPDIR:"+tempdir);
+    TS_TRACE("Created tempdir:"+tempdir);
     string cmd = "cp data/example.raw.sim data/example.bpm.csv "+tempdir;
     int status = system(cmd.c_str());
     if (status!=0) { // test assertions are not allowed in setup
@@ -81,11 +80,12 @@ class TestBase :  public CxxTest::TestSuite
   {
     // this is called after every test (successful or not)
     string cmd = "rm -Rf " + tempdir;
-    //int result = 0;
-    int result = system(cmd.c_str());
-    cerr << cmd << " " << result << endl;
+    int status = system(cmd.c_str());
+    if (status!=0) { // test assertions are not allowed in teardown
+      cerr << "Failed to delete temporary directory: " << tempdir << endl;
+      throw 1;
+    }
     TS_TRACE("Removed tempdir: "+tempdir);
-
   }
 
   void assertFilesIdentical(string path1, string path2, int size)
@@ -116,6 +116,26 @@ class TestBase :  public CxxTest::TestSuite
     TS_ASSERT_EQUALS(size, testSize);
   }
 
+  void stdoutRedirect(string tempfile) {
+    // redirect standard output to given path, which may be /dev/null
+    FILE *ptr;
+    ptr = freopen(tempfile.c_str(), "w", stdout); 
+    if (!ptr) { // null pointer
+      cerr << "Failed to redirect standard output to file: ";
+      cerr << tempfile << endl;
+      throw 1;
+    }
+  }
+
+  void stdoutRestore(void) {
+    // restore stdout to standard terminal
+    FILE *ptr;
+    ptr = freopen("/dev/tty", "w", stdout); 
+    if (!ptr) { // null pointer
+      cerr << "Failed to return stdout to terminal!" << endl;
+      throw 1;
+    }
+  }
 
 };
 
@@ -152,7 +172,7 @@ class NormalizeTest : public TestBase
     string normfile = "data/mock_normalized.bpm.csv";
     string outfile = tempdir+"/mock_normalized.bpm.csv";
     Manifest *manifest = new Manifest();
-    TS_TRACE(infile);
+    TS_TRACE("Normalizing "+infile);
     TS_ASSERT_THROWS_NOTHING(manifest->open(infile));
     TS_ASSERT_THROWS_NOTHING(manifest->write(outfile));
 
@@ -165,6 +185,20 @@ class NormalizeTest : public TestBase
     TS_TRACE("Normalized .csv file is identical to master");
 
     delete manifest;
+  }
+
+};
+
+class SimTest : public TestBase {
+
+ public:
+
+  void testExecutable(void) {
+    TS_TRACE("Testing the 'sim' executable");
+    stdoutRedirect("/dev/null"); // suppress standard output form command
+    string cmd = "./sim "+sim_raw+" 10";
+    TS_ASSERT_EQUALS(system(cmd.c_str()), 0);
+    stdoutRestore();
   }
 
 };
@@ -183,13 +217,48 @@ class SimtoolsTest : public TestBase
     bool normalize = false;
     Commander *commander = new Commander();
     TS_ASSERT_THROWS_NOTHING(commander->commandCreate(infile, outfile, normalize, manfile, verbose));
+    delete commander;
     TS_TRACE("SIM file successfully created from GTC");
-    //int size = 1491; // expected file size
     assertFileSize(outfile, sim_size);
     TS_TRACE("SIM file created from GTC is of expected length");
     assertFilesIdentical(outfile, sim_raw, sim_size);
     TS_TRACE("SIM file created from GTC is identical to master");
+  }
+
+  void testGenoSNP(void) {
+    // Tests of GenoSNP mode:
+    // 1. Input from file, output all SNPs
+    // 2. Input from stdin, output all SNPs
+    // 3. Input from file, output subset of SNPs
+    int size_all = 430;
+    int size_single = 168;
+    Commander *commander = new Commander();
+    int start_pos = 0;
+    int end_pos = -1;
+    string outfile1 = tempdir+"/genosnp01.gsn";
+    string expected = "data/example_1.gsn";
+    TS_TRACE("Testing GenoSNP command with .sim input from file");
+    TS_ASSERT_THROWS_NOTHING(commander->commandGenoSNP(sim_raw, outfile1, manfile, start_pos, end_pos, verbose));
+    assertFileSize(outfile1, size_all);
+    assertFilesIdentical(outfile1, expected, size_all);
+    // now try with standard input; TODO do this without a system call
+    string outfile2 = tempdir+"/genosnp02.gsn";
+    string cmd = "cat "+sim_raw+" | ./simtools genosnp --infile - "+
+      "--outfile "+outfile2+" --man_file "+manfile;
+    TS_TRACE("Testing GenoSNP command with .sim input from STDIN");
+    TS_ASSERT_EQUALS(system(cmd.c_str()), 0);
+    assertFileSize(outfile2, size_all);
+    assertFilesIdentical(outfile2, expected, size_all);
+    // test output of a single sample
+    start_pos = 2;
+    end_pos = 3;
+    string outfile3 = tempdir+"/genosnp03.gsn";
+    expected = "data/example_4.gsn";
+    TS_TRACE("Testing GenoSNP command with output of a single sample");
+    TS_ASSERT_THROWS_NOTHING(commander->commandGenoSNP(sim_raw, outfile3, manfile, start_pos, end_pos, verbose));
     delete commander;
+    assertFileSize(outfile3, size_single);
+    assertFilesIdentical(outfile3, expected, size_single);
   }
 
   void testIlluminus(void) {
@@ -197,35 +266,36 @@ class SimtoolsTest : public TestBase
     // 1. Input from file, output all SNPs
     // 2. Input from stdin, output all SNPs
     // 3. Input from file, output subset of SNPs
-    int size;
+    int size_all = 1268; // output size for all SNPs
+    int size_single = 349; // SNP 3 only
     Commander *commander = new Commander();
     int start_pos = 0;
     int end_pos = -1;
     string outfile1 = tempdir+"/illuminus01.iln";
     string expected = "data/illuminus_all.iln";
+    TS_TRACE("Testing Illuminus command with .sim input from file");
     TS_ASSERT_THROWS_NOTHING(commander->commandIlluminus(sim_raw, outfile1, manfile, start_pos, end_pos, verbose));
-    size = 1268;
-    assertFileSize(outfile1, size);
-    assertFilesIdentical(outfile1, expected, size);
+    assertFileSize(outfile1, size_all);
+    assertFilesIdentical(outfile1, expected, size_all);
     // now try with standard input
     string outfile2 = tempdir+"/illuminus02.iln";
     // TODO Would be cleaner to run test without the system call
-    TS_TRACE("Testing Illuminus command with .sim from STDIN");
+    TS_TRACE("Testing Illuminus command with .sim input from STDIN");
     string cmd = "cat "+sim_raw+" | ./simtools illuminus --infile - "+
       "--outfile "+outfile2+" --man_file "+manfile;
     TS_ASSERT_EQUALS(system(cmd.c_str()), 0);
-    assertFileSize(outfile2, size);
-    assertFilesIdentical(outfile2, expected, size);
+    assertFileSize(outfile2, size_all);
+    assertFilesIdentical(outfile2, expected, size_all);
     // input a subset of SNPs
+    TS_TRACE("Testing Illuminus command with output of a single SNP");
     start_pos = 3;
     end_pos = 3;
-    string outfile3 = tempdir+"/illuminus03.iln";
-    expected = "data/illuminus_snp03.iln";
+    string outfile3 = tempdir+"/illuminus_single.iln";
+    expected = "data/illuminus_single.iln";
     TS_ASSERT_THROWS_NOTHING(commander->commandIlluminus(sim_raw, outfile3, manfile, start_pos, end_pos, verbose));
-    size = 349;
-    assertFileSize(outfile3, size);
-    assertFilesIdentical(outfile3, expected, size);
     delete commander;
+    assertFileSize(outfile3, size_single);
+    assertFilesIdentical(outfile3, expected, size_single);
   }
 
   void testQC(void) {
@@ -238,6 +308,7 @@ class SimtoolsTest : public TestBase
     bool verbose = false;
     Commander *commander = new Commander();
     TS_ASSERT_THROWS_NOTHING(commander->commandQC(infile, mag, xyd, verbose));
+    delete commander;
     TS_TRACE("QC files successfully created from SIM");
     int mag_size = 4500;
     assertFileSize(mag, mag_size);
@@ -249,21 +320,25 @@ class SimtoolsTest : public TestBase
     TS_TRACE("QC xydiff output is of expected size");
     assertFilesIdentical(xyd, xyd_expected, xyd_size);
     TS_TRACE("QC xydiff output is identical to master");
-    delete commander;
   }
 
   void testView(void) {
     TS_TRACE("Testing .sim view command");
-    Commander *commander = new Commander();
     string simfile = "./data/example.raw.sim";
+    string tempfile = tempdir+"/simview.txt";
+    string viewfile = "data/simview.txt"; // expected view output
+    int viewsize = 355;
     bool verbose = false;
+    stdoutRedirect(tempfile);
+    Commander *commander = new Commander();
     TS_ASSERT_THROWS_NOTHING(commander->commandView(simfile, verbose));
     delete commander;
-    TS_TRACE("View command test finished");
+    stdoutRestore();
+    assertFileSize(tempfile, viewsize);
+    TS_TRACE("Sim view output is of expected size");
+    assertFilesIdentical(tempfile, viewfile, viewsize);
+    TS_TRACE("Sim view output is identical to master");
   }
-
-
-
 };
 
 
