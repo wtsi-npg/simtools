@@ -8,32 +8,39 @@
 
 # Author: Jennifer Liddle <js10@sanger.ac.uk, jennifer@jsquared.co.uk>
 #
-# Redistribution and use in source and binary forms, with or without modification, 
-# are permitted provided that the following conditions are met:
-# 1. Redistributions of source code must retain the above copyright notice, this
-# list of conditions and the following disclaimer.
-# 2. Redistributions in binary form must reproduce the above copyright notice, 
-# this list of conditions and the following disclaimer in the documentation and/or
-# other materials provided with the distribution.
-# 3. Neither the name of the Genome Research Ltd nor the names of its contributors 
-# may be used to endorse or promote products derived from software without specific
-# prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR WARRANTIES, 
-# INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
-# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. EVENT SHALL GENOME RESEARCH LTD. BE LIABLE 
-# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
-# (INCLUDING, LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
-# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
-# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-# OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-# THE POSSIBILITY OF SUCH DAMAGE.
-#
+
+# Redistribution and use in source and binary forms, with or without 
+# modification, are permitted provided that the following conditions are met:
+# 1. Redistributions of source code must retain the above copyright notice, 
+# this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 3. Neither the name of Genome Research Ltd nor the names of the 
+# contributors may be used to endorse or promote products derived from 
+# software without specific prior written permission.
+
+# THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR 
+# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES 
+# OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
+# IN NO EVENT SHALL GENOME RESEARCH LTD. BE LIABLE FOR ANY DIRECT, INDIRECT, 
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF 
+# USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY 
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF 
+# THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
 
 .PHONY: test cxxtest # always run, regardless of timestamps
 
-INSTALLLIB=/software/varinf/lib
+DIR = INSTALL_DIRECTORY # placeholder for main installation directory
+BIN=$(DIR)/bin
+# default directories for g2i 
+INSTALLLIB=/software/varinf/lib 
 INSTALLBIN=/software/varinf/bin
+# other useful paths
 STLPORT_INC=/software/solexa/pkg/STLport/current/stlport
 STLPORT_LIB=/software/solexa/pkg/STLport/current/build/lib/obj/gcc/so
 #STLPORT_INC=/software/varinf/lib/STLport/include/stlport
@@ -64,20 +71,27 @@ endif
 LDFLAGS=-Wl,-rpath -Wl,$(STLPORT_LIB) -L$(STLPORT_LIB) -lstlport -lm 
 CXXFLAGS=-Wno-deprecated -I/software/gapi/pkg/cxxtest/4.2.1/
 
-default: all
+usage:
+	@echo -e "Usage: make install DIR=<destination directory>\nOther targets: make all, make test, make install_g2i"
+
 
 clean:
 	rm -f *.o Gtc_wrap.cxx Gtc.pm Sim_wrap.cxx Sim.pm runner.cpp runner $(TARGETS)
 
-test: runner.o Sim.o Gtc.o Manifest.o QC.o json/json_reader.o json/json_writer.o json/json_value.o commands.o #simtools sim
+test: Sim.o Gtc.o Manifest.o QC.o json/json_reader.o json/json_writer.o json/json_value.o commands.o runner.o
 	$(CC) $(CFLAGS) $(LDFLAGS) $(CXXFLAGS) -o runner $^ -lstlport
 	./runner # run "./runner -v" to print trace information
 
-runner.o:
+runner.o: all
 	cxxtestgen --error-printer -o runner.cpp test_simtools.h
 	$(CC) -c $(CFLAGS) $(LDFLAGS) $(CXXFLAGS)  -o $@ runner.cpp
 
 install: all
+	install -d $(BIN) 
+	install g2i gtc normalize_manifest sim simtools $(BIN)
+	@echo -e "Simtools successfully installed."
+
+install_g2i: all
 	cp Gtc.pm $(INSTALLLIB)
 	cp Gtc.so $(INSTALLLIB)
 	cp Sim.pm $(INSTALLLIB)
