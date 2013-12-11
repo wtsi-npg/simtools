@@ -33,7 +33,7 @@
 
 
 
-.PHONY: test cxxtest # always run, regardless of timestamps
+.PHONY: test # always run, regardless of timestamps
 
 DIR = INSTALL_DIRECTORY # placeholder for main installation directory
 BIN=$(DIR)/bin
