@@ -31,16 +31,9 @@
 #include <fstream>
 #include <cstdio>
 #include <cstdlib>
-
 #include <cxxtest/TestSuite.h>
-
-// include statements from simtools
 #include "commands.h"
-#include "Sim.h"
-#include "Gtc.h"
-#include "QC.h"
 #include "Manifest.h"
-#include "json/json.h"
 
 using namespace std;
 
@@ -211,7 +204,7 @@ class SimtoolsTest : public TestBase
 
   void testCreate(void) {
     TS_TRACE("Testing .sim create command");
-    string infile = "data/example_with_dir.json";
+    string infile = "data/example.json";
     string expected = "data/example.raw.sim";
     string outfile = tempdir+"/test.sim";
     bool normalize = false;
@@ -236,7 +229,7 @@ class SimtoolsTest : public TestBase
     int start_pos = 0;
     int end_pos = -1;
     string outfile1 = tempdir+"/genosnp01.gsn";
-    string expected = "data/example_1.gsn";
+    string expected = "data/example_all.gsn";
     TS_TRACE("Testing GenoSNP command with .sim input from file");
     TS_ASSERT_THROWS_NOTHING(commander->commandGenoSNP(sim_raw, outfile1, manfile, start_pos, end_pos, verbose));
     assertFileSize(outfile1, size_all);
@@ -253,7 +246,7 @@ class SimtoolsTest : public TestBase
     start_pos = 2;
     end_pos = 3;
     string outfile3 = tempdir+"/genosnp03.gsn";
-    expected = "data/example_4.gsn";
+    expected = "data/example_single.gsn";
     TS_TRACE("Testing GenoSNP command with output of a single sample");
     TS_ASSERT_THROWS_NOTHING(commander->commandGenoSNP(sim_raw, outfile3, manfile, start_pos, end_pos, verbose));
     delete commander;
@@ -272,7 +265,7 @@ class SimtoolsTest : public TestBase
     int start_pos = 0;
     int end_pos = -1;
     string outfile1 = tempdir+"/illuminus01.iln";
-    string expected = "data/illuminus_all.iln";
+    string expected = "data/example_all.iln";
     TS_TRACE("Testing Illuminus command with .sim input from file");
     TS_ASSERT_THROWS_NOTHING(commander->commandIlluminus(sim_raw, outfile1, manfile, start_pos, end_pos, verbose));
     assertFileSize(outfile1, size_all);
@@ -290,8 +283,8 @@ class SimtoolsTest : public TestBase
     TS_TRACE("Testing Illuminus command with output of a single SNP");
     start_pos = 3;
     end_pos = 3;
-    string outfile3 = tempdir+"/illuminus_single.iln";
-    expected = "data/illuminus_single.iln";
+    string outfile3 = tempdir+"/illuminus03.iln";
+    expected = "data/example_single.iln";
     TS_ASSERT_THROWS_NOTHING(commander->commandIlluminus(sim_raw, outfile3, manfile, start_pos, end_pos, verbose));
     delete commander;
     assertFileSize(outfile3, size_single);
