@@ -69,16 +69,13 @@ default: all
 clean:
 	rm -f *.o Gtc_wrap.cxx Gtc.pm Sim_wrap.cxx Sim.pm runner.cpp runner $(TARGETS)
 
-cxxtest: runner.o Sim.o Gtc.o Manifest.o QC.o json/json_reader.o json/json_writer.o json/json_value.o commands.o
+test: runner.o Sim.o Gtc.o Manifest.o QC.o json/json_reader.o json/json_writer.o json/json_value.o commands.o #simtools sim
 	$(CC) $(CFLAGS) $(LDFLAGS) $(CXXFLAGS) -o runner $^ -lstlport
 	./runner # run "./runner -v" to print trace information
 
 runner.o:
 	cxxtestgen --error-printer -o runner.cpp test_simtools.h
 	$(CC) -c $(CFLAGS) $(LDFLAGS) $(CXXFLAGS)  -o $@ runner.cpp
-
-test:
-	./run_tests
 
 install: all
 	cp Gtc.pm $(INSTALLLIB)
