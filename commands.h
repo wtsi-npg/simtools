@@ -1,10 +1,6 @@
-//
-// QC.h
-//
-// Header file for QC.cpp
-//
-//
 // Author: Iain Bancarz <ib5@sanger.ac.uk>
+//
+// Copyright (c) 2013 Genome Research Ltd. All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without 
 // modification, are permitted provided that the following conditions are met:
@@ -29,42 +25,43 @@
 // THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-#ifndef _QC_H
-#define _QC_H
+// Class to provide a high-level interface to simtools functionality
+// Parse command-line options in simtools.cpp, input to methods in this class
 
-#include <ctime>
 #include <iostream>
-#include <stdlib.h>  
+#include <sstream>
+#include <vector>
+#include <map>
+#include <iomanip>
+#include <algorithm>
 
 #include "Sim.h"
+#include "Gtc.h"
+#include "QC.h"
+#include "Manifest.h"
+#include "json/json.h"
 
 using namespace std;
 
-class QC {
- public:  
-  static const int VERBOSE_FREQ = 1000; // frequency of verbose output
-  static const int TIME_BUFFER = 100; // max size in bytes of timestamp string
-  static const bool CLEANUP = true; // reset all Nan/infinity inputs to zero
-
-  QC(string simPath, bool verbose);
-  void close(void);
-  void writeMagnitude(string outPath, bool verbose);
-  void writeXydiff(string outPath, bool verbose);
-
- private:
-  Sim *qcsim;
-  uint16_t *intensity_int_array;
-  float *intensity_float_array;
-
-  void getNextMagnitudes(float magnitudes[], char* sampleName, Sim *sim);
-  void magnitudeByProbe(float magByProbe[], bool verbose);
-  void magnitudeBySample(float magBySample[], float magByProbe[], 
-			 char sampleNames[][Sim::SAMPLE_NAME_SIZE+1],
-			 bool verbose);
-  void xydiffBySample(float xydBySample[], 
-		      char sampleNames[][Sim::SAMPLE_NAME_SIZE+1]);
-  void timeText(char *buffer);
-
+class SNPSorter {
+  // compare SNP classes by position
+ public:
+  bool operator() (const snpClass &snp1, const snpClass &snp2);
 };
 
-#endif	// _QC_H
+class Commander {
+
+ public:
+
+  Commander();
+
+  void loadManifest(Manifest *manifest, string manfile);
+  void parseInfile(string infile, vector<string> &sampleNames, vector<string> &infiles);
+  void commandView(string infile, bool verbose);
+  void commandCreate(string infile, string outfile, bool normalize, string manfile, bool verbose);
+  void commandIlluminus(string infile, string outfile, string manfile, int start_pos, int end_pos, bool verbose);
+  void commandGenoSNP(string infile, string outfile, string manfile, int start_pos, int end_pos, bool verbose);
+  void commandQC(string infile, string magnitude, string xydiff, bool verbose);
+
+
+};
