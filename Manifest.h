@@ -73,13 +73,13 @@ class snpClass {
   long position;
   float score;
   char snp [2];		// 'GT' or 'AG' for example. Defined to be A/B for TOP strand. 
-  char iStrand;		// Illumina Strand: B (Bottom) or T (Top)
-  char cStrand;		// Customer Strand: B (Bottom) or T (Top)
+  char iStrand;		// Original Illumina Strand: B (Bottom) or T (Top)
+  char cStrand;		// Original Customer Strand: B (Bottom) or T (Top)
   int normId;		    // index into normalisation table
   int BeadSetID;      // Only available from "wide format" manifest files (.csv not .bpm.csv)
 
   bool converted; // has SNP been converted from original to ILMN top strand?
-
+  // converted=true changes output of toString(), but not the iStrand and cStrand variables (which represent the original values)
 };
 
 

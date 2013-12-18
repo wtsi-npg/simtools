@@ -104,7 +104,6 @@ void Manifest::open(string filename, bool wide)
 {
 	string s;
 	ifstream file;
-	snpClass *snp = new snpClass();
 
 	map<string, int> widecols; // Only used if opening a wide-format file.
                                // Key = col. name; value = col. number (0 onwards).
@@ -185,6 +184,7 @@ void Manifest::open(string filename, bool wide)
 
 	  //cout << "\nDEBUG: " << s << flush;
 
+	  snpClass *snp = new snpClass();
 
 	  if ( wide ) {
 		size_t found = s.find("[Controls]");
@@ -319,6 +319,7 @@ void Manifest::open(string filename, bool wide)
 		}
 		else {
 		  convert (snp, a[SNP_COL]);
+
 		}
 
 		if ( -1 == BEADSETID_COL ) {
@@ -340,6 +341,8 @@ void Manifest::open(string filename, bool wide)
 		normIdMap[snp->normId] = 1;
 
 		numsnps++; // If we got this far, must be OK to increment!
+	
+		delete snp;
 	}
 
 	file.close();
