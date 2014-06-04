@@ -1,7 +1,11 @@
 //
-// Author: Jennifer Liddle <js10@sanger.ac.uk, jennifer@jsquared.co.uk>
+// QC.h
 //
-
+// Header file for QC.cpp
+//
+//
+// Author: Iain Bancarz <ib5@sanger.ac.uk>
+//
 // Redistribution and use in source and binary forms, with or without 
 // modification, are permitted provided that the following conditions are met:
 // 1. Redistributions of source code must retain the above copyright notice, 
@@ -25,8 +29,42 @@
 // THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-#include "Gtc.h"
-#include "Manifest.h"
-double getMeanIntensity(Gtc *gtc, Manifest *manifest);
-double getIlluminaPassrate(double cutOff, Gtc *gtc, Manifest *manifest);
+#ifndef _QC_H
+#define _QC_H
 
+#include <ctime>
+#include <iostream>
+#include <stdlib.h>  
+
+#include "Sim.h"
+
+using namespace std;
+
+class QC {
+ public:  
+  static const int VERBOSE_FREQ = 1000; // frequency of verbose output
+  static const int TIME_BUFFER = 100; // max size in bytes of timestamp string
+  static const bool CLEANUP = true; // reset all Nan/infinity inputs to zero
+
+  QC(string simPath, bool verbose);
+  void close(void);
+  void writeMagnitude(string outPath, bool verbose);
+  void writeXydiff(string outPath, bool verbose);
+
+ private:
+  Sim *qcsim;
+  uint16_t *intensity_int_array;
+  float *intensity_float_array;
+
+  void getNextMagnitudes(float magnitudes[], char* sampleName, Sim *sim);
+  void magnitudeByProbe(float magByProbe[], bool verbose);
+  void magnitudeBySample(float magBySample[], float magByProbe[], 
+			 char sampleNames[][Sim::SAMPLE_NAME_SIZE+1],
+			 bool verbose);
+  void xydiffBySample(float xydBySample[], 
+		      char sampleNames[][Sim::SAMPLE_NAME_SIZE+1]);
+  void timeText(char *buffer);
+
+};
+
+#endif	// _QC_H

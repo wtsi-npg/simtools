@@ -8,99 +8,148 @@
 //
 // Author: Jennifer Liddle <js10@sanger.ac.uk, jennifer@jsquared.co.uk>
 //
-// Redistribution and use in source and binary forms, with or without modification, 
-// are permitted provided that the following conditions are met:
-// 1. Redistributions of source code must retain the above copyright notice, this 
-// list of conditions and the following disclaimer.
-// 2. Redistributions in binary form must reproduce the above copyright notice, 
-// this list of conditions and the following disclaimer in the documentation and/or 
-// other materials provided with the distribution.
-// 3. Neither the name of the Genome Research Ltd nor the names of its contributors 
-// may be used to endorse or promote products derived from software without specific 
-// prior written permission.
+
+// Redistribution and use in source and binary forms, with or without 
+// modification, are permitted provided that the following conditions are met:
+// 1. Redistributions of source code must retain the above copyright notice, 
+// this list of conditions and the following disclaimer.
+// 2. Redistributions in binary form must reproduce the above copyright 
+// notice, this list of conditions and the following disclaimer in the 
+// documentation and/or other materials provided with the distribution.
+// 3. Neither the name of Genome Research Ltd nor the names of the 
+// contributors may be used to endorse or promote products derived from 
+// software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR WARRANTIES, 
-// INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
-// FOR A PARTICULAR PURPOSE ARE DISCLAIMED. EVENT SHALL GENOME RESEARCH LTD. BE LIABLE 
-// FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
-// (INCLUDING, LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
-// THE POSSIBILITY OF SUCH DAMAGE.
+// THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR 
+// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES 
+// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
+// IN NO EVENT SHALL GENOME RESEARCH LTD. BE LIABLE FOR ANY DIRECT, INDIRECT, 
+// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
+// BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF 
+// USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY 
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF 
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //
 #include "Sim.h"
+#include <cmath>
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <vector>
 #include <stdint.h>
 #include <errno.h>
+#include <stdio.h>
+
 
 using namespace std;
 
 Sim::Sim(void) 
 {
 	version=0;
+	inPath = "";
 	filename = "";
+	errorMsg="";
+	nanCount = 0;
+	infCount = 0;
 }
 
-void Sim::open(char *f)
+void Sim::openInput(string fname) 
 {
-	string fname = f;
-	open(fname);
+        inPath = fname;
+        char *f = new char[fname.length()+1];
+	strcpy(f, fname.c_str());
+        openLowLevel(f);
 }
 
-void Sim::open(string fname) 
+void Sim::openLowLevel(char *fname) {
+  // open C-style file descriptor and read header data
+  if (strcmp(fname, "-")==0) inFile = stdin;
+  else inFile = fopen(fname, "r");
+  char *magicChars = (char *) calloc(4, sizeof(char));
+  int size_t;
+  size_t = fread(magicChars, 1, 3, inFile);
+  magic = string(magicChars);
+  if (strcmp(magicChars, "sim") || size_t != 3) {
+    throw("File " + string(fname) + " has invalid header [" 
+	  + string(magic) + "]");
+  }
+  size_t = fread(&version, 1, 1, inFile);
+  if (size_t != 1) throw("Error reading .sim file header version");
+  size_t = fread(&sampleNameSize, 2, 1, inFile);
+  if (size_t != 1) throw("Error reading .sim file header name size");
+  size_t = fread(&numSamples, 4, 1, inFile);
+  if (size_t != 1) throw("Error reading .sim file header samples");
+  size_t = fread(&numProbes, 4, 1, inFile);
+  if (size_t != 1) throw("Error reading .sim file header probes");
+  size_t = fread(&numChannels, 1, 1, inFile);
+  if (size_t != 1) throw("Error reading .sim file header channels");
+  size_t = fread(&numberFormat, 1, 1, inFile);
+  if (size_t != 1) throw("Error reading .sim file header numeric format");
+
+  if (ferror(inFile)!=0) {
+    throw("Error reading header from .sim file: [" + string(fname) + "]");
+  }
+
+  // calculate and store record length
+  switch (numberFormat) {
+  case FLOAT:	      numericBytes= 4;	break;
+  case INTEGER:	      numericBytes = 2; break;
+  case SCALED_INTEGER:  numericBytes = 2; break;
+  default:	cerr << "Invalid number format " << numberFormat;
+    exit(1);
+  }
+  sampleIntensityTotal = numProbes * numChannels;
+  recordLength = numProbes * numChannels;
+  recordLength *= numericBytes;
+  recordLength += sampleNameSize;
+}
+
+void Sim::close(void) {
+  // close input and output files (if open, and not equal to stdin or stdout)
+  if (filename != "" && filename !="-") {
+    fout.close();
+  }
+  if (inPath !="" && inPath!="-") { 
+    if (ferror(inFile)) {
+      cerr << "Input file is in error state!" << endl;
+      exit(1);
+    }
+    int status;
+    status = fclose(inFile);
+    if (status!=0) { 
+      cerr << "Failed to close input file" << endl;
+      exit(1);
+    }
+  }
+}
+
+void Sim::openOutput(string fname) {
+  filename = fname;
+  _openOut(filename);
+
+}
+
+void Sim::reset(void)
 {
-	char buff[256];
+  // return to starting point of .sim file (immediately after header)
+  // use for multiple passes through .sim file in QC metrics
+  if (filename == "-") {
+    throw "Cannot reset file position in standard input!";
+  }
+  fseek(inFile, HEADER_LENGTH, 0);
+  nanCount = 0;
+  infCount = 0;
+}
 
-	errorMsg = "";
-
-	this->filename = fname;
-	_openFile(fname);
-	infile->get(buff,4);
-
-	if (strcmp(buff,"sim")) {
-		throw("File " + filename + " has invalid header [" + buff + "]");
+void Sim::writeHeader(uint32_t _numSamples, uint32_t _numProbes, 
+		      uint8_t _numChannels, uint8_t _numberFormat)
+{
+        if (filename=="") {
+	  cerr << "Output not defined; need to call Sim::openOutput()" << endl;
+	  exit(1);
 	}
-	magic = buff;
-
-	this->filename = fname;
-	// read SIM header
-	infile->read((char*)&version,1);
-	infile->read((char*)&sampleNameSize,2);
-	infile->read((char*)&numSamples,4);
-	infile->read((char*)&numProbes,4);
-	infile->read((char*)&numChannels,1);
-	infile->read((char*)&numberFormat,1);
-
-	// calculate and store record length
-	recordLength = numProbes * numChannels;
-	switch (numberFormat) {
-		case FLOAT:				recordLength *= 4;	break;
-		case INTEGER:			recordLength *= 2; break;
-		case SCALED_INTEGER:	recordLength *= 2; break;
-		default:	cerr << "Invalid number format " << numberFormat;
-					exit(1);
-	}
-	recordLength += sampleNameSize;
-	_closeFile();
-}
-
-void Sim::close(void)
-{
-	if (filename != "-") fout.close();	// don't close stdout!	
-}
-
-void Sim::createFile(string fname)
-{
-	filename = fname;
-}
-
-void Sim::writeHeader(uint32_t _numSamples, uint32_t _numProbes, uint8_t _numChannels, uint8_t _numberFormat)
-{
 	version = VERSION;
 	sampleNameSize = SAMPLE_NAME_SIZE;
 	numSamples = _numSamples;
@@ -108,7 +157,6 @@ void Sim::writeHeader(uint32_t _numSamples, uint32_t _numProbes, uint8_t _numCha
 	numChannels = _numChannels;
 	numberFormat = _numberFormat;
 
-	_openFile(filename,true);
 	outfile->write("sim", 3);
 	outfile->write((char*)&version, sizeof(version));
 	outfile->write((char*)&sampleNameSize, sizeof(sampleNameSize));
@@ -134,73 +182,79 @@ string Sim::dump(void)
 	return s.str();
 }
 
-void Sim::__openin(istream &f) 
-{
-	infile = &f;
-}
 
 void Sim::__openout(ostream &f) 
 {
 	outfile = &f;
 }
 
-void Sim::_openFile(string filename, bool writing)
+void Sim::_openOut(string filename)
 {
-	if (filename == "-") {
-		if (writing) { __openout(cout); }
-		else         { __openin(cin); }
-	} else {
-		if (writing) { fout.open(filename.c_str(),ios::binary | ios::trunc | ios::in | ios::out); __openout(fout); }
-		else         { 
-			fin.open(filename.c_str(),ios::binary | ios::in); 
-			__openin(fin); 
-		}
-	}
-	if (!writing && (!infile || !fin)) {
-		cerr << "Can't open " << filename << " for reading : " << strerror(errno) << endl;
-	}
-	if (writing && (!outfile || !fout)) {
-		cerr << "Can't open " << filename << " for writing : " << strerror(errno) << endl;
-	}
+  // open filestream for output
+  if (filename == "-") {
+    __openout(cout); 
+  } else {
+    fout.open(filename.c_str(),
+	      ios::binary | ios::trunc | ios::in | ios::out); 
+    __openout(fout); 
+  }
+  if (!outfile || !fout) {
+    cerr << "Can't open " << filename << " for writing : " 
+	 << strerror(errno) << endl;
+  }
 }
 
-void Sim::_closeFile(void)
-{
-//	file.close();
-//	file.clear();
+void Sim::getNextRecord(char *sampleName, uint16_t *intensity) {
+  // read array of intensity intensities
+  // no need to check for NaN/inf values, as these can't be integers
+  char *status = fgets(sampleName, sampleNameSize+1, inFile);
+  if (status==NULL) throw("Error reading sample name from .sim file!");
+  int items = fread(intensity, numericBytes, sampleIntensityTotal, inFile);
+  if (items != sampleIntensityTotal || ferror(inFile)) {
+    throw("Error reading intensities from .sim file!");
+  }
 }
 
-void Sim::getNextRecord(char *sampleName, vector<uint16_t> *intensity)
-{
-	unsigned int n;
-	char *p;
-	char *buff = new char[recordLength];
-
-	infile->read(buff,recordLength);
-	memcpy(sampleName,buff,sampleNameSize);
-	for (n=0, p=buff+sampleNameSize; n < numProbes*numChannels; n++, p+=2) {
-		uint16_t v = *(uint16_t*)p;
-		intensity->push_back(v);
-	}
-	delete buff;
+void Sim::getNextRecord(char *sampleName, float *intensity, 
+			bool cleanup) {
+  // read array of float intensities & check for NaN/infinite values
+  // if cleanup=true, reset all NaN/infinite values to zero
+  char *status = fgets(sampleName, sampleNameSize+1, inFile);
+  if (status==NULL) throw("Error reading sample name from .sim file!");
+  int items = fread(intensity, numericBytes, sampleIntensityTotal, inFile);
+  if (items != sampleIntensityTotal || ferror(inFile)) {
+    throw("Error reading intensities from .sim file!");
+  }
+  // check for nan/inf values in input
+  // looking at sum is faster than calling isnan/isinf on everything
+  // nan/inf tend to be concentrated in a few samples
+  float sum = 0.0;
+  for (int i=0;i<sampleIntensityTotal;i++) sum += intensity[i];
+  if (isinf(sum) || isnan(sum)) { // one or more INF/NaN values present
+    for (int i=0;i<sampleIntensityTotal;i++) {
+      if (isinf(intensity[i])) {
+	infCount++;
+	if (cleanup) intensity[i] = 0;
+      } else if (isnan(intensity[i])) {
+	nanCount++;
+	if (cleanup) intensity[i] = 0;
+      }
+    } 
+  }
 }
 
-void Sim::getNextRecord(char *sampleName, vector<float> *intensity)
-{
-	unsigned int n;
-	char *p;
-	char *buff = new char[recordLength];
-	infile->read(buff,recordLength);
-	memcpy(sampleName,buff,sampleNameSize);
-	for (n=0, p=buff+sampleNameSize; n < numProbes*numChannels; n++, p+=4) {
-		float v = *(float*)p;
-		intensity->push_back(v);
-	}
-	delete buff;
+void Sim::reportNonNumeric(void) {
+  // check infinity/nan counts and report to standard output
+  cout << "Total NaN values found: " << nanCount << endl;
+  cout << "Total INF values found: " << infCount << endl;
 }
 
 void Sim::write(void *buffer, int length)
 {
+        if (filename=="") {
+	  cerr << "Output not defined; need to call Sim::openOutput()" << endl;
+	  exit(1);
+	}
 	outfile->write((const char*)buffer,length);
 }
 

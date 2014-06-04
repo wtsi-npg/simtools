@@ -6,34 +6,38 @@
 // $Id: Manifest.cpp 1354 2010-11-11 16:20:09Z js10 $
 //
 #include "Manifest.h"
-// Author: Jennifer Liddle <js10@sanger.ac.uk, jennifer@jsquared.co.uk>
+// Author: Jennifer Liddle <js10@sanger.ac.uk, jennifer@jsquared.co.uk>, Iain Bancarz <ib5@sanger.ac.uk>
 //
-// Redistribution and use in source and binary forms, with or without modification, 
-// are permitted provided that the following conditions are met:
-// 1. Redistributions of source code must retain the above copyright notice, this
-// list of conditions and the following disclaimer.
-// 2. Redistributions in binary form must reproduce the above copyright notice, 
-// this list of conditions and the following disclaimer in the documentation and/or
-// other materials provided with the distribution.
-// 3. Neither the name of the Genome Research Ltd nor the names of its contributors 
-// may be used to endorse or promote products derived from software without specific
-// prior written permission.
+// Redistribution and use in source and binary forms, with or without 
+// modification, are permitted provided that the following conditions are met:
+// 1. Redistributions of source code must retain the above copyright notice, 
+// this list of conditions and the following disclaimer.
+// 2. Redistributions in binary form must reproduce the above copyright 
+// notice, this list of conditions and the following disclaimer in the 
+// documentation and/or other materials provided with the distribution.
+// 3. Neither the name of Genome Research Ltd nor the names of the 
+// contributors may be used to endorse or promote products derived from 
+// software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR WARRANTIES, 
-// INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
-// FOR A PARTICULAR PURPOSE ARE DISCLAIMED. EVENT SHALL GENOME RESEARCH LTD. BE LIABLE 
-// FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
-// (INCLUDING, LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-// THE POSSIBILITY OF SUCH DAMAGE.
+// THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR 
+// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES 
+// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
+// IN NO EVENT SHALL GENOME RESEARCH LTD. BE LIABLE FOR ANY DIRECT, INDIRECT, 
+// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
+// BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF 
+// USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY 
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF 
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
 #include <iostream>
 #include <fstream>
 #include <map>
 #include <vector>
+#include <cstdio>
+#include <string> 
+
 
 using namespace std;
 
@@ -49,6 +53,7 @@ Manifest::Manifest(void)
   filename = "";
 
   EXCLUDE_CNVS = false;
+  hasBeadSetID = false;
 
 #ifdef _DEBUG      // compile with g++ -D_DEBUG Manifest.cpp ...
   test_convert();
@@ -76,7 +81,9 @@ Manifest::Manifest(void)
 
 void Manifest::open (string filename, string chromosome, bool wide) {
 
+#ifdef _DEBUG  
   cout << "\nDEBUG: in chrom-specific open()..\n\n";
+#endif
 
   this->selectedChromosome = chromosome;
   open (filename, wide);
@@ -167,6 +174,8 @@ void Manifest::open(string filename, bool wide)
 	  NORMID_COL = 8; 
 	  BEADSETID_COL = -1; 
 	}
+
+	if (BEADSETID_COL != -1) { hasBeadSetID = true; } // instance variable
 
 	//
 	// OK, now ready to acquire data
@@ -488,6 +497,7 @@ void Manifest::convert (snpClass* snip, std::string input_snp) {
 		default:
 		  snip->snp[1] = '?';
 		}
+		snip->converted = true;
 	}
 	break;
    
@@ -722,6 +732,35 @@ void Manifest::dump(void)
 } 
 
 
+///////////////////////////////////////////////
+//
+// void Manifest::write (string outpath)
+//
+// Write normalized .bpm.csv output to given path
+// Use to create a normalized .bpm.csv file for input to genotype callers
+//
+///////////////////////////////////////////////
+
+void Manifest::write(string outPath) {
+
+
+  string header = "Index,Name,Chromosome,Position,GenTrain Score,SNP,ILMN Strand,Customer Strand,NormID";
+  if (this->hasBeadSetID) { header += ",BeadSetID"; }
+  ofstream outFile;
+  outFile.open(outPath.c_str());
+
+  outFile << header << endl;
+  // TODO ensure SNPs are output in sorted order?
+  int snpTotal = snps.size();
+  for (int i = 0; i < snpTotal; i++) {
+	snpClass s = snps[i];
+	outFile << s.toString().c_str() << endl;
+  }
+  outFile.close();
+
+}
+
+
 
 ///////////////////////////////////////////////
 //
@@ -900,6 +939,99 @@ int Manifest::get_map_value (map<string, int>& mymap, const char* const treasure
 
 }
 
+
+///////////////////////////////////////////////
+//
+// string snpClass::toString()
+//
+// method of snpClass objects to convert data to a comma-delimited string
+// use for .bpm.csv output in Manifest::write
+//
+///////////////////////////////////////////////
+
+string snpClass::toString() {
+
+  int bufSize = 1000;
+  char buffer[bufSize];
+  int n;
+  string i, s, p, nid, bsid;
+
+  try { // attempt to convert other data types to strings
+
+    n = snprintf(buffer, bufSize, "%d", index);        // index
+    if (n >= bufSize) { throw 1; }
+    i = string(buffer, n);
+
+    n = snprintf(buffer, bufSize, "%ld", position);    // position
+    if (n >= bufSize) { throw 1; }
+    p = string(buffer, n);
+
+    n = snprintf(buffer, bufSize, "%f", score);        // score
+    if (n >= bufSize) { throw 1; }
+    s = string(buffer, n);
+
+    n = snprintf(buffer, bufSize, "%d", normId);       // norm ID
+    if (n >= bufSize) { throw 1; }
+    nid = string(buffer, n);
+
+    if (this->BeadSetID != -1) { // BeadSetID, if any
+      n = snprintf(buffer, bufSize, "%d", this->BeadSetID);
+      if (n >= bufSize) { throw 1; }
+      bsid = string(buffer, n);
+    }
+
+  } catch (int param) {
+    cerr << "Error: String representation of SNP variable is too large for conversion buffer. Bad input or corrupt data in manifest?" << endl;
+    throw;
+  }
+
+  // generate the allele string
+  string a = string(1, snp[0]); // this constructor makes 1 copy of snp[0]
+  string b = string(1, snp[1]);
+  if (a=="?") { a = "N"; }
+  if (b=="?") { b = "N"; }
+  string alleles = "["+a+"/"+b+"]";
+  
+  // strands after normalization
+  string iStrandNorm = strandToString(iStrand, converted);
+  string cStrandNorm = strandToString(cStrand, converted);
+
+  // .bpm.csv fields: "Index,Name,Chromosome,Position,GenTrain Score,SNP,ILMN Strand,Customer Strand,NormID"
+  string snpString = i+","+name+","+chromosome+","+p+","+s+","+alleles+\
+    ","+iStrandNorm+","+cStrandNorm+","+nid;
+
+  if (this->BeadSetID != -1) { snpString = snpString+","+bsid; }
+
+  return snpString;
+}
+
+
+///////////////////////////////////////////////
+//
+// string snpClass::strandToString(char strand, bool converted)
+//
+// Convert char strand ID to original long-form string
+// use in snpClass::toString
+//
+///////////////////////////////////////////////
+
+
+string snpClass::strandToString(char strand, bool converted) {
+  // generate string representation; may be normalized to Illumina top strand
+  string normStrand;
+  if (converted) {  
+    // Reverse the single-character strand representation
+    // T->B, B->T, otherwise unchanged
+    if (strand=='T') { strand = 'B'; }
+    else if (strand=='B') { strand = 'T'; }
+  }
+  if (strand=='T') { normStrand = "TOP"; }
+  else if (strand=='B') { normStrand = "BOT"; }
+  else if (strand=='M') { normStrand = "MINUS"; }
+  else if (strand=='P') { normStrand = "PLUS"; }
+  else { normStrand = "?"; }
+  return normStrand;
+}
 
 
 

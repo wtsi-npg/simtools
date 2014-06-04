@@ -7,26 +7,27 @@
 //
 // Author: Jennifer Liddle <js10@sanger.ac.uk, jennifer@jsquared.co.uk>
 //
-// Redistribution and use in source and binary forms, with or without modification, 
-// are permitted provided that the following conditions are met:
-// 1. Redistributions of source code must retain the above copyright notice, this
-// list of conditions and the following disclaimer.
-// 2. Redistributions in binary form must reproduce the above copyright notice, 
-// this list of conditions and the following disclaimer in the documentation and/or
-// other materials provided with the distribution.
-// 3. Neither the name of the Genome Research Ltd nor the names of its contributors 
-// may be used to endorse or promote products derived from software without specific
-// prior written permission.
+// Redistribution and use in source and binary forms, with or without 
+// modification, are permitted provided that the following conditions are met:
+// 1. Redistributions of source code must retain the above copyright notice, 
+// this list of conditions and the following disclaimer.
+// 2. Redistributions in binary form must reproduce the above copyright 
+// notice, this list of conditions and the following disclaimer in the 
+// documentation and/or other materials provided with the distribution.
+// 3. Neither the name of Genome Research Ltd nor the names of the 
+// contributors may be used to endorse or promote products derived from 
+// software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR WARRANTIES, 
-// INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
-// FOR A PARTICULAR PURPOSE ARE DISCLAIMED. EVENT SHALL GENOME RESEARCH LTD. BE LIABLE 
-// FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
-// (INCLUDING, LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-// THE POSSIBILITY OF SUCH DAMAGE.
+// THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR 
+// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES 
+// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
+// IN NO EVENT SHALL GENOME RESEARCH LTD. BE LIABLE FOR ANY DIRECT, INDIRECT, 
+// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
+// BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF 
+// USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY 
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF 
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
 #ifndef _MANIFEST_H
@@ -59,19 +60,25 @@ class snpClass {
 	cStrand = '?';
 	normId = -1;
 	BeadSetID = -1;
+	converted = false;
 
   };
+
+  string toString();
+  string strandToString(char strand, bool converted);
 
   int index;
   string name;
   string chromosome;
   long position;
   float score;
-  char snp [2];		// 'GT' or 'AG' for example. Defined to be A/B for TOP strand.
+  char snp [2];		// 'GT' or 'AG' for example. Defined to be A/B for TOP strand. 
   char iStrand;		// Illumina Strand: B (Bottom) or T (Top)
   char cStrand;		// Customer Strand: B (Bottom) or T (Top)
   int normId;		    // index into normalisation table
   int BeadSetID;      // Only available from "wide format" manifest files (.csv not .bpm.csv)
+
+  bool converted; // has SNP been converted from original to ILMN top strand?
 
 };
 
@@ -95,6 +102,7 @@ public:
 	void order_by_position();
 
 	string filename;
+
 	vector<snpClass> snps; // If your code removes elements from this vector after
 		 		// it's been populated, for now you must not use code
 				// which uses the hash_map snpNames for lookup.
@@ -115,6 +123,7 @@ public:
 
 	void exclude_cnvs();
 
+	void write(string outpath); // write normalized .bpm.csv to file
 
  protected:
    void populate_hashmap();
@@ -135,6 +144,8 @@ public:
 	string selectedChromosome; // Used if we are only concerned with a specific chromosome.
 
 	bool EXCLUDE_CNVS;
+
+	bool hasBeadSetID; // is extra BeadSetID column present?
 
 };
 

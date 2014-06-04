@@ -1,7 +1,7 @@
+// Author: Iain Bancarz <ib5@sanger.ac.uk>
 //
-// Author: Jennifer Liddle <js10@sanger.ac.uk, jennifer@jsquared.co.uk>
+// Copyright (c) 2013 Genome Research Ltd. All rights reserved.
 //
-
 // Redistribution and use in source and binary forms, with or without 
 // modification, are permitted provided that the following conditions are met:
 // 1. Redistributions of source code must retain the above copyright notice, 
@@ -25,8 +25,43 @@
 // THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-#include "Gtc.h"
-#include "Manifest.h"
-double getMeanIntensity(Gtc *gtc, Manifest *manifest);
-double getIlluminaPassrate(double cutOff, Gtc *gtc, Manifest *manifest);
+// Class to provide a high-level interface to simtools functionality
+// Parse command-line options in simtools.cpp, input to methods in this class
 
+#include <iostream>
+#include <sstream>
+#include <vector>
+#include <map>
+#include <iomanip>
+#include <algorithm>
+
+#include "Sim.h"
+#include "Gtc.h"
+#include "QC.h"
+#include "Manifest.h"
+#include "json/json.h"
+
+using namespace std;
+
+class SNPSorter {
+  // compare SNP classes by position
+ public:
+  bool operator() (const snpClass &snp1, const snpClass &snp2);
+};
+
+class Commander {
+
+ public:
+
+  Commander();
+
+  void loadManifest(Manifest *manifest, string manfile);
+  void parseInfile(string infile, vector<string> &sampleNames, vector<string> &infiles);
+  void commandView(string infile, bool verbose);
+  void commandCreate(string infile, string outfile, bool normalize, string manfile, bool verbose);
+  void commandIlluminus(string infile, string outfile, string manfile, int start_pos, int end_pos, bool verbose);
+  void commandGenoSNP(string infile, string outfile, string manfile, int start_pos, int end_pos, bool verbose);
+  void commandQC(string infile, string magnitude, string xydiff, bool verbose);
+
+
+};
