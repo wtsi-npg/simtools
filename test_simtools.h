@@ -147,6 +147,8 @@ class EgtTest : public TestBase
     Egt *egt;
     TS_TRACE("Starting EGT test");
     egt = new Egt();
+    TS_ASSERT_THROWS_NOTHING(egt->open(infile));
+    TS_TRACE("Finished EGT test");
     delete egt;
   }
 };

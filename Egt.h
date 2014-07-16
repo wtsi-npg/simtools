@@ -35,6 +35,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <iostream>
 #include <fstream>
 #include <stdint.h>
 
@@ -44,6 +45,22 @@ class Egt {
 
  public:
   Egt();
+  void open(char *filename);
+  void open(string filename);
+  string filename;
+  int NUMERIC_BYTES;
+  // EGT header fields
+  int fileVersion;
+  string gcVersion;
+  string clusterVersion;
+  string callVersion;
+  string normalizationVersion;
+  string dateCreated;
+  char mode;
+  string manifest;
+
+private:
+  int readInteger(ifstream &file, bool littleEndian=true);
 
 };
 

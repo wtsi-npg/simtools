@@ -32,13 +32,78 @@
 #include <iostream>
 #include <vector>
 #include <map>
-#include "stdlib.h" 
+//#include <cstdio>
+#include <iostream>
+#include <fstream>
+#include <string> 
 #include "Egt.h"
 
 using namespace std;
 
 Egt::Egt(void)
 {
-  cout << "Class to represent Illumina EGT cluster files" << endl;
+  cout << endl << "Class to represent Illumina EGT cluster files" << endl;
 
+  NUMERIC_BYTES = 4;
+
+}
+
+/*
+ * Want to port the EGT.py class in zCall to C++
+ * 
+ * EGT format: Binary file with header, body
+ * Data types in binary file:
+ * - Bute
+ * - 4-byte integers (32-bit signed long int)
+ * - 4-byte floats (long double?)
+ * - String, encoded with the first byte denoting length of the subsequent string. (Max 256 characters.)
+ */
+
+
+
+
+void Egt::open(string filename)
+{
+
+  ifstream file;
+ 
+  cout << "Opening file: " << filename << endl;
+
+  file.open(filename.c_str());
+  if (!file) {
+    cout << "Can't open file: " << filename << endl << flush;
+    exit(1);
+  }
+  // read header data
+  version = readInteger(file);
+  // TODO sanity check on EGT version, use to verify little-endianness
+  cout << "EGT version: " << version << endl << flush;
+  file.close();
+}
+
+void Egt::open(char *filename)
+{
+  string f = filename;
+  open(f);
+}
+
+int Egt::readInteger(ifstream &file, bool littleEndian)
+{
+  int result = 0;
+  char * buffer;
+  buffer = new char[NUMERIC_BYTES];
+  file.read(buffer, NUMERIC_BYTES);
+  cout << "BUFFER:" ;
+  if (littleEndian)
+    for (int i = NUMERIC_BYTES-1; i>=0; i--) {
+      result = (result << 8) + buffer[i];
+      cout << int(buffer[i]);
+    }
+  else
+     for (int i = 0; i<NUMERIC_BYTES; i++) {
+       result = (result << 8) + buffer[i];
+       cout << int(buffer[i]);
+     }
+  cout << endl;
+  return result;
 }
