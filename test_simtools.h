@@ -34,6 +34,7 @@
 #include <cxxtest/TestSuite.h>
 #include "commands.h"
 #include "Manifest.h"
+#include "Egt.h"
 
 using namespace std;
 
@@ -132,6 +133,23 @@ class TestBase :  public CxxTest::TestSuite
 
 };
 
+
+class EgtTest : public TestBase
+{
+ public:
+
+  void testEgt(void)
+  {
+    // test creation of EGT objects
+    // for now, just a placeholder for later tests
+    string infile = "data/humancoreexome-12v1-1_a.egt";
+    TS_ASSERT_EQUALS(1, 1);
+    Egt *egt;
+    TS_TRACE("Starting EGT test");
+    egt = new Egt();
+    delete egt;
+  }
+};
 
 class NormalizeTest : public TestBase
 {
