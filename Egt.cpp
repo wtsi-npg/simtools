@@ -75,9 +75,17 @@ void Egt::open(string filename)
     exit(1);
   }
   // read header data
-  fileVersion = readInteger(file);
-  // TODO sanity check on EGT version, use to verify little-endianness
-  cout << "EGT version: " << fileVersion << endl << flush;
+  // sanity check on EGT version, use to verify little-endianness
+  long fileVersionLE = readInteger(file, true);
+  if (fileVersionLE >=0 and fileVersionLE <= 1000) {
+    little_endian = true;
+    fileVersion = fileVersionLE;
+  }  else {
+    little_endian = false;
+    file.seekg(0);
+    fileVersion = readInteger(file, LITTLE_ENDIAN);
+  }
+  gcVersion = readString(file);
   file.close();
 }
 
@@ -89,21 +97,41 @@ void Egt::open(char *filename)
 
 int Egt::readInteger(ifstream &file, bool littleEndian)
 {
-  int result = 0;
+  long result = 0;
   char * buffer;
   buffer = new char[NUMERIC_BYTES];
   file.read(buffer, NUMERIC_BYTES);
-  cout << "BUFFER:" ;
   if (littleEndian)
     for (int i = NUMERIC_BYTES-1; i>=0; i--) {
       result = (result << 8) + buffer[i];
-      cout << int(buffer[i]);
     }
   else
      for (int i = 0; i<NUMERIC_BYTES; i++) {
        result = (result << 8) + buffer[i];
-       cout << int(buffer[i]);
      }
-  cout << endl;
+  delete buffer;
   return result;
+}
+
+string Egt::readString(ifstream &file) {
+  // EGT string format is as follows: 
+  // - First byte encodes string length
+  // - Subsequent bytes contain the string
+  // Total bytes read is (length encoded in first byte)+1 -- at most 257
+  char * lengthPtr;
+  char * buffer;
+  lengthPtr = new char[1];
+  file.read(lengthPtr, 1);
+  char length = *lengthPtr;
+  delete lengthPtr;
+  cout << "String length: " << (int) length << endl;
+  buffer = new char[length+1];
+  file.read(buffer, length);
+  string result = string(buffer);
+  delete buffer;
+  cout << "String: " << result << endl;
+  //string result = "foobar";
+
+  return result;
+
 }

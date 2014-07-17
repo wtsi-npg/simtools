@@ -49,8 +49,9 @@ class Egt {
   void open(string filename);
   string filename;
   int NUMERIC_BYTES;
+  bool little_endian;
   // EGT header fields
-  int fileVersion;
+  long fileVersion;
   string gcVersion;
   string clusterVersion;
   string callVersion;
@@ -60,8 +61,8 @@ class Egt {
   string manifest;
 
 private:
-  int readInteger(ifstream &file, bool littleEndian=true);
-
+  int readInteger(ifstream &file, bool littleEndian);
+  string readString(ifstream &file);
 };
 
 #endif	// _EGT_H
