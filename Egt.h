@@ -58,6 +58,10 @@ class Egt {
   void printPreface();
   string filename;
   int NUMERIC_BYTES;
+  int ENTRIES_IN_RECORD;
+  int BYTES_IN_RECORD;
+  int GENOTYPES_PER_SNP;
+  
   // EGT header fields
   long fileVersion;
   string gcVersion;
@@ -71,11 +75,29 @@ class Egt {
   long dataVersion;
   string opa;
   long snpTotal;
+  // arrays for numerical data
+  int *nAA;
+  int *nAB;
+  int *nBB;
+  float* devRAA;
+  float* devRAB;
+  float* devRBB;
+  float* meanRAA;
+  float* meanRAB;
+  float* meanRBB;
+  float* devThetaAA;
+  float* devThetaAB;
+  float* devThetaBB;
+  float* meanThetaAA;
+  float* meanThetaAB;
+  float* meanThetaBB;
 
 private:
+  int* bytesToInts(char block[], int start, int end);
+  float* bytesToFloats(char block[], int start, int end);
   numericConverter getConverter(ifstream &file);
   void readHeader(ifstream &file);
-  long readInteger(ifstream &file);
+  int readInteger(ifstream &file);
   float readFloat(ifstream &file);
   void readPreface(ifstream &file);
   string readString(ifstream &file);

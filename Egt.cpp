@@ -37,6 +37,11 @@
  *
  * Repository for zCall:  https://github.com/wtsi-npg/zCall
  * 
+ * Native EGT format stores coordinates as (R, Theta) polar coordinates
+ * Python EGT class converts to Cartesian for storage in memory
+ * This class stores as polar, but has method for Cartesian conversion
+ * (More efficient than converting and storing as Cartesian, since both are 
+needed for FCR output)
  */
 
 #include <iostream>
@@ -53,7 +58,10 @@ using namespace std;
 
 Egt::Egt(void)
 {
+  GENOTYPES_PER_SNP = 3; 
   NUMERIC_BYTES = 4;
+  ENTRIES_IN_RECORD = 30;
+  BYTES_IN_RECORD = NUMERIC_BYTES * ENTRIES_IN_RECORD;
 }
 
 void Egt::open(string filename)
@@ -71,6 +79,35 @@ void Egt::open(string filename)
   readPreface(file);
   printHeader();
   printPreface();
+  // read cluster data
+  nAA = new int[snpTotal];
+  nAB = new int[snpTotal];
+  nBB = new int[snpTotal];
+  char *block = new char[BYTES_IN_RECORD];
+  for (int i=0; i<1; i++) { // TODO iterate up to snpTotal
+    file.read(block, BYTES_IN_RECORD);
+    int *ints = bytesToInts(block, 0, GENOTYPES_PER_SNP);
+
+   for (int j=0; j<3; j++)
+      cout << ints[j] << " ";
+    cout << endl;
+
+    float *floats = bytesToFloats(block, GENOTYPES_PER_SNP, ENTRIES_IN_RECORD);
+    
+    for (int j=0; j<12; j++)
+      cout << floats[j] << " ";
+    cout << endl;
+
+    /*
+    nAA[0] = readInteger(file);
+    nAB[0] = readInteger(file);
+    nBB[0] = readInteger(file);
+    cout << endl <<  nAA[0] << ", " << nAB[0]  << ", " << nBB[0] << endl;
+    */
+    delete floats;
+
+  }
+  delete block;
   file.close();
 }
 
@@ -81,7 +118,35 @@ void Egt::open(char *filename)
 }
 
 
+int* Egt::bytesToInts(char block[], int start, int end) {
+  // convert a section of a byte array into ints
+  int *results = new int[end - start];
+  numericConverter converter;
+  for (int i=start;i<end;i++) {
+    for (int j=0;j<NUMERIC_BYTES;j++) {
+      converter.ncChar[j] = block[i*NUMERIC_BYTES + j];
+    }
+    results[i] = converter.ncInt;
+  }
+  return results;
+}
+
+float* Egt::bytesToFloats(char block[], int start, int end) {
+  // convert a section of a byte array into ints
+  float *results = new float[end - start];
+  numericConverter converter;
+  for (int i=start;i<end;i++) {
+    for (int j=0;j<NUMERIC_BYTES;j++) {
+      converter.ncChar[j] = block[i*NUMERIC_BYTES + j];
+    }
+    results[i] = converter.ncFloat;
+  }
+  return results;
+}
+
+
 numericConverter Egt::getConverter(ifstream &file) {
+  // get a union for numeric conversion, for the next bytes in the given file
   char * buffer;
   buffer = new char[NUMERIC_BYTES];
   file.read(buffer, NUMERIC_BYTES);
@@ -115,9 +180,9 @@ void Egt::readHeader(ifstream &file)
   manifest = readString(file);
 }
 
-long Egt::readInteger(ifstream &file)
+int Egt::readInteger(ifstream &file)
 {
-  long result;
+  int result;
   numericConverter converter = getConverter(file);
   result = converter.ncInt;
   return result; 
@@ -159,7 +224,7 @@ void Egt::printHeader() {
 }
 
 void Egt::printPreface() {
-  cout << "DATA_VERSION: " << dataVersion << endl;
-  cout << "OPA: " << opa << endl;
-  cout << "TOTAL_SNPS: " << snpTotal << endl;
+  cout << "DATA_VERSION " << dataVersion << endl;
+  cout << "OPA " << opa << endl;
+  cout << "TOTAL_SNPS " << snpTotal << endl;
 }
