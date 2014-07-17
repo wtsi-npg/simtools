@@ -75,9 +75,9 @@ void Egt::open(string filename)
     exit(1);
   }
   // read header data
-  version = readInteger(file);
+  fileVersion = readInteger(file);
   // TODO sanity check on EGT version, use to verify little-endianness
-  cout << "EGT version: " << version << endl << flush;
+  cout << "EGT version: " << fileVersion << endl << flush;
   file.close();
 }
 
