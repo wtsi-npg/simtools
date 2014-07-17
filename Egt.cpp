@@ -115,23 +115,14 @@ int Egt::readInteger(ifstream &file, bool littleEndian)
 
 string Egt::readString(ifstream &file) {
   // EGT string format is as follows: 
-  // - First byte encodes string length
+  // - First byte is a *signed* char encoding the string length
   // - Subsequent bytes contain the string
-  // Total bytes read is (length encoded in first byte)+1 -- at most 257
-  char * lengthPtr;
+  // Total bytes read is (length encoded in first byte)+1 -- at most 128
+  char length = file.get(); // get a single byte
   char * buffer;
-  lengthPtr = new char[1];
-  file.read(lengthPtr, 1);
-  char length = *lengthPtr;
-  delete lengthPtr;
-  cout << "String length: " << (int) length << endl;
   buffer = new char[length+1];
   file.read(buffer, length);
   string result = string(buffer);
   delete buffer;
-  cout << "String: " << result << endl;
-  //string result = "foobar";
-
   return result;
-
 }
