@@ -73,7 +73,9 @@ void Egt::open(string filename)
   }
   // read header data
   readHeader(file);
-  //printHeader();
+  readPreface(file);
+  printHeader();
+  printPreface();
   file.close();
 }
 
@@ -116,6 +118,14 @@ long Egt::readInteger(ifstream &file, bool littleEndian)
   return result;
 }
 
+void Egt::readPreface(ifstream &file) {
+  // read the 'preface' from the body of an EGT file
+  // assumes file is positioned at start of the body
+  dataVersion = readInteger(file, little_endian);
+  opa = readString(file);
+  snpTotal = readInteger(file, little_endian);
+}
+
 string Egt::readString(ifstream &file) {
   // EGT string format is as follows: 
   // - First byte is a *signed* char encoding the string length
@@ -141,4 +151,10 @@ void Egt::printHeader() {
   cout << "DATE_CREATED " << dateCreated << endl;
   cout << "MODE " << (int) mode << endl;
   cout << "MANIFEST " << manifest << endl;
+}
+
+void Egt::printPreface() {
+  cout << "DATA_VERSION: " << dataVersion << endl;
+  cout << "OPA: " << opa << endl;
+  cout << "TOTAL_SNPS: " << snpTotal << endl;
 }
