@@ -148,7 +148,10 @@ class EgtTest : public TestBase
     TS_TRACE("Starting EGT test");
     egt = new Egt();
     TS_ASSERT_THROWS_NOTHING(egt->open(infile));
+    // check some (not all) fields in EGT header
     TS_ASSERT_EQUALS(egt->fileVersion, 3);
+    TS_ASSERT_EQUALS(egt->mode, 1);
+    TS_ASSERT_EQUALS(egt->manifest, "HumanCoreExome-12v1-1_A");
     TS_TRACE("Finished EGT test");
     delete egt;
   }

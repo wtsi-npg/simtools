@@ -47,6 +47,7 @@ class Egt {
   Egt();
   void open(char *filename);
   void open(string filename);
+  void printHeader();
   string filename;
   int NUMERIC_BYTES;
   bool little_endian;
@@ -61,8 +62,10 @@ class Egt {
   string manifest;
 
 private:
-  int readInteger(ifstream &file, bool littleEndian);
+  void readHeader(ifstream &file);
+  long readInteger(ifstream &file, bool littleEndian);
   string readString(ifstream &file);
+
 };
 
 #endif	// _EGT_H
