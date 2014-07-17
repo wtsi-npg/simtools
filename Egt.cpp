@@ -28,11 +28,20 @@
 // THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
+/*
+ * Egt is a class to parse Illumina EGT cluster files.
+ *
+ * This is a port of the EGT Python class in zCall to C++.
+ * There is no public documentation for the EGT binary file format.
+ * (However, the zCall EGT class is claimed to originate from Illumina.)
+ *
+ * Repository for zCall:  https://github.com/wtsi-npg/zCall
+ * 
+ */
 
 #include <iostream>
 #include <vector>
 #include <map>
-//#include <cstdio>
 #include <iostream>
 #include <fstream>
 #include <string> 
@@ -42,50 +51,29 @@ using namespace std;
 
 Egt::Egt(void)
 {
-  cout << endl << "Class to represent Illumina EGT cluster files" << endl;
-
   NUMERIC_BYTES = 4;
-
 }
-
-/*
- * Want to port the EGT.py class in zCall to C++
- * 
- * EGT format: Binary file with header, body
- * Data types in binary file:
- * - Bute
- * - 4-byte integers (32-bit signed long int)
- * - 4-byte floats (long double?)
- * - String, encoded with the first byte denoting length of the subsequent string. (Max 256 characters.)
- */
-
-
-
 
 void Egt::open(string filename)
 {
-
+  this->filename = filename;
   ifstream file;
  
-  cout << "Opening file: " << filename << endl;
-
   file.open(filename.c_str());
   if (!file) {
     cout << "Can't open file: " << filename << endl << flush;
     exit(1);
   }
-  // read header data
   // sanity check on EGT version, use to verify little-endianness
   long fileVersionLE = readInteger(file, true);
   if (fileVersionLE >=0 and fileVersionLE <= 1000) {
     little_endian = true;
-    fileVersion = fileVersionLE;
   }  else {
     little_endian = false;
-    file.seekg(0);
-    fileVersion = readInteger(file, LITTLE_ENDIAN);
   }
-  gcVersion = readString(file);
+  // read header data
+  readHeader(file);
+  //printHeader();
   file.close();
 }
 
@@ -95,7 +83,22 @@ void Egt::open(char *filename)
   open(f);
 }
 
-int Egt::readInteger(ifstream &file, bool littleEndian)
+
+void Egt::readHeader(ifstream &file) 
+{
+  // populate instance variables with header values
+  file.seekg(0); // set read position to zero, if not already there
+  fileVersion = readInteger(file, little_endian);
+  gcVersion = readString(file);
+  clusterVersion = readString(file);
+  callVersion = readString(file);
+  normalizationVersion = readString(file);
+  dateCreated = readString(file);
+  mode = file.get();
+  manifest = readString(file);
+}
+
+long Egt::readInteger(ifstream &file, bool littleEndian)
 {
   long result = 0;
   char * buffer;
@@ -119,10 +122,23 @@ string Egt::readString(ifstream &file) {
   // - Subsequent bytes contain the string
   // Total bytes read is (length encoded in first byte)+1 -- at most 128
   char length = file.get(); // get a single byte
+  if (length <= 0)
+    throw("Illegal string length in EGT file");
   char * buffer;
   buffer = new char[length+1];
   file.read(buffer, length);
   string result = string(buffer);
   delete buffer;
   return result;
+}
+
+void Egt::printHeader() {
+  cout << "FILE_VERSION " << fileVersion << endl;
+  cout << "GC_VERSION " << gcVersion << endl;
+  cout << "CLUSTER_VERSION " << clusterVersion << endl;
+  cout << "CALL_VERSION " << callVersion << endl;
+  cout << "NORMALIZATION_VERSION " << normalizationVersion << endl;
+  cout << "DATE_CREATED " << dateCreated << endl;
+  cout << "MODE " << (int) mode << endl;
+  cout << "MANIFEST " << manifest << endl;
 }
