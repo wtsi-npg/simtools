@@ -49,6 +49,8 @@
 
 using namespace std;
 
+
+
 Egt::Egt(void)
 {
   NUMERIC_BYTES = 4;
@@ -63,13 +65,6 @@ void Egt::open(string filename)
   if (!file) {
     cout << "Can't open file: " << filename << endl << flush;
     exit(1);
-  }
-  // sanity check on EGT version, use to verify little-endianness
-  long fileVersionLE = readInteger(file, true);
-  if (fileVersionLE >=0 and fileVersionLE <= 1000) {
-    little_endian = true;
-  }  else {
-    little_endian = false;
   }
   // read header data
   readHeader(file);
@@ -86,11 +81,31 @@ void Egt::open(char *filename)
 }
 
 
+numericConverter Egt::getConverter(ifstream &file) {
+  char * buffer;
+  buffer = new char[NUMERIC_BYTES];
+  file.read(buffer, NUMERIC_BYTES);
+  numericConverter converter;
+  for (int i=0; i<NUMERIC_BYTES; i++) {
+    converter.ncChar[i] = buffer[i];
+  }
+  delete buffer;
+  return converter;
+}
+
+float Egt::readFloat(ifstream &file) {
+  float result;
+  numericConverter converter = getConverter(file);
+  result = converter.ncFloat;
+  return result;
+
+}
+
 void Egt::readHeader(ifstream &file) 
 {
   // populate instance variables with header values
   file.seekg(0); // set read position to zero, if not already there
-  fileVersion = readInteger(file, little_endian);
+  fileVersion = readInteger(file);
   gcVersion = readString(file);
   clusterVersion = readString(file);
   callVersion = readString(file);
@@ -100,30 +115,20 @@ void Egt::readHeader(ifstream &file)
   manifest = readString(file);
 }
 
-long Egt::readInteger(ifstream &file, bool littleEndian)
+long Egt::readInteger(ifstream &file)
 {
-  long result = 0;
-  char * buffer;
-  buffer = new char[NUMERIC_BYTES];
-  file.read(buffer, NUMERIC_BYTES);
-  if (littleEndian)
-    for (int i = NUMERIC_BYTES-1; i>=0; i--) {
-      result = (result << 8) + buffer[i];
-    }
-  else
-     for (int i = 0; i<NUMERIC_BYTES; i++) {
-       result = (result << 8) + buffer[i];
-     }
-  delete buffer;
-  return result;
+  long result;
+  numericConverter converter = getConverter(file);
+  result = converter.ncInt;
+  return result; 
 }
 
 void Egt::readPreface(ifstream &file) {
   // read the 'preface' from the body of an EGT file
   // assumes file is positioned at start of the body
-  dataVersion = readInteger(file, little_endian);
+  dataVersion = readInteger(file);
   opa = readString(file);
-  snpTotal = readInteger(file, little_endian);
+  snpTotal = readInteger(file);
 }
 
 string Egt::readString(ifstream &file) {

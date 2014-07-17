@@ -38,8 +38,15 @@
 #include <iostream>
 #include <fstream>
 #include <stdint.h>
+#include <stdlib.h>
 
 using namespace std;
+
+union numericConverter {
+  float ncFloat;
+  int ncInt;
+  char ncChar[sizeof(int)];
+};
 
 class Egt {
 
@@ -51,7 +58,6 @@ class Egt {
   void printPreface();
   string filename;
   int NUMERIC_BYTES;
-  bool little_endian;
   // EGT header fields
   long fileVersion;
   string gcVersion;
@@ -67,8 +73,10 @@ class Egt {
   long snpTotal;
 
 private:
+  numericConverter getConverter(ifstream &file);
   void readHeader(ifstream &file);
-  long readInteger(ifstream &file, bool littleEndian);
+  long readInteger(ifstream &file);
+  float readFloat(ifstream &file);
   void readPreface(ifstream &file);
   string readString(ifstream &file);
 
