@@ -140,8 +140,6 @@ class EgtTest : public TestBase
 
   void testEgt(void)
   {
-    // test creation of EGT objects
-    // for now, just a placeholder for later tests
     string infile = "data/humancoreexome-12v1-1_a.egt";
     Egt *egt;
     TS_TRACE("Starting EGT test");
@@ -152,6 +150,11 @@ class EgtTest : public TestBase
     TS_ASSERT_EQUALS(egt->mode, 1);
     TS_ASSERT_EQUALS(egt->manifest, "HumanCoreExome-12v1-1_A");
     TS_ASSERT_EQUALS(egt->snpTotal, 542585);
+    // check items for first two SNPs in numerical data
+    TS_ASSERT_EQUALS(egt->counts[0], 286);
+    TS_ASSERT_EQUALS(egt->counts[3], 286);
+    TS_ASSERT_DELTA(egt->params[0], 0.1098993, 1e-6);
+    TS_ASSERT_DELTA(egt->params[12], 0.1409651, 1e-6);
     TS_TRACE("Finished EGT test");
     delete egt;
   }
