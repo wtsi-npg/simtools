@@ -58,10 +58,13 @@ using namespace std;
 
 Egt::Egt(void)
 {
+  verbose = true; // TODO read verbose as an input parameter
   GENOTYPES_PER_SNP = 3; 
+  PARAMS_PER_SNP = 12;
   NUMERIC_BYTES = 4;
   ENTRIES_IN_RECORD = 30;
   BYTES_IN_RECORD = NUMERIC_BYTES * ENTRIES_IN_RECORD;
+  ENTRIES_TO_USE = 15;
 }
 
 void Egt::open(string filename)
@@ -77,35 +80,27 @@ void Egt::open(string filename)
   // read header data
   readHeader(file);
   readPreface(file);
-  printHeader();
-  printPreface();
+  if (verbose) {
+    printHeader();
+    printPreface();
+  }
   // read cluster data
-  nAA = new int[snpTotal];
-  nAB = new int[snpTotal];
-  nBB = new int[snpTotal];
+  counts = new int[GENOTYPES_PER_SNP*snpTotal]; // nAA, nAB, nBB
+  // expected cluster positions, in polar coordinates (R, Theta) for (AA,AB,BB)
+  // Order of params is: devRAA, devRAB, devRBB, meanRAA, meanRAB, meanRBB, devThetaAA, devThetaAB, devThetaBB, meanThetaAA, meanThetaAB, meanThetaBB
+  // Can't use a multidimensional array because we don't know snpTotal at compile time; instead use a pseudo-multidimensional array such that the (i,j)th value is (i*WIDTH + j)
+  params = new float[PARAMS_PER_SNP*snpTotal];
   char *block = new char[BYTES_IN_RECORD];
-  for (int i=0; i<1; i++) { // TODO iterate up to snpTotal
+  for (int i=0; i<snpTotal; i++) { 
     file.read(block, BYTES_IN_RECORD);
     int *ints = bytesToInts(block, 0, GENOTYPES_PER_SNP);
-
-   for (int j=0; j<3; j++)
-      cout << ints[j] << " ";
-    cout << endl;
-
     float *floats = bytesToFloats(block, GENOTYPES_PER_SNP, ENTRIES_IN_RECORD);
-    
-    for (int j=0; j<12; j++)
-      cout << floats[j] << " ";
-    cout << endl;
-
-    /*
-    nAA[0] = readInteger(file);
-    nAB[0] = readInteger(file);
-    nBB[0] = readInteger(file);
-    cout << endl <<  nAA[0] << ", " << nAB[0]  << ", " << nBB[0] << endl;
-    */
+    for (int j=0;j<GENOTYPES_PER_SNP;j++)
+      counts[i*GENOTYPES_PER_SNP + j] = ints[j];
+    for (int j=0;j<PARAMS_PER_SNP;j++)
+      params[i*PARAMS_PER_SNP + j] = floats[j];
     delete floats;
-
+    delete ints;
   }
   delete block;
   file.close();
@@ -120,33 +115,36 @@ void Egt::open(char *filename)
 
 int* Egt::bytesToInts(char block[], int start, int end) {
   // convert a section of a byte array into ints
+  // start, end indices refer to positions in the array of ints (not bytes)
   int *results = new int[end - start];
   numericConverter converter;
   for (int i=start;i<end;i++) {
     for (int j=0;j<NUMERIC_BYTES;j++) {
       converter.ncChar[j] = block[i*NUMERIC_BYTES + j];
     }
-    results[i] = converter.ncInt;
+    results[i-start] = converter.ncInt;
   }
   return results;
 }
 
 float* Egt::bytesToFloats(char block[], int start, int end) {
-  // convert a section of a byte array into ints
+  // convert a section of a byte array into floats
+  // start, end indices refer to positions in the array of floats (not bytes)
   float *results = new float[end - start];
   numericConverter converter;
   for (int i=start;i<end;i++) {
     for (int j=0;j<NUMERIC_BYTES;j++) {
       converter.ncChar[j] = block[i*NUMERIC_BYTES + j];
     }
-    results[i] = converter.ncFloat;
+    results[i-start] = converter.ncFloat;
   }
   return results;
 }
 
 
-numericConverter Egt::getConverter(ifstream &file) {
-  // get a union for numeric conversion, for the next bytes in the given file
+numericConverter Egt::getNextConverter(ifstream &file) {
+  // convenience method to read the next few bytes into a union
+  // can then use the union for numeric conversion
   char * buffer;
   buffer = new char[NUMERIC_BYTES];
   file.read(buffer, NUMERIC_BYTES);
@@ -160,7 +158,7 @@ numericConverter Egt::getConverter(ifstream &file) {
 
 float Egt::readFloat(ifstream &file) {
   float result;
-  numericConverter converter = getConverter(file);
+  numericConverter converter = getNextConverter(file);
   result = converter.ncFloat;
   return result;
 
@@ -183,7 +181,7 @@ void Egt::readHeader(ifstream &file)
 int Egt::readInteger(ifstream &file)
 {
   int result;
-  numericConverter converter = getConverter(file);
+  numericConverter converter = getNextConverter(file);
   result = converter.ncInt;
   return result; 
 }
@@ -213,6 +211,7 @@ string Egt::readString(ifstream &file) {
 }
 
 void Egt::printHeader() {
+  // convenience method to print file header
   cout << "FILE_VERSION " << fileVersion << endl;
   cout << "GC_VERSION " << gcVersion << endl;
   cout << "CLUSTER_VERSION " << clusterVersion << endl;
@@ -224,6 +223,7 @@ void Egt::printHeader() {
 }
 
 void Egt::printPreface() {
+  // convenience method to print preface of "main" data section
   cout << "DATA_VERSION " << dataVersion << endl;
   cout << "OPA " << opa << endl;
   cout << "TOTAL_SNPS " << snpTotal << endl;
