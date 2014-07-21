@@ -31,14 +31,9 @@
 #ifndef _EGT_H
 #define _EGT_H
 
-// TODO check if all of these includes are needed
 #include <string>
-#include <vector>
-#include <map>
 #include <iostream>
 #include <fstream>
-#include <stdint.h>
-#include <stdlib.h>
 
 using namespace std;
 
@@ -51,7 +46,7 @@ union numericConverter {
 class Egt {
 
  public:
-  Egt();
+  Egt(bool verbose=false);
   void open(char *filename);
   void open(string filename);
   void printHeader();

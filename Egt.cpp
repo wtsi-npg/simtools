@@ -44,21 +44,14 @@
 needed for FCR output)
  */
 
-#include <iostream>
-#include <vector>
-#include <map>
-#include <iostream>
-#include <fstream>
 #include <string> 
 #include "Egt.h"
 
 using namespace std;
 
-
-
-Egt::Egt(void)
+Egt::Egt(bool verbose)
 {
-  verbose = true; // TODO read verbose as an input parameter
+  this->verbose = verbose;
   GENOTYPES_PER_SNP = 3; 
   PARAMS_PER_SNP = 12;
   NUMERIC_BYTES = 4;
