@@ -81,6 +81,8 @@ class Egt {
   // arrays for numerical data
   int *counts;
   float *params;
+  // array for SNP names
+  string *snpNames;
 
 private:
   int* bytesToInts(char block[], int start, int end);
@@ -90,6 +92,7 @@ private:
   int readInteger(ifstream &file);
   float readFloat(ifstream &file);
   void readPreface(ifstream &file);
+  string* readSNPNames(ifstream &file);
   string readString(ifstream &file);
 
 };

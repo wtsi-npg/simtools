@@ -155,6 +155,8 @@ class EgtTest : public TestBase
     TS_ASSERT_EQUALS(egt->counts[3], 286);
     TS_ASSERT_DELTA(egt->params[0], 0.1098993, 1e-6);
     TS_ASSERT_DELTA(egt->params[12], 0.1409651, 1e-6);
+    // check first SNP name
+    TS_ASSERT_EQUALS(egt->snpNames[0], "1KG_1_100177980");
     TS_TRACE("Finished EGT test");
     delete egt;
   }

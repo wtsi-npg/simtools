@@ -103,6 +103,7 @@ void Egt::open(string filename)
     delete ints;
   }
   delete block;
+  snpNames = readSNPNames(file);
   file.close();
 }
 
@@ -192,6 +193,23 @@ void Egt::readPreface(ifstream &file) {
   dataVersion = readInteger(file);
   opa = readString(file);
   snpTotal = readInteger(file);
+}
+
+string* Egt::readSNPNames(ifstream &file) {
+  // read SNP names from an EGT file
+  // assumes file is positioned at end of cluster (mean, sd) data
+  string *names = new string[snpTotal];
+  int pos = file.tellg();
+  file.seekg(pos + 13 * snpTotal); // skip SNP quality scores
+  for (int i=0;i<snpTotal;i++) {
+    // skip genotype scores
+    // length of strings is unknown, so must read each one and discard it
+    readString(file);
+  }
+  for (int i=0;i<snpTotal;i++) {
+    names[i] = readString(file);
+  }
+  return names;
 }
 
 string Egt::readString(ifstream &file) {
