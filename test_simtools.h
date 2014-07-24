@@ -247,6 +247,27 @@ class SimtoolsTest : public TestBase
     TS_TRACE("SIM file created from GTC is identical to master");
   }
 
+  void testFCR(void) {
+    TS_TRACE("Placeholder for test of FCR mode");
+    Commander *commander = new Commander();
+
+    string infile = "data/example.json";
+    string outfile = "/tmp/fcr_test.txt";
+    string manfile = "data/mock.bpm.csv";
+    string egtfile = "data/humancoreexome-12v1-1_a.egt";
+    int start_pos = 0;
+    int end_pos = -1;
+    bool verbose = true;
+    /*
+    commander->commandFCR(infile, outfile, manfile, 
+                          egtfile, start_pos, 
+                          end_pos, verbose);
+    TS_ASSERT_THROWS_NOTHING(commander->commandFCR(infile, outfile, manfile, 
+                                                   egtfile, start_pos, 
+                                                   end_pos, verbose));
+    */
+  }
+
   void testGenoSNP(void) {
     // Tests of GenoSNP mode:
     // 1. Input from file, output all SNPs
