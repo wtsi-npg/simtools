@@ -258,14 +258,9 @@ class SimtoolsTest : public TestBase
     int start_pos = 0;
     int end_pos = -1;
     bool verbose = true;
-    /*
-    commander->commandFCR(infile, outfile, manfile, 
-                          egtfile, start_pos, 
-                          end_pos, verbose);
     TS_ASSERT_THROWS_NOTHING(commander->commandFCR(infile, outfile, manfile, 
                                                    egtfile, start_pos, 
                                                    end_pos, verbose));
-    */
   }
 
   void testGenoSNP(void) {
