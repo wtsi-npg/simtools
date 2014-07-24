@@ -38,6 +38,7 @@
 #include "commands.h"
 #include "Sim.h"
 #include "Gtc.h"
+#include "Egt.h"
 #include "QC.h"
 #include "Manifest.h"
 #include "json/json.h"
@@ -91,6 +92,14 @@ void Commander::parseInfile(string infile, vector<string> &sampleNames, vector<s
     while (f >> filename) infiles.push_back(filename);
   }
   f.close();
+  // do simple validation
+  if (infiles.size() == 0) throw("No GTC files are specified in the infile");
+  Gtc *gtc = new Gtc();
+  for (unsigned int i = 0; i < infiles.size(); i++) {
+    gtc->open(infiles[i],0);
+    if (gtc->errorMsg.length()) throw gtc->errorMsg;
+  }
+  delete gtc;
 }
 
 // View the header of a .sim file and (optionally) its contents
@@ -172,15 +181,7 @@ void Commander::commandCreate(string infile, string outfile, bool normalize, str
   // First, get a list of GTC files. and possibly sample names
   //
   if (infile == "") throw("commandCreate(): infile not specified");
-  
   parseInfile(infile,sampleNames,infiles);
-  if (infiles.size() == 0) throw("No GTC files are specified in the infile");
-  
-  // Let's check the GTC files, shall we?
-  for (unsigned int n = 0; n < infiles.size(); n++) {
-    gtc->open(infiles[n],0);
-    if (gtc->errorMsg.length()) throw gtc->errorMsg;
-  }
   
   // We need a manifest file to sort the SNPs and to normalise the intensities (if required)
   loadManifest(manifest, manfile);
@@ -189,7 +190,7 @@ void Commander::commandCreate(string infile, string outfile, bool normalize, str
   
   // Create the SIM file and write the header
   sim->openOutput(outfile);
-  sim->writeHeader(infiles.size(),gtc->numSnps, 2, numberFormat);
+  sim->writeHeader(infiles.size(), manifest->snps.size(), 2, numberFormat);
   
   // For each GTC file, write the sample name and intensities to the SIM file
   for (unsigned int n = 0; n < infiles.size(); n++) {
@@ -255,6 +256,33 @@ void Commander::commandCreate(string infile, string outfile, bool normalize, str
   sim->close();
   delete sim;
 }
+
+
+void Commander::commandFCR(string infile, string outfile, string manfile, string egtfile, int start_pos, int end_pos, bool verbose)
+{
+  vector<string> sampleNames;	// list of sample names from JSON input file
+  vector<string> infiles;	// list of GTC files to process
+  Gtc *gtc = new Gtc();
+  Manifest *manifest = new Manifest();
+  Egt *egt = new Egt();
+  if (verbose) {
+    cout << "Welcome to FCR mode!" << endl;
+  }
+  ofstream outFStream;
+  ostream *outStream;
+  if (outfile == "-") {
+    outStream = &cout;
+  } else {
+    outFStream.open(outfile.c_str(),ios::trunc | ios::out);
+    outStream = &outFStream;
+  }
+  if (infile == "") throw("commandCreate(): infile not specified");
+  parseInfile(infile, sampleNames, infiles);
+  loadManifest(manifest, manfile);
+  sort(manifest->snps.begin(), manifest->snps.end(), SNPSorter());
+  egt->open(egtfile);
+}
+
 
 //
 // Generate Illuminus output
