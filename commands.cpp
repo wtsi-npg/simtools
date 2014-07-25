@@ -301,23 +301,29 @@ void Commander::commandFCR(string infile, string outfile, string manfile, string
   // want to read intensities and scores from each GTC file
   // iterate over all (snp, sample) pairs
   // write output to a (gzipped?) FCR file
-  // Fields in each FCR line: snp_name, sample_id, allele_A, allele_B, theta, R, X_normalized, Y_normalized, X_raw, Y_raw, BAF, logR
+  // Fields in each FCR line: snp_name, sample_id, allele_A, allele_B, score, theta, R, X_normalized, Y_normalized, X_raw, Y_raw, BAF, logR
   if (end_pos == -1) end_pos = manifest->snps.size();// - 1;
   for (unsigned int i = 0; i < infiles.size(); i++) {
     // TODO is SCORES flag necessary?
     gtc->open(infiles[i], Gtc::XFORM | Gtc::INTENSITY | Gtc::SCORES);
     compareNumberOfSNPs(manifest, gtc);
+    string sampleName;
+    if (i < sampleNames.size()) sampleName = sampleNames[i];
+    else sampleName = gtc->sampleName;
     for (unsigned int j = 0; j < manifest->snps.size(); j++) {
+      string snpName = manifest->snps[j].name;
       double x_raw = gtc->xRawIntensity[j];
       double y_raw = gtc->yRawIntensity[j];
-      //cerr << i << " " << j << ": X_RAW: " << x_raw <<  ", Y_RAW: " << y_raw << endl;
       float score = gtc->scores[j];
       double x_norm;
       double y_norm;
       unsigned int norm_id = manifest->normIdMap[manifest->snps[j].normId];
+      char *alleles = manifest->snps[j].snp;
       normalizeIntensity(x_raw, y_raw, x_norm, y_norm, norm_id, gtc);
-      // TODO initial test of output, expand later
-      *outStream  << i << "\t" << j << "\t" << x_raw << "\t" << y_raw << "\t" <<  x_norm << "\t" << y_norm << "\t" << score << endl;
+      // output with placeholders for values to be calculated
+      cerr  << sampleName << "\t" << snpName << "\t" << alleles[0] << "\t" << alleles[1]  << "\t" << score << "\t"  << "THETA" << "\t"  << "R" << "\t" <<  x_norm << "\t" << y_norm << "\t" << x_raw << "\t" << y_raw << "\t" << "BAF" << "\t" << "LogR" << endl;
+      *outStream  << sampleName << "\t" << snpName << "\t" << alleles[0] << "\t" << alleles[1]  << "\t" << score << "\t"  << "THETA" << "\t"  << "R" << "\t" <<  x_norm << "\t" << y_norm << "\t" << x_raw << "\t" << y_raw << "\t" << "BAF" << "\t" << "LogR" << endl;
+
     }
   }
   delete gtc;
