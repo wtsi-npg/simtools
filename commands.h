@@ -38,6 +38,7 @@
 #include "Sim.h"
 #include "Gtc.h"
 #include "Egt.h"
+#include "Fcr.h"
 #include "QC.h"
 #include "Manifest.h"
 #include "json/json.h"

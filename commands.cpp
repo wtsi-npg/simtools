@@ -39,6 +39,7 @@
 #include "Sim.h"
 #include "Gtc.h"
 #include "Egt.h"
+#include "Fcr.h"
 #include "QC.h"
 #include "Manifest.h"
 #include "json/json.h"
@@ -283,6 +284,7 @@ void Commander::commandFCR(string infile, string outfile, string manfile, string
   Gtc *gtc = new Gtc();
   Manifest *manifest = new Manifest();
   Egt *egt = new Egt();
+  Fcr *fcr = new Fcr(); // Final Call Report generator
   ofstream outFStream;
   ostream *outStream;
   if (outfile == "-") {
@@ -320,9 +322,13 @@ void Commander::commandFCR(string infile, string outfile, string manfile, string
       unsigned int norm_id = manifest->normIdMap[manifest->snps[j].normId];
       char *alleles = manifest->snps[j].snp;
       normalizeIntensity(x_raw, y_raw, x_norm, y_norm, norm_id, gtc);
+      double theta;
+      double r;
+      fcr->cartesianToPolar(x_raw, y_raw, theta, r);
+
       // output with placeholders for values to be calculated
-      cerr  << sampleName << "\t" << snpName << "\t" << alleles[0] << "\t" << alleles[1]  << "\t" << score << "\t"  << "THETA" << "\t"  << "R" << "\t" <<  x_norm << "\t" << y_norm << "\t" << x_raw << "\t" << y_raw << "\t" << "BAF" << "\t" << "LogR" << endl;
-      *outStream  << sampleName << "\t" << snpName << "\t" << alleles[0] << "\t" << alleles[1]  << "\t" << score << "\t"  << "THETA" << "\t"  << "R" << "\t" <<  x_norm << "\t" << y_norm << "\t" << x_raw << "\t" << y_raw << "\t" << "BAF" << "\t" << "LogR" << endl;
+      cerr  << sampleName << "\t" << snpName << "\t" << alleles[0] << "\t" << alleles[1]  << "\t" << score << "\t"  << theta << "\t"  << r << "\t" <<  x_norm << "\t" << y_norm << "\t" << x_raw << "\t" << y_raw << "\t" << "BAF" << "\t" << "LogR" << endl;
+      *outStream  << sampleName << "\t" << snpName << "\t" << alleles[0] << "\t" << alleles[1]  << "\t" << score << "\t"  << theta << "\t"  << r << "\t" <<  x_norm << "\t" << y_norm << "\t" << x_raw << "\t" << y_raw << "\t" << "BAF" << "\t" << "LogR" << endl;
 
     }
   }

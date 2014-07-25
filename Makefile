@@ -78,7 +78,7 @@ usage:
 clean:
 	rm -f *.o Gtc_wrap.cxx Gtc.pm Sim_wrap.cxx Sim.pm runner.cpp runner $(TARGETS)
 
-test: Sim.o Gtc.o Manifest.o Egt.o QC.o json/json_reader.o json/json_writer.o json/json_value.o commands.o runner.o
+test: Sim.o Gtc.o Manifest.o Egt.o Fcr.o QC.o json/json_reader.o json/json_writer.o json/json_value.o commands.o runner.o
 	$(CC) $(CFLAGS) $(LDFLAGS) $(CXXFLAGS) -o runner $^ -lstlport
 	./runner # run "./runner -v" to print trace information
 
@@ -111,7 +111,7 @@ normalize_manifest: normalize_manifest.o Manifest.o
 sim: sim.o Sim.o
 	$(CC) $(LDFLAGS) -o $@ $^ -lstlport
 
-simtools: simtools.o commands.o Sim.o Gtc.o Manifest.o Egt.o QC.o json/json_reader.o json/json_writer.o json/json_value.o
+simtools: simtools.o commands.o Sim.o Gtc.o Manifest.o Egt.o Fcr.o QC.o json/json_reader.o json/json_writer.o json/json_value.o
 	$(CC) $(LDFLAGS) -o $@ $^ -lstlport
 
 commands.o: commands.cpp
@@ -152,6 +152,7 @@ Gtc.o: Gtc.cpp Gtc.h
 Sim.o: Sim.cpp Sim.h
 Manifest.o: Manifest.cpp Manifest.h
 Egt.o: Egt.cpp Egt.h
+Fcr.o: Fcr.cpp Fcr.h
 gtc.o: Gtc.h Manifest.h
 sim.o: Sim.h
 simtools.o: Sim.h
