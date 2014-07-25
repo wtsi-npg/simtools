@@ -56,10 +56,11 @@ class Commander {
 
   Commander();
 
+  void compareNumberOfSNPs(Manifest *manifest, Gtc *gtc);
   void loadManifest(Manifest *manifest, string manfile);
   void parseInfile(string infile, vector<string> &sampleNames, vector<string> &infiles);
   //void readGTC(string gtcfile, Manifest manifest, vector<double> &intensities, vector<float> &scores, string &name);
-  void normalizeIntensity(double x_raw, double y_raw, double &x_norm, double &y_norm, unsigned int norm, Gtc *gtc);
+  void normalizeIntensity(double x_raw, double y_raw, double &x_norm, double &y_norm, unsigned int norm_id, Gtc *gtc);
   void commandView(string infile, bool verbose);
   void commandCreate(string infile, string outfile, bool normalize, string manfile, bool verbose);
   void commandFCR(string infile, string outfile, string manfile, string egtfile, int start_pos, int end_pos, bool verbose);
