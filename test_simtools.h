@@ -245,6 +245,7 @@ class SimtoolsTest : public TestBase
     TS_TRACE("SIM file created from GTC is of expected length");
     assertFilesIdentical(outfile, sim_raw, sim_size);
     TS_TRACE("SIM file created from GTC is identical to master");
+    // TODO also test with intensity normalization?
   }
 
   void testFCR(void) {
@@ -252,8 +253,9 @@ class SimtoolsTest : public TestBase
     Commander *commander = new Commander();
 
     string infile = "data/example.json";
+    //string outfile = tempdir+"/fcr_test.txt";
     string outfile = "/tmp/fcr_test.txt";
-    string manfile = "data/mock.bpm.csv";
+    string manfile = "data/example.bpm.csv";
     string egtfile = "data/humancoreexome-12v1-1_a.egt";
     int start_pos = 0;
     int end_pos = -1;
