@@ -36,12 +36,14 @@
 #include <iostream>
 #include <fstream>
 
+using namespace std;
+
 class Fcr {
 
  public:
   Fcr();
   void cartesianToPolar(double x, double y, double &theta, double &r);
-  
+  string createHeader(string content, int samples, int snps);
 
 
 };

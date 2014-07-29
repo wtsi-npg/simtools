@@ -34,7 +34,8 @@
  *
  */
 
-
+#include <ctime>
+#include <cstdio>
 #include <string> 
 #include "Fcr.h"
 
@@ -45,10 +46,44 @@ Fcr::Fcr() {
 
 }
 
-
 void Fcr::cartesianToPolar(double x, double y, double &theta, double &r) {
   // convert (x,y) cartesian coordinates to (r, theta) polar
   theta = atan2(y, x);
   r = sqrt(pow(y,2) + pow(x,2));
+
+}
+
+string Fcr::createHeader(string content, int samples, int snps) {
+  // generate standard FCR header
+  // content argument is typically the manifest name
+  // includes data set summary, and column heads for main body
+  string header = "[Header]\n";
+  header += "GSGT Version\tsimtools\n";
+  // create a time structure and add to output
+  time_t rawtime;
+  struct tm * timeinfo;
+  time ( &rawtime );
+  timeinfo = localtime ( &rawtime );
+  char *buffer = new char[20];
+  // use date format from Illumina FCR files
+  strftime(buffer, 20, "%m/%d/%Y %I:%M %p", timeinfo);
+  header += "Processing Date\t"+string(buffer)+"\n";
+  delete buffer;
+  header += "Content\t"+content+"\n";
+  // to_string is not working because of compiler issues
+  buffer = new char[50];  
+  sprintf(buffer, "%d", snps);
+  header += "Num SNPs\t"+string(buffer)+"\n";
+  header += "Total SNPs\t"+string(buffer)+"\n";
+  buffer = new char[50];  
+  sprintf(buffer, "%d", samples);
+  header += "Num Samples\t"+string(buffer)+"\n";
+  header += "Total Samples\t"+string(buffer)+"\n";
+  header += "File\t1 of 1\n"; // no split across files
+  header += "[Data]\n";
+  // now add column headers for man body
+  header += "SNP Name\tSample ID\tAllele1 - Top\tAllele2 - Top\tGC Score\tChr\tPosition\tTheta\tR\tX\tY\tX Raw\tY Raw\tB Allele Freq\tLog R Ratio\n";
+  //cerr << header;
+  return header;
 
 }
