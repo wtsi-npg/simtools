@@ -33,7 +33,6 @@
 // THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-// TODO Keep command line parsing in this file; move analysis logic into a separate class. Tidies up code and enables testing.
 
 #include <getopt.h>
 #include <iostream>
@@ -46,6 +45,7 @@ static struct option long_options[] = {
                    {"outfile", 1, 0, 0},
                    {"man_file", 1, 0, 0},
                    {"man_dir", 1, 0, 0},
+                   {"egt_file", 1, 0, 0},
                    {"normalize", 0, 0, 0},
                    {"verbose", 0, 0, 0},
                    {"start", 1, 0, 0},
@@ -63,60 +63,74 @@ void showUsage(int argc, char *argv[])
 
 	cout << endl;
 	if (command == "create") {
-		cout << "Usage:   " << argv[0] << " create [options]" << endl << endl;
-		cout << "Create a SIM file from a list of GTC files" << endl<< endl;
-		cout << "Options: --infile <filename>    File containing list of GTC files to process" << endl;
-		cout << "         --outfile <filename>   Name of SIM file to create or '-' for STDOUT" << endl;
-		cout << "         --man_file <dirname>    Directory to look for Manifest file in" << endl;
-		cout << "         --normalize            Normalize the intensities (default is raw values)" << endl;
-		cout << "         --verbose              Show progress messages to STDERR" << endl;
-		exit(0);
+          cout << "Usage:   " << argv[0] << " create [options]" << endl << endl;
+          cout << "Create a SIM file from a list of GTC files" << endl<< endl;
+          cout << "Options: --infile <filename>    File containing list of GTC files to process" << endl;
+          cout << "         --outfile <filename>   Name of SIM file to create or '-' for STDOUT" << endl;
+          cout << "         --man_file <dirname>   Directory to look for Manifest file in" << endl;
+          cout << "         --normalize            Normalize the intensities (default is raw values)" << endl;
+          cout << "         --verbose              Show progress messages to STDERR" << endl;
+          exit(0);
 	}
 
+        if (command == "fcr") {
+          cout << "Usage:   " << argv[0] << " fcr [options]" << endl << endl;
+          cout << "Create a FCR file from a list of GTC files" << endl<< endl;
+          cout << "Options: --infile <filename>    File containing list of GTC files to process" << endl;
+          cout << "         --outfile <filename>   Name of FCR file to create or '-' for STDOUT" << endl;
+          cout << "         --man_file <dirname>   Path to bpm.csv manifest file" << endl;
+          cout << "         --egt_file <dirname>   Path to EGT binary cluster file" << endl;
+          cout << "         --start <index>        Which SNP to start processing at (default is to start at the beginning)" << endl;
+          cout << "         --end <index>          Which SNP to end processing at (default is to continue until the end)" << endl;
+          cout << "         --verbose              Show progress messages to STDERR" << endl;
+          exit(0);
+        }
+
 	if (command == "illuminus") {
-		cout << "Usage:   " << argv[0] << " illuminus [options]" << endl << endl;
-		cout << "Create an Illuminus file from a SIM file" << endl<< endl;
-		cout << "Options: --infile <filename>    Name of SIM file to process or '-' for STDIN" << endl;
-		cout << "         --outfile <filename>   Name of Illuminus file to create or '-' for STDOUT" << endl;
-		cout << "         --man_file <dirname>    Directory to look for Manifest file in" << endl;
-		cout << "         --start <index>        Which SNP to start processing at (default is to start at the beginning)" << endl;
-		cout << "         --end <index>          Which SNP to end processing at (default is to continue until the end)" << endl;
-		cout << "         --verbose              Show progress messages to STDERR" << endl;
-		exit(0);
+          cout << "Usage:   " << argv[0] << " illuminus [options]" << endl << endl;
+          cout << "Create an Illuminus file from a SIM file" << endl<< endl;
+          cout << "Options: --infile <filename>    Name of SIM file to process or '-' for STDIN" << endl;
+          cout << "         --outfile <filename>   Name of Illuminus file to create or '-' for STDOUT" << endl;
+          cout << "         --man_file <dirname>    Directory to look for Manifest file in" << endl;
+          cout << "         --start <index>        Which SNP to start processing at (default is to start at the beginning)" << endl;
+          cout << "         --end <index>          Which SNP to end processing at (default is to continue until the end)" << endl;
+          cout << "         --verbose              Show progress messages to STDERR" << endl;
+          exit(0);
 	}
 
 	if (command == "genosnp") {
-		cout << "Usage:   " << argv[0] << " genosnp [options]" << endl << endl;
-		cout << "Create a GenoSNP file from a SIM file" << endl<< endl;
-		cout << "Options: --infile   The name of the SIM file or '-' for STDIN" << endl;
-		cout << "         --outfile  Name of GenoSNP file to create or '-' for STDOUT" << endl;
-		cout << "         --start <index>        Which sample to start processing at (default is to start at the beginning)" << endl;
-		cout << "         --end <index>          Which sample to end processing at (default is to continue until the end)" << endl;
-		cout << "         --verbose              Show progress messages to STDERR" << endl;
-		exit(0);
+          cout << "Usage:   " << argv[0] << " genosnp [options]" << endl << endl;
+          cout << "Create a GenoSNP file from a SIM file" << endl<< endl;
+          cout << "Options: --infile   The name of the SIM file or '-' for STDIN" << endl;
+          cout << "         --outfile  Name of GenoSNP file to create or '-' for STDOUT" << endl;
+          cout << "         --start <index>        Which sample to start processing at (default is to start at the beginning)" << endl;
+          cout << "         --end <index>          Which sample to end processing at (default is to continue until the end)" << endl;
+          cout << "         --verbose              Show progress messages to STDERR" << endl;
+          exit(0);
 	}
 
 	if (command == "view") {
-		cout << "Usage:   " << argv[0] << " view [options]" << endl << endl;
-		cout << "Display some information from a SIM file" << endl<< endl;
-		cout << "Options: --infile   The name of the SIM file or '-' for STDIN" << endl;
-		cout << "         --verbose  Display intensities as well as header information" << endl;
-		exit(0);
+          cout << "Usage:   " << argv[0] << " view [options]" << endl << endl;
+          cout << "Display some information from a SIM file" << endl<< endl;
+          cout << "Options: --infile   The name of the SIM file or '-' for STDIN" << endl;
+          cout << "         --verbose  Display intensities as well as header information" << endl;
+          exit(0);
 	}
 
 	if (command == "qc") {
-		cout << "Usage:   " << argv[0] << " qc [options]" << endl << endl;
-		cout << "Compute genotyping QC metrics and write to text files" << endl<< endl;
-		cout << "Options: --infile      The name of the SIM file (cannot accept STDIN)" << endl;
-		cout << "         --magnitude   Output file for sample magnitude (normalised by SNP); cannot use STDOUT" << endl;
-		cout << "         --xydiff      Output file for XY intensity difference; cannot use STDOUT" << endl;
-		cout << "         --verbose     Show progress messages to STDERR" << endl;
-		exit(0);
+          cout << "Usage:   " << argv[0] << " qc [options]" << endl << endl;
+          cout << "Compute genotyping QC metrics and write to text files" << endl<< endl;
+          cout << "Options: --infile      The name of the SIM file (cannot accept STDIN)" << endl;
+          cout << "         --magnitude   Output file for sample magnitude (normalised by SNP); cannot use STDOUT" << endl;
+          cout << "         --xydiff      Output file for XY intensity difference; cannot use STDOUT" << endl;
+          cout << "         --verbose     Show progress messages to STDERR" << endl;
+          exit(0);
 	}
 
 	cout << "Usage:   " << argv[0] << " <command> [options]" << endl;
 	cout << "Command: view        Dump SIM file to screen" << endl;
 	cout << "         create      Create a SIM file from GTC files" << endl;
+	cout << "         fcr         Create a FCR file from GTC files" << endl;
 	cout << "         illuminus   Produce Illuminus output" << endl;
 	cout << "         genosnp     Produce GenoSNP output" << endl;
 	cout << "         qc          Produce QC metrics" << endl;
@@ -130,6 +144,7 @@ int main(int argc, char *argv[])
 	string infile = "-";
 	string outfile = "-";
 	string manfile = "";
+        string egtfile = "";
 	string magnitude = "";
 	string xydiff = "";
 	bool verbose = false;
@@ -154,6 +169,7 @@ int main(int argc, char *argv[])
 			if (option == "verbose") verbose = true;
 			if (option == "man_file") manfile = optarg;
 			if (option == "man_dir") manfile = optarg;
+			if (option == "egt_file") egtfile = optarg;
 			if (option == "normalize") normalize = true;
 			if (option == "start") start_pos = atoi(optarg);
 			if (option == "end") end_pos = atoi(optarg);
@@ -174,7 +190,10 @@ int main(int argc, char *argv[])
 	  } else if (command == "create") {
 	    commander->commandCreate(infile, outfile, normalize, 
 				     manfile, verbose);
-	  } else if (command == "illuminus") {
+	  } else if (command == "fcr") {
+            commander->commandFCR(infile, outfile, manfile, egtfile, 
+                                  start_pos, end_pos, verbose);
+          } else if (command == "illuminus") {
 	    commander->commandIlluminus(infile, outfile, manfile, 
 					start_pos, end_pos, verbose);
 	  } else if (command == "genosnp") {
