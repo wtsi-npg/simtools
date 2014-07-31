@@ -82,8 +82,6 @@ void Commander::loadManifest(Manifest *manifest, string manfile)
   manifest->open(manfile);
 }
 
-
-// placeholder to get parameters correct
 void Commander::normalizeIntensity(double x_raw, double y_raw,
                                    double &x_norm, double &y_norm,
                                    unsigned int norm_id, Gtc *gtc) {
