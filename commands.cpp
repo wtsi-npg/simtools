@@ -276,6 +276,13 @@ void Commander::commandCreate(string infile, string outfile, bool normalize, str
   delete sim;
 }
 
+// write a Final Call Report (FCR) file
+//
+// FCR consists of header and body
+// Fields for each line in body: (snp_name, sample_id, allele_A, allele_B, 
+// score, chr, pos, theta, R, X_normalized, Y_normalized, X_raw, Y_raw, 
+// BAF, logR)
+// 
 
 void Commander::commandFCR(string infile, string outfile, string manfile, string egtfile, int start_pos, int end_pos, bool verbose)
 {
@@ -293,7 +300,6 @@ void Commander::commandFCR(string infile, string outfile, string manfile, string
     outFStream.open(outfile.c_str(),ios::trunc | ios::out);
     outStream = &outFStream;
   }
-  // TODO write FCR file header
   if (infile == "") throw("commandCreate(): infile not specified");
   parseInfile(infile, sampleNames, infiles);
   loadManifest(manifest, manfile);
@@ -303,8 +309,10 @@ void Commander::commandFCR(string infile, string outfile, string manfile, string
   // want to read intensities and scores from each GTC file
   // iterate over all (snp, sample) pairs
   // write output to a (gzipped?) FCR file
-  // Fields in each FCR line: snp_name, sample_id, allele_A, allele_B, score, theta, R, X_normalized, Y_normalized, X_raw, Y_raw, BAF, logR
+  // Fields in each FCR line: snp_name, sample_id, allele_A, allele_B, score, chr, pos, theta, R, X_normalized, Y_normalized, X_raw, Y_raw, BAF, logR
   if (end_pos == -1) end_pos = manifest->snps.size();// - 1;
+  string header = fcr->createHeader(manifest->filename, infiles.size(), 
+                                    manifest->snps.size());
   for (unsigned int i = 0; i < infiles.size(); i++) {
     // TODO is SCORES flag necessary?
     gtc->open(infiles[i], Gtc::XFORM | Gtc::INTENSITY | Gtc::SCORES);
@@ -314,6 +322,8 @@ void Commander::commandFCR(string infile, string outfile, string manfile, string
     else sampleName = gtc->sampleName;
     for (unsigned int j = 0; j < manifest->snps.size(); j++) {
       string snpName = manifest->snps[j].name;
+      string chromosome = manifest->snps[j].chromosome;
+      long position = manifest->snps[j].position;
       double x_raw = gtc->xRawIntensity[j];
       double y_raw = gtc->yRawIntensity[j];
       float score = gtc->scores[j];
@@ -325,11 +335,11 @@ void Commander::commandFCR(string infile, string outfile, string manfile, string
       double theta;
       double r;
       fcr->cartesianToPolar(x_raw, y_raw, theta, r);
-
+      double logR = fcr->logR(theta, r, *egt, j);
+      double baf = fcr->BAF(theta, *egt, j);
       // output with placeholders for values to be calculated
-      cerr  << sampleName << "\t" << snpName << "\t" << alleles[0] << "\t" << alleles[1]  << "\t" << score << "\t"  << theta << "\t"  << r << "\t" <<  x_norm << "\t" << y_norm << "\t" << x_raw << "\t" << y_raw << "\t" << "BAF" << "\t" << "LogR" << endl;
-      *outStream  << sampleName << "\t" << snpName << "\t" << alleles[0] << "\t" << alleles[1]  << "\t" << score << "\t"  << theta << "\t"  << r << "\t" <<  x_norm << "\t" << y_norm << "\t" << x_raw << "\t" << y_raw << "\t" << "BAF" << "\t" << "LogR" << endl;
-
+      //cerr  << sampleName << "\t" << snpName << "\t" << alleles[0] << "\t" << alleles[1]  << "\t" << score << "\t" << chromosome << "\t" << position << "\t" << theta << "\t"  << r << "\t" <<  x_norm << "\t" << y_norm << "\t" << x_raw << "\t" << y_raw << "\t" << baf << "\t" << logR << endl;
+      *outStream  << sampleName << "\t" << snpName << "\t" << alleles[0] << "\t" << alleles[1]  << "\t" << score << "\t" << chromosome << "\t" << position << "\t" << theta << "\t"  << r << "\t" <<  x_norm << "\t" << y_norm << "\t" << x_raw << "\t" << y_raw << "\t" << baf << "\t" << logR << endl;
     }
   }
   delete gtc;
