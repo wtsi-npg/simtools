@@ -321,8 +321,6 @@ void Commander::commandFCR(string infile, string outfile, string manfile, string
     else sampleName = gtc->sampleName;
     for (unsigned int j = 0; j < manifest->snps.size(); j++) {
       string snpName = manifest->snps[j].name;
-      string chromosome = manifest->snps[j].chromosome;
-      long position = manifest->snps[j].position;
       double x_raw = gtc->xRawIntensity[j];
       double y_raw = gtc->yRawIntensity[j];
       float score = gtc->scores[j];
@@ -337,8 +335,7 @@ void Commander::commandFCR(string infile, string outfile, string manfile, string
       double logR = fcr->logR(theta, r, *egt, j);
       double baf = fcr->BAF(theta, *egt, j);
       // output with placeholders for values to be calculated
-      //cerr  << sampleName << "\t" << snpName << "\t" << alleles[0] << "\t" << alleles[1]  << "\t" << score << "\t" << chromosome << "\t" << position << "\t" << theta << "\t"  << r << "\t" <<  x_norm << "\t" << y_norm << "\t" << x_raw << "\t" << y_raw << "\t" << baf << "\t" << logR << endl;
-      *outStream  << sampleName << "\t" << snpName << "\t" << alleles[0] << "\t" << alleles[1]  << "\t" << score << "\t" << chromosome << "\t" << position << "\t" << theta << "\t"  << r << "\t" <<  x_norm << "\t" << y_norm << "\t" << x_raw << "\t" << y_raw << "\t" << baf << "\t" << logR << endl;
+      *outStream  << sampleName << "\t" << snpName << "\t" << alleles[0] << "\t" << alleles[1]  << "\t" << score << "\t" << "\t" << theta << "\t"  << r << "\t" <<  x_norm << "\t" << y_norm << "\t" << x_raw << "\t" << y_raw << "\t" << baf << "\t" << logR << endl;
     }
   }
   delete gtc;

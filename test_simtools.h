@@ -303,8 +303,10 @@ class SimtoolsTest : public TestBase
     Commander *commander = new Commander();
 
     string infile = "data/example.json";
-    string outfile = tempdir+"/fcr_test.txt";
-    string outfile_notime = tempdir+"/fcr_test_notime.txt";
+    //string outfile = tempdir+"/fcr_test.txt";
+    //string outfile_notime = tempdir+"/fcr_test_notime.txt";
+    string outfile = "/tmp/fcr_test.txt";
+    string outfile_notime = "/tmp/fcr_test_notime.txt";
     string manfile = "data/example.bpm.csv";
     string egtfile = "data/humancoreexome-12v1-1_a.egt";
     string normfile = "data/fcr_test_notime.txt";
@@ -314,7 +316,7 @@ class SimtoolsTest : public TestBase
     TS_ASSERT_THROWS_NOTHING(commander->commandFCR(infile, outfile, manfile, 
                                                    egtfile, start_pos, 
                                                    end_pos, verbose));
-    int size = 4811; // expected file size
+    int size = 4338; // expected file size
     assertFileSize(outfile, size);
     TS_TRACE("FCR file is of correct length");
     // compare output data; first, need to strip out file creation time
@@ -324,7 +326,7 @@ class SimtoolsTest : public TestBase
       cerr << "Failed to grep test FCR file: " << outfile << endl;
       throw 1;
     }
-    size = 4775;
+    size = 4302;
     assertFilesIdentical(normfile, outfile_notime, size);
     TS_TRACE("FCR file is identical to master");
   }

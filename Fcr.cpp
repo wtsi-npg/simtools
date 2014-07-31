@@ -97,7 +97,7 @@ string Fcr::createHeader(string content, int samples, int snps) {
   header += "File\t1 of 1\n"; // no split across files
   header += "[Data]\n";
   // now add column headers for man body
-  header += "SNP Name\tSample ID\tAllele1 - Top\tAllele2 - Top\tGC Score\tChr\tPosition\tTheta\tR\tX\tY\tX Raw\tY Raw\tB Allele Freq\tLog R Ratio\n";
+  header += "SNP Name\tSample ID\tAllele1 - Top\tAllele2 - Top\tGC Score\tTheta\tR\tX\tY\tX Raw\tY Raw\tB Allele Freq\tLog R Ratio\n";
   return header;
 }
 
