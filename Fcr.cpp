@@ -32,18 +32,33 @@
  * Fcr is a class to generate Final Call Report (FCR) files.
  * Output is similar to the FCR files produced by GenomeStudio.
  *
+ * Includes the logR and BAF statistics defined in:
+ * Peiffer, Daniel A., et al. "High-resolution genomic profiling of chromosomal aberrations using Infinium whole-genome genotyping." Genome research 16.9 (2006): 1136-1148.
  */
 
+#include <cmath>
 #include <ctime>
 #include <cstdio>
-#include <string> 
+#include <string>
+#include "Egt.h"
 #include "Fcr.h"
 
 using namespace std;
 
 Fcr::Fcr() {
-  // placeholder for constructor
+  // empty constructor
+}
 
+double Fcr::BAF(double theta, Egt egt, long snpIndex) {
+  // estimate the B allele frequency by interpolating between known clusters
+  float *meanTheta = egt.getMeanTheta(snpIndex);
+  double baf = 0.0;
+  if (theta < meanTheta[1]) {
+    baf = ((theta - meanTheta[0])/(meanTheta[1] - meanTheta[0]))*0.5;
+  } else {
+    baf = 0.5 + ((theta - meanTheta[1])/(meanTheta[2] - meanTheta[1]))*0.5;
+  }
+  return baf;
 }
 
 void Fcr::cartesianToPolar(double x, double y, double &theta, double &r) {
@@ -83,7 +98,23 @@ string Fcr::createHeader(string content, int samples, int snps) {
   header += "[Data]\n";
   // now add column headers for man body
   header += "SNP Name\tSample ID\tAllele1 - Top\tAllele2 - Top\tGC Score\tChr\tPosition\tTheta\tR\tX\tY\tX Raw\tY Raw\tB Allele Freq\tLog R Ratio\n";
-  //cerr << header;
   return header;
+}
 
+double Fcr::logR(double theta, double r, Egt egt, long snpIndex) {
+  // calculate the LogR metric for given (theta, r) of sample
+  // snpIndex is position in the manifest (starting from 0)
+  // get (theta, R) for AA, AB, BB from EGT and interpolate
+  // find intersection with (theta, R) of sample to get R_expected
+  float *meanR = egt.getMeanR(snpIndex);
+  float *meanTheta = egt.getMeanTheta(snpIndex);
+  double rExpected = 0.0;
+  for (int i=1; i<egt.GENOTYPES_PER_SNP; i++) {
+    if (theta < meanTheta[i] or i+1 == egt.GENOTYPES_PER_SNP) {
+      // m = gradient of interpolated line
+      double m = (meanR[i] - meanR[i-1])/(meanTheta[i] - meanTheta[i-1]);
+      rExpected = m * theta + meanR[i-1];
+    }
+  }
+  return log2(r/rExpected);
 }
