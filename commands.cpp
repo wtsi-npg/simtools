@@ -311,6 +311,7 @@ void Commander::commandFCR(string infile, string outfile, string manfile, string
   if (end_pos == -1) end_pos = manifest->snps.size();// - 1;
   string header = fcr->createHeader(manifest->filename, infiles.size(), 
                                     manifest->snps.size());
+  *outStream  << header;
   for (unsigned int i = 0; i < infiles.size(); i++) {
     // TODO is SCORES flag necessary?
     gtc->open(infiles[i], Gtc::XFORM | Gtc::INTENSITY | Gtc::SCORES);
