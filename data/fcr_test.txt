@@ -1,3 +1,14 @@
+[Header]
+GSGT Version	simtools
+Processing Date	07/31/2014 11:36 AM
+Content	
+Num SNPs	10
+Total SNPs	10
+Num Samples	5
+Total Samples	5
+File	1 of 1
+[Data]
+SNP Name	Sample ID	Allele1 - Top	Allele2 - Top	GC Score	Chr	Position	Theta	R	X	Y	X Raw	Y Raw	B Allele Freq	Log R Ratio
 urn:wtsi:example_0000	snp0000001	G	A	10	1	1000000	1.10715	2.23607	1	2	1	2	1.13875	1.65129
 urn:wtsi:example_0000	snp0000010	G	A	10	10	10000009	1.10715	2.23607	1	2	1	2	1.13707	1.54649
 urn:wtsi:example_0000	snp0000002	G	A	10	2	2000001	1.10715	2.23607	1	2	1	2	1.11753	1.53914
