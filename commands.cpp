@@ -335,7 +335,7 @@ void Commander::commandFCR(string infile, string outfile, string manfile, string
       double logR = fcr->logR(theta, r, *egt, j);
       double baf = fcr->BAF(theta, *egt, j);
       // output with placeholders for values to be calculated
-      *outStream  << sampleName << "\t" << snpName << "\t" << alleles[0] << "\t" << alleles[1]  << "\t" << score << "\t" << "\t" << theta << "\t"  << r << "\t" <<  x_norm << "\t" << y_norm << "\t" << x_raw << "\t" << y_raw << "\t" << baf << "\t" << logR << endl;
+      *outStream  << snpName << "\t" << sampleName << "\t" << alleles[0] << "\t" << alleles[1]  << "\t" << score << "\t" << "\t" << theta << "\t"  << r << "\t" <<  x_norm << "\t" << y_norm << "\t" << x_raw << "\t" << y_raw << "\t" << baf << "\t" << logR << endl;
     }
   }
   delete gtc;
