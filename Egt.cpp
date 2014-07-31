@@ -78,10 +78,10 @@ void Egt::open(string filename)
     printPreface();
   }
   // read cluster data
-  counts = new int[GENOTYPES_PER_SNP*snpTotal]; // nAA, nAB, nBB
   // expected cluster positions, in polar coordinates (R, Theta) for (AA,AB,BB)
   // Order of params is: devRAA, devRAB, devRBB, meanRAA, meanRAB, meanRBB, devThetaAA, devThetaAB, devThetaBB, meanThetaAA, meanThetaAB, meanThetaBB
   // Can't use a multidimensional array because we don't know snpTotal at compile time; instead use a pseudo-multidimensional array such that the (i,j)th value is (i*WIDTH + j)
+  counts = new int[GENOTYPES_PER_SNP*snpTotal]; // nAA, nAB, nBB
   params = new float[PARAMS_PER_SNP*snpTotal];
   char *block = new char[BYTES_IN_RECORD];
   for (int i=0; i<snpTotal; i++) { 
@@ -135,6 +135,36 @@ float* Egt::bytesToFloats(char block[], int start, int end) {
   return results;
 }
 
+float* Egt::getClusters(long index) {
+  // return all (theta, R) params for given position in the SNP manifest
+  // includes s.d. and mean of (r, theta) for AA, AB, BB
+  int start = index*PARAMS_PER_SNP;
+  float *snp_params = new float[PARAMS_PER_SNP];
+  for (int j=0; j < PARAMS_PER_SNP; j++) {
+    snp_params[j] = this->params[start + j];
+  }
+  return snp_params;
+}
+
+float* Egt::getMeanR(long index) {
+  // find mean polar radius for AA, AB, BB at given index
+  int start = index*PARAMS_PER_SNP + GENOTYPES_PER_SNP;
+  float *means = new float[GENOTYPES_PER_SNP];
+  for (int j=0; j < GENOTYPES_PER_SNP; j++) {
+    means[j] = this->params[start + j];
+  }
+  return means;
+}
+
+float* Egt::getMeanTheta(long index) {
+  // find mean polar angle for AA, AB, BB at given index
+  int start = index*PARAMS_PER_SNP + 3*GENOTYPES_PER_SNP;
+  float *means = new float[GENOTYPES_PER_SNP];
+  for (int j=0; j < GENOTYPES_PER_SNP; j++) {
+    means[j] = this->params[start + j];
+  }
+  return means;
+}
 
 numericConverter Egt::getNextConverter(ifstream &file) {
   // convenience method to read the next few bytes into a union

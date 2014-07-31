@@ -47,6 +47,9 @@ class Egt {
 
  public:
   Egt(bool verbose=false);
+  float* getClusters(long index);
+  float* getMeanR(long index);
+  float* getMeanTheta(long index);
   void open(char *filename);
   void open(string filename);
   void printHeader();
