@@ -78,7 +78,7 @@ usage:
 clean:
 	rm -f *.o Gtc_wrap.cxx Gtc.pm Sim_wrap.cxx Sim.pm runner.cpp runner $(TARGETS)
 
-test: Sim.o Gtc.o Manifest.o QC.o json/json_reader.o json/json_writer.o json/json_value.o commands.o runner.o
+test: Sim.o Gtc.o Manifest.o QC.o win2unix.o json/json_reader.o json/json_writer.o json/json_value.o commands.o runner.o
 	$(CC) $(CFLAGS) $(LDFLAGS) $(CXXFLAGS) -o runner $^ -lstlport
 	./runner # run "./runner -v" to print trace information
 
