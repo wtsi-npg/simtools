@@ -34,8 +34,7 @@ const char * win2unix(const char *f)
 	filepath = findAndReplace(filepath,"//","/");
 	filepath = findAndReplace(filepath,"evs-users3","evs-illumina");
 	filepath = findAndReplace(filepath,"evs-illumina","nfs");
-	filepath = findAndReplace(filepath,"netapp6a/illumina","nfs/new_illumina");
-	filepath = findAndReplace(filepath,"netapp6b/illumina","nfs/new_illumina");
+	filepath = findAndReplace(filepath,"fastnfs/illumina","nfs/new_illumina");
 	filepath = findAndReplace(filepath,"geno1","geno01");
 	filepath = findAndReplace(filepath,"geno2","geno02");
 	filepath = findAndReplace(filepath,"geno3","geno03");
