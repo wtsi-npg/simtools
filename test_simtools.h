@@ -34,6 +34,7 @@
 #include <cxxtest/TestSuite.h>
 #include "commands.h"
 #include "Manifest.h"
+#include "win2unix.h"
 
 using namespace std;
 
@@ -334,6 +335,21 @@ class SimtoolsTest : public TestBase
   }
 };
 
+
+class Win2UnixTest : public TestBase
+{
+ public:
+
+  void testWin2Unix(void) {
+
+    string filepath = "\\\\fastnfs\\illumina_geno4\\call\\20130605\\9298751015_R01C01.gtc";
+    string expected = "/nfs/new_illumina_geno04/call/20130605/9298751015_R01C01.gtc";
+    filepath = win2unix(filepath);
+    TS_ASSERT_EQUALS(filepath, expected);
+   
+  }
+
+};
 
 // Putting TestSuite classes in separate files appears not to work
 // See Cxx manual section 4.4; possible issue with compiler options
