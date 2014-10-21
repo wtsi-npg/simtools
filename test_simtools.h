@@ -201,9 +201,9 @@ class FcrTest : public TestBase
     double theta;
     double x = 3.0;
     double y = 4.0;
-    fcr->cartesianToPolar(x, y, theta, r);
-    TS_ASSERT_DELTA(r, 5.0, 1e-6);
-    TS_ASSERT_DELTA(theta, 0.9272952, 1e-6);
+    fcr->illuminaCoordinates(x, y, theta, r);
+    TS_ASSERT_DELTA(r, 7.0, 1e-6);
+    TS_ASSERT_DELTA(theta, 0.5903345, 1e-6);
     double baf = fcr->BAF(0.738881, *egt, 0);
     TS_ASSERT_DELTA(baf, 0.75, 1e-6);
     double logR = fcr->logR(1, 0.73881, *egt, 0);
@@ -317,7 +317,7 @@ class SimtoolsTest : public TestBase
     TS_ASSERT_THROWS_NOTHING(commander->commandFCR(infile, outfile, manfile, 
                                                    egtfile, start_pos, 
                                                    end_pos, verbose));
-    int size = 4288; // expected file size
+    int size = 4657; // expected file size
     assertFileSize(outfile, size);
     TS_TRACE("FCR file is of correct length");
     // compare output data; first, need to strip out file creation time
@@ -327,7 +327,7 @@ class SimtoolsTest : public TestBase
       cerr << "Failed to grep test FCR file: " << outfile << endl;
       throw 1;
     }
-    size = 4252;
+    size = 4621;
     assertFilesIdentical(normfile, outfile_notime, size);
     TS_TRACE("FCR file is identical to master");
   }

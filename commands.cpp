@@ -301,7 +301,7 @@ void Commander::commandFCR(string infile, string outfile, string manfile, string
   if (infile == "") throw("commandCreate(): infile not specified");
   parseInfile(infile, sampleNames, infiles);
   loadManifest(manifest, manfile);
-  sort(manifest->snps.begin(), manifest->snps.end(), SNPSorter());
+  //sort(manifest->snps.begin(), manifest->snps.end(), SNPSorter());
   egt->open(egtfile);
   // now we have output stream, GTC paths, populated manifest and EGT
   // want to read intensities and scores from each GTC file
@@ -331,11 +331,19 @@ void Commander::commandFCR(string infile, string outfile, string manfile, string
       normalizeIntensity(x_raw, y_raw, x_norm, y_norm, norm_id, gtc);
       double theta;
       double r;
-      fcr->cartesianToPolar(x_raw, y_raw, theta, r);
+      fcr->illuminaCoordinates(x_norm, y_norm, theta, r);
       double logR = fcr->logR(theta, r, *egt, j);
       double baf = fcr->BAF(theta, *egt, j);
       // produce tab-delimited output
-      *outStream  << snpName << "\t" << sampleName << "\t" << alleles[0] << "\t" << alleles[1]  << "\t" << score << "\t" << theta << "\t"  << r << "\t" <<  x_norm << "\t" << y_norm << "\t" << x_raw << "\t" << y_raw << "\t" << baf << "\t" << logR << endl;
+      char *buffer = new char[500];
+      string format = string("%s\t%s\t%c\t%c\t%.4f\t%.3f\t%.3f\t%.3f\t%.3f")+
+        string("\t%d\t%d\t%.4f\t%.4f\n");
+      sprintf(buffer, format.c_str(), snpName.c_str(), 
+              sampleName.c_str(), alleles[0], alleles[1],
+              score, theta, r, x_norm, y_norm,
+              int(x_raw), int(y_raw), baf, logR);
+      *outStream << string(buffer);
+      delete buffer;
     }
   }
   delete gtc;

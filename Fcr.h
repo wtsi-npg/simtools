@@ -43,7 +43,7 @@ class Fcr {
  public:
   Fcr();
   double BAF(double theta, Egt egt, long snpIndex);
-  void cartesianToPolar(double x, double y, double &theta, double &r);
+  void illuminaCoordinates(double x, double y, double &theta, double &r);
   string createHeader(string content, int samples, int snps);
   double logR(double theta, double r, Egt egt, long snpIndex);
 

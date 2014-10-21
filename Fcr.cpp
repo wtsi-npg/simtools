@@ -45,6 +45,8 @@
 
 using namespace std;
 
+const static double pi = 3.141593;
+
 Fcr::Fcr() {
   // empty constructor
 }
@@ -61,10 +63,13 @@ double Fcr::BAF(double theta, Egt egt, long snpIndex) {
   return baf;
 }
 
-void Fcr::cartesianToPolar(double x, double y, double &theta, double &r) {
-  // convert (x,y) cartesian coordinates to (r, theta) polar
-  theta = atan2(y, x);
-  r = sqrt(pow(y,2) + pow(x,2));
+void Fcr::illuminaCoordinates(double x, double y, double &theta, double &r) {
+  // convert (x,y) cartesian coordinates to Illumina coordinates (theta, r)
+  // these are NOT standard polar coordinates!
+  // the angle theta is rescaled s.t. pi/2 radians = 1 "Illumina angular unit"
+  // r = x+y instead of r = sqrt(x**2 + y**2)
+  theta = atan2(y, x)/(pi/2);
+  r = x + y;
 
 }
 
