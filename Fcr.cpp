@@ -122,7 +122,8 @@ double Fcr::logR(double theta, double r, Egt egt, long snpIndex) {
     if (theta < meanTheta[i] or i+1 == egt.GENOTYPES_PER_SNP) {
       // m = gradient of interpolated line
       double m = (meanR[i] - meanR[i-1])/(meanTheta[i] - meanTheta[i-1]);
-      rExpected = m * theta + meanR[i-1];
+      rExpected = m * (theta - meanTheta[i-1]) + meanR[i-1];
+      break;
     }
   }
   return log2(r/rExpected);

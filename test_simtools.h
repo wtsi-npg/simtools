@@ -207,7 +207,7 @@ class FcrTest : public TestBase
     double baf = fcr->BAF(0.738881, *egt, 0);
     TS_ASSERT_DELTA(baf, 0.75, 1e-6);
     double logR = fcr->logR(1, 0.73881, *egt, 0);
-    TS_ASSERT_DELTA(logR, -0.11553, 1e-4);
+    TS_ASSERT_DELTA(logR, -0.7180, 1e-4);
     delete egt;
     delete fcr;
   }
