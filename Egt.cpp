@@ -39,7 +39,7 @@
  * 
  * Native EGT format stores coordinates as (R, Theta) polar coordinates
  * Python EGT class converts to Cartesian for storage in memory
- * This class stores as polar, but has method for Cartesian conversion
+ * This class stores as polar
  * (More efficient than converting and storing as Cartesian, since both are 
 needed for FCR output)
  */
@@ -67,7 +67,7 @@ void Egt::open(string filename)
  
   file.open(filename.c_str());
   if (!file) {
-    cout << "Can't open file: " << filename << endl << flush;
+    cerr << "Can't open file: " << filename << endl << flush;
     exit(1);
   }
   // read header data
