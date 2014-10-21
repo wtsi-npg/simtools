@@ -54,8 +54,12 @@ Fcr::Fcr() {
 double Fcr::BAF(double theta, Egt egt, long snpIndex) {
   // estimate the B allele frequency by interpolating between known clusters
   float *meanTheta = egt.getMeanTheta(snpIndex);
-  double baf = 0.0;
-  if (theta < meanTheta[1]) {
+  double baf;
+  if (theta < meanTheta[0]) {
+    baf = 0.0;
+  } else if (theta > meanTheta[2]) {
+    baf = 1.0;
+  } else if (theta < meanTheta[1]) {
     baf = ((theta - meanTheta[0])/(meanTheta[1] - meanTheta[0]))*0.5;
   } else {
     baf = 0.5 + ((theta - meanTheta[1])/(meanTheta[2] - meanTheta[1]))*0.5;
@@ -65,7 +69,7 @@ double Fcr::BAF(double theta, Egt egt, long snpIndex) {
 
 void Fcr::illuminaCoordinates(double x, double y, double &theta, double &r) {
   // convert (x,y) cartesian coordinates to Illumina coordinates (theta, r)
-  // these are NOT standard polar coordinates!
+  // these are ***NOT*** standard polar coordinates!
   // the angle theta is rescaled s.t. pi/2 radians = 1 "Illumina angular unit"
   // r = x+y instead of r = sqrt(x**2 + y**2)
   theta = atan2(y, x)/(pi/2);
