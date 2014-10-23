@@ -34,6 +34,8 @@
 #include <cxxtest/TestSuite.h>
 #include "commands.h"
 #include "Manifest.h"
+#include "Egt.h"
+#include "Fcr.h"
 #include "win2unix.h"
 
 using namespace std;
@@ -134,6 +136,83 @@ class TestBase :  public CxxTest::TestSuite
 };
 
 
+class EgtTest : public TestBase
+{
+ public:
+
+  void testEgt(void)
+  {
+    string infile = "data/humancoreexome-12v1-1_a.egt";
+    Egt *egt;
+    TS_TRACE("Starting EGT test");
+    egt = new Egt();
+    TS_ASSERT_THROWS_NOTHING(egt->open(infile));
+    // check some (not all) fields in EGT header & preface
+    TS_ASSERT_EQUALS(egt->fileVersion, 3);
+    TS_ASSERT_EQUALS(egt->mode, 1);
+    TS_ASSERT_EQUALS(egt->manifest, "HumanCoreExome-12v1-1_A");
+    TS_ASSERT_EQUALS(egt->snpTotal, 542585);
+    TS_TRACE("Header and preface checks complete");
+    // check items for first two SNPs in numerical data
+    TS_ASSERT_EQUALS(egt->counts[0], 286);
+    TS_ASSERT_EQUALS(egt->counts[3], 286);
+    TS_ASSERT_DELTA(egt->params[0], 0.1098993, 1e-6);
+    TS_ASSERT_DELTA(egt->params[12], 0.1409651, 1e-6);
+    TS_TRACE("Check on counts and params for first two SNPs complete");
+    // check first SNP name
+    TS_ASSERT_EQUALS(egt->snpNames[0], "1KG_1_100177980");
+    TS_TRACE("SNP name check complete");
+    float expected[12] = { 0.109899, 0.183567, 0.107813, 
+                           1.31153, 1.62674, 1.23534, 
+                           0.00652837, 0.0223607, 0.0223607, 
+                           0.0283947, 0.502052, 0.97571 };
+    float *clusters = egt->getClusters(0);
+    for (int i=0;i<egt->PARAMS_PER_SNP;i++) {
+      TS_ASSERT_DELTA(clusters[i], expected[i], 1e-5);
+    }
+    float *meanR = egt->getMeanR(0);
+    for (int i=0;i<3;i++) {
+      TS_ASSERT_DELTA(meanR[i], expected[i+3], 1e-5);
+    }
+    float *meanTheta = egt->getMeanTheta(0);
+    for (int i=0;i<3;i++) {
+      TS_ASSERT_DELTA(meanTheta[i], expected[i+9], 1e-5);
+    }
+    TS_TRACE("Check on contents of first EGT cluster record complete");
+    TS_TRACE("Finished EGT test");
+    delete egt;
+  }
+};
+
+class FcrTest : public TestBase 
+{
+ public:
+
+  void testFcrClass(void)
+  {
+    string infile = "data/humancoreexome-12v1-1_a.egt";
+    Fcr *fcr;
+    Egt *egt;
+    egt = new Egt();
+    egt->open(infile);
+    TS_ASSERT_THROWS_NOTHING(new Fcr());
+    fcr = new Fcr();
+    double r;
+    double theta;
+    double x = 3.0;
+    double y = 4.0;
+    fcr->illuminaCoordinates(x, y, theta, r);
+    TS_ASSERT_DELTA(r, 7.0, 1e-6);
+    TS_ASSERT_DELTA(theta, 0.5903345, 1e-6);
+    double baf = fcr->BAF(0.738881, *egt, 0);
+    TS_ASSERT_DELTA(baf, 0.75, 1e-6);
+    double logR = fcr->logR(1, 0.73881, *egt, 0);
+    TS_ASSERT_DELTA(logR, -0.7180, 1e-4);
+    delete egt;
+    delete fcr;
+  }
+};
+
 class NormalizeTest : public TestBase
 {
  public:
@@ -217,6 +296,40 @@ class SimtoolsTest : public TestBase
     TS_TRACE("SIM file created from GTC is of expected length");
     assertFilesIdentical(outfile, sim_raw, sim_size);
     TS_TRACE("SIM file created from GTC is identical to master");
+    // TODO also test with intensity normalization?
+  }
+
+  void testFCR(void) {
+    TS_TRACE("Test of final call report (FCR) command");
+    Commander *commander = new Commander();
+    string infile = "data/example.json";
+    // TODO switch these paths back when development is stable
+    //string outfile = tempdir+"/fcr_test.txt";
+    //string outfile_notime = tempdir+"/fcr_test_notime.txt";
+    string outfile = "/tmp/fcr_test.txt";
+    string outfile_notime = "/tmp/fcr_test_notime.txt";
+    string manfile = "data/example_normalized.bpm.csv";
+    string egtfile = "data/humancoreexome-12v1-1_a.egt";
+    string normfile = "data/fcr_test_notime.txt";
+    int start_pos = 0;
+    int end_pos = -1;
+    bool verbose = true;
+    TS_ASSERT_THROWS_NOTHING(commander->commandFCR(infile, outfile, manfile, 
+                                                   egtfile, start_pos, 
+                                                   end_pos, verbose));
+    int size = 4657; // expected file size
+    assertFileSize(outfile, size);
+    TS_TRACE("FCR file is of correct length");
+    // compare output data; first, need to strip out file creation time
+    string cmd = "grep -v \"^Processing Date\" "+outfile+" > "+outfile_notime;
+    int status = system(cmd.c_str());
+    if (status!=0) {
+      cerr << "Failed to grep test FCR file: " << outfile << endl;
+      throw 1;
+    }
+    size = 4621;
+    assertFilesIdentical(normfile, outfile_notime, size);
+    TS_TRACE("FCR file is identical to master");
   }
 
   void testGenoSNP(void) {
