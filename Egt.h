@@ -47,9 +47,10 @@ class Egt {
 
  public:
   Egt(bool verbose=false);
-  float* getClusters(long index);
-  float* getMeanR(long index);
-  float* getMeanTheta(long index);
+  //~Egt();
+  void getClusters(long index, float params[]);
+  void getMeanR(long index, float means[]);
+  void getMeanTheta(long index, float means[]);
   void open(char *filename);
   void open(string filename);
   void printHeader();
@@ -90,7 +91,7 @@ private:
   int readInteger(ifstream &file);
   float readFloat(ifstream &file);
   void readPreface(ifstream &file);
-  string* readSNPNames(ifstream &file);
+  void readSNPNames(ifstream &file, string names[]);
   string readString(ifstream &file);
 
 };

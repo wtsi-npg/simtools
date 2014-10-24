@@ -53,7 +53,8 @@ Fcr::Fcr() {
 
 double Fcr::BAF(double theta, Egt egt, long snpIndex) {
   // estimate the B allele frequency by interpolating between known clusters
-  float *meanTheta = egt.getMeanTheta(snpIndex);
+  float *meanTheta = new float[egt.GENOTYPES_PER_SNP];
+  egt.getMeanTheta(snpIndex, meanTheta);
   double baf;
   if (theta < meanTheta[0]) {
     baf = 0.0;
@@ -64,6 +65,7 @@ double Fcr::BAF(double theta, Egt egt, long snpIndex) {
   } else {
     baf = 0.5 + ((theta - meanTheta[1])/(meanTheta[2] - meanTheta[1]))*0.5;
   }
+  delete meanTheta;
   return baf;
 }
 
@@ -115,8 +117,10 @@ double Fcr::logR(double theta, double r, Egt egt, long snpIndex) {
   // snpIndex is position in the manifest (starting from 0)
   // get (theta, R) for AA, AB, BB from EGT and interpolate
   // find intersection with (theta, R) of sample to get R_expected
-  float *meanR = egt.getMeanR(snpIndex);
-  float *meanTheta = egt.getMeanTheta(snpIndex);
+  float *meanR = new float[egt.GENOTYPES_PER_SNP];
+  float *meanTheta = new float[egt.GENOTYPES_PER_SNP];
+  egt.getMeanR(snpIndex, meanR);
+  egt.getMeanTheta(snpIndex, meanTheta);
   double rExpected = 0.0;
   for (int i=1; i<egt.GENOTYPES_PER_SNP; i++) {
     if (theta < meanTheta[i] or i+1 == egt.GENOTYPES_PER_SNP) {
@@ -126,5 +130,7 @@ double Fcr::logR(double theta, double r, Egt egt, long snpIndex) {
       break;
     }
   }
+  delete meanR;
+  delete meanTheta;
   return log2(r/rExpected);
 }

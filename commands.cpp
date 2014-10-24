@@ -335,7 +335,7 @@ void Commander::commandFCR(string infile, string outfile, string manfile, string
       double logR = fcr->logR(theta, r, *egt, j);
       double baf = fcr->BAF(theta, *egt, j);
       // produce tab-delimited output
-      char *buffer = new char[500];
+      char buffer[500] = { }; // initialize to null values
       string format = string("%s\t%s\t%c\t%c\t%.4f\t%.3f\t%.3f\t%.3f\t%.3f")+
         string("\t%d\t%d\t%.4f\t%.4f\n");
       sprintf(buffer, format.c_str(), snpName.c_str(), 
@@ -343,7 +343,6 @@ void Commander::commandFCR(string infile, string outfile, string manfile, string
               score, theta, r, x_norm, y_norm,
               int(x_raw), int(y_raw), baf, logR);
       *outStream << string(buffer);
-      delete buffer;
     }
   }
   delete gtc;

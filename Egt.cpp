@@ -60,6 +60,17 @@ Egt::Egt(bool verbose)
   ENTRIES_TO_USE = 15;
 }
 
+/*
+Egt::~Egt()
+{ // destructor
+  cerr << counts[0] << ", " << params[0] << ", " << snpNames[0] << endl;
+
+  delete[] this->counts;
+  delete[] this->params;
+  delete[] this->snpNames;
+}
+*/
+
 void Egt::open(string filename)
 {
   this->filename = filename;
@@ -96,7 +107,8 @@ void Egt::open(string filename)
     delete ints;
   }
   delete block;
-  snpNames = readSNPNames(file);
+  snpNames = new string[snpTotal];
+  readSNPNames(file, snpNames);
   file.close();
 }
 
@@ -135,35 +147,29 @@ float* Egt::bytesToFloats(char block[], int start, int end) {
   return results;
 }
 
-float* Egt::getClusters(long index) {
+void Egt::getClusters(long index, float snp_params[]) {
   // return all (theta, R) params for given position in the SNP manifest
   // includes s.d. and mean of (r, theta) for AA, AB, BB
   int start = index*PARAMS_PER_SNP;
-  float *snp_params = new float[PARAMS_PER_SNP];
   for (int j=0; j < PARAMS_PER_SNP; j++) {
     snp_params[j] = this->params[start + j];
   }
-  return snp_params;
 }
 
-float* Egt::getMeanR(long index) {
+void Egt::getMeanR(long index, float means[]) {
   // find mean polar radius for AA, AB, BB at given index
   int start = index*PARAMS_PER_SNP + GENOTYPES_PER_SNP;
-  float *means = new float[GENOTYPES_PER_SNP];
   for (int j=0; j < GENOTYPES_PER_SNP; j++) {
     means[j] = this->params[start + j];
   }
-  return means;
 }
 
-float* Egt::getMeanTheta(long index) {
+void Egt::getMeanTheta(long index, float means[]) {
   // find mean polar angle for AA, AB, BB at given index
   int start = index*PARAMS_PER_SNP + 3*GENOTYPES_PER_SNP;
-  float *means = new float[GENOTYPES_PER_SNP];
   for (int j=0; j < GENOTYPES_PER_SNP; j++) {
     means[j] = this->params[start + j];
   }
-  return means;
 }
 
 numericConverter Egt::getNextConverter(ifstream &file) {
@@ -218,10 +224,9 @@ void Egt::readPreface(ifstream &file) {
   snpTotal = readInteger(file);
 }
 
-string* Egt::readSNPNames(ifstream &file) {
+void Egt::readSNPNames(ifstream &file, string names[]) {
   // read SNP names from an EGT file
   // assumes file is positioned at end of cluster (mean, sd) data
-  string *names = new string[snpTotal];
   int pos = file.tellg();
   file.seekg(pos + 13 * snpTotal); // skip SNP quality scores
   for (int i=0;i<snpTotal;i++) {
@@ -232,7 +237,6 @@ string* Egt::readSNPNames(ifstream &file) {
   for (int i=0;i<snpTotal;i++) {
     names[i] = readString(file);
   }
-  return names;
 }
 
 string Egt::readString(ifstream &file) {
@@ -240,12 +244,17 @@ string Egt::readString(ifstream &file) {
   // - First byte is a *signed* char encoding the string length
   // - Subsequent bytes contain the string
   // Total bytes read is (length encoded in first byte)+1 -- at most 128
-  char length = file.get(); // get a single byte
-  if (length <= 0)
+  int length = int(file.get()); // get a single byte
+  if (not file.good())
+    throw("Cannot read length from EGT file, file state is not good");
+  else if (length <= 0)
     throw("Illegal string length in EGT file");
   char * buffer;
   buffer = new char[length+1];
+  buffer[length] = '\0'; // ensure buffer ends with a null character
   file.read(buffer, length);
+  if (not file.good())
+    throw("Cannot read string from EGT file, file state is not good");
   string result = string(buffer);
   delete buffer;
   return result;

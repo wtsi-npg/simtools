@@ -166,15 +166,18 @@ class EgtTest : public TestBase
                            1.31153, 1.62674, 1.23534, 
                            0.00652837, 0.0223607, 0.0223607, 
                            0.0283947, 0.502052, 0.97571 };
-    float *clusters = egt->getClusters(0);
+    float *clusters = new float[egt->GENOTYPES_PER_SNP];
+    float *meanR = new float[egt->GENOTYPES_PER_SNP];
+    float *meanTheta = new float[egt->GENOTYPES_PER_SNP];
+    egt->getClusters(0, clusters);
     for (int i=0;i<egt->PARAMS_PER_SNP;i++) {
       TS_ASSERT_DELTA(clusters[i], expected[i], 1e-5);
     }
-    float *meanR = egt->getMeanR(0);
+    egt->getMeanR(0, meanR);
     for (int i=0;i<3;i++) {
       TS_ASSERT_DELTA(meanR[i], expected[i+3], 1e-5);
     }
-    float *meanTheta = egt->getMeanTheta(0);
+    egt->getMeanTheta(0, meanTheta);
     for (int i=0;i<3;i++) {
       TS_ASSERT_DELTA(meanTheta[i], expected[i+9], 1e-5);
     }
