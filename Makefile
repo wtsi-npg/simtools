@@ -141,10 +141,10 @@ Gtc_wrap.cxx: Gtc.i
 Sim_wrap.cxx: Sim.i
 	swig -perl -c++ -shadow -Wall Sim.i
 
-Gtc.so: Gtc_wrap.swig.o Gtc.swig.o Manifest.swig.o gtc_process.swig.o win2unix.swig.o 
+Gtc.so Gtc.pm: Gtc_wrap.swig.o Gtc.swig.o Manifest.swig.o gtc_process.swig.o win2unix.swig.o
 	$(CXX) -shared $(PERL_LD_OPTS) -o $@ $^
 
-Sim.so: Sim_wrap.swig.o Sim.swig.o
+Sim.so Sim.pm: Sim_wrap.swig.o Sim.swig.o
 	$(CXX) -shared $(PERL_LD_OPTS) -o $@ $^
 
 libsimtools.so: Sim.o Gtc.o Manifest.o QC.o json/json_reader.o json/json_writer.o json/json_value.o utilities.o plink_binary.o gtc_process.o win2unix.o
