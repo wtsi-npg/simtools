@@ -48,7 +48,8 @@ STLPORT_LIB=/software/solexa/pkg/STLport/current/build/lib/obj/gcc/so
 EXECUTABLES=gtc g2i gtc_process sim simtools normalize_manifest
 INCLUDES=Sim.h Gtc.h Manifest.h win2unix.h 
 LIBS=libsimtools.so libsimtools.a
-PERL_MODULES = Gtc.pm Sim.pm
+PERL_MODULES=Gtc.pm Sim.pm
+PERL_LIBS=Gtc.so Sim.so
 TARGETS=$(EXECUTABLES) $(LIBS)
 PERL_TARGETS=$(PERL_MODULES)
 
@@ -86,6 +87,9 @@ test: Sim.o Gtc.o Manifest.o QC.o win2unix.o json/json_reader.o json/json_writer
 	$(CXX) $(CXXFLAGS) -Wno-deprecated $(LDFLAGS) -o runner $^ -lstlport
 	LD_LIBRARY_PATH=. ./runner # run "./runner -v" to print trace information
 
+test_perl:
+	perl -e 'use Gtc; my $$g=new Gtc::Gtc()'
+
 runner.cpp: test_simtools.h
 	cxxtestgen --error-printer -o runner.cpp test_simtools.h
 
@@ -101,9 +105,9 @@ install: all
 	install $(PERL_MODULES) $(INSTALL_LIB)
 	install $(EXECUTABLES) $(INSTALL_BIN)
 
-all: $(TARGETS) $(PERL_MODULES)
+all: $(TARGETS) $(PERL_MODULES) $(PERL_LIBS)
 
-perl: $(PERL_MODULES)
+perl: $(PERL_MODULES) $(PERL_LIBS)
 
 gtc: gtc.o libsimtools.a
 	$(CXX) $< $(LDFLAGS) -o $@ -lm -lstlport -Wl,-Bstatic -lsimtools -Wl,-Bdynamic
