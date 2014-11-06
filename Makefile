@@ -135,13 +135,13 @@ gtc_process.o: gtc_process.cpp
 %.swig.o: %.cxx
 	$(CXX) -c -DSWIG $(CXXFLAGS) $(PERL_CC_OPTS) -o $@ $<
 
-Gtc_wrap.cxx: Gtc.i
+Gtc_wrap.cxx Gtc.pm: Gtc.i
 	swig -perl -c++ -shadow -Wall Gtc.i
 
-Sim_wrap.cxx: Sim.i
+Sim_wrap.cxx Sim.pm: Sim.i
 	swig -perl -c++ -shadow -Wall Sim.i
 
-Gtc.so: Gtc_wrap.swig.o Gtc.swig.o Manifest.swig.o gtc_process.swig.o win2unix.swig.o 
+Gtc.so: Gtc_wrap.swig.o Gtc.swig.o Manifest.swig.o gtc_process.swig.o win2unix.swig.o
 	$(CXX) -shared $(PERL_LD_OPTS) -o $@ $^
 
 Sim.so: Sim_wrap.swig.o Sim.swig.o
