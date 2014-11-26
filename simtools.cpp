@@ -80,8 +80,6 @@ void showUsage(int argc, char *argv[])
           cout << "         --outfile <filename>   Name of FCR file to create or '-' for STDOUT" << endl;
           cout << "         --man_file <dirname>   Path to bpm.csv manifest file" << endl;
           cout << "         --egt_file <dirname>   Path to EGT binary cluster file" << endl;
-          cout << "         --start <index>        Which SNP to start processing at (default is to start at the beginning)" << endl;
-          cout << "         --end <index>          Which SNP to end processing at (default is to continue until the end)" << endl;
           cout << "         --verbose              Show progress messages to STDERR" << endl;
           exit(0);
         }

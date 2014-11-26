@@ -37,6 +37,7 @@
 #include <fstream>
 #include <vector>
 #include "Egt.h"
+#include "Gtc.h"
 #include "Manifest.h"
 
 using namespace std;
@@ -46,10 +47,11 @@ class Fcr {
  public:
   Fcr();
   double BAF(double theta, Egt egt, long snpIndex);
+  void compareNumberOfSNPs(Manifest *manifest, Gtc *gtc);
   void illuminaCoordinates(double x, double y, double &theta, double &r);
   string createHeader(string content, int samples, int snps);
   double logR(double theta, double r, Egt egt, long snpIndex);
-  void run(Egt egt, Manifest manifest, ostream outStream, vector<string> infiles);
+  void write(Egt *egt, Manifest *manifest, ostream *outStream, vector<string> infiles, vector<string> sampleNames);
 
 };
 

@@ -36,12 +36,15 @@
  * Peiffer, Daniel A., et al. "High-resolution genomic profiling of chromosomal aberrations using Infinium whole-genome genotyping." Genome research 16.9 (2006): 1136-1148.
  */
 
+#include <iostream>
+#include <sstream>
 #include <cmath>
 #include <ctime>
 #include <cstdio>
 #include <string>
 #include "Egt.h"
 #include "Fcr.h"
+#include "Gtc.h"
 
 using namespace std;
 
@@ -67,6 +70,18 @@ double Fcr::BAF(double theta, Egt egt, long snpIndex) {
   }
   delete meanTheta;
   return baf;
+}
+
+// sanity check on manifest and gtc file
+void Fcr::compareNumberOfSNPs(Manifest *manifest, Gtc *gtc) {
+  if (manifest->snps.size() != gtc->xRawIntensity.size()) {
+    ostringstream msg;
+    msg << "Size mismatch: Manifest contains " << manifest->snps.size() 
+        << " probes, but GTC " << gtc->filename << " contains " 
+        << gtc->xRawIntensity.size() << " probes.";
+    cerr << msg.str() << endl;
+    throw msg.str();
+  }
 }
 
 void Fcr::illuminaCoordinates(double x, double y, double &theta, double &r) {
@@ -136,9 +151,57 @@ double Fcr::logR(double theta, double r, Egt egt, long snpIndex) {
 }
 
 
-void Fcr::run(Egt egt, Manifest manifest, ostream outStream, 
-              vector<string> infiles) {
-  // 'main' method to generate FCR
-
-
+void Fcr::write(Egt *egt, Manifest *manifest, ostream *outStream, 
+              vector<string> infiles, vector<string> sampleNames) {
+  // 'main' method to generate FCR and write to given output stream
+ Gtc *gtc = new Gtc();
+ string header = createHeader(manifest->filename, infiles.size(), 
+                              manifest->snps.size());
+ *outStream  << header;
+ double epsilon = 1e-6;
+ for (unsigned int i = 0; i < infiles.size(); i++) {
+    // TODO is SCORES flag necessary?
+    gtc->open(infiles[i], Gtc::XFORM | Gtc::INTENSITY | Gtc::SCORES);
+    compareNumberOfSNPs(manifest, gtc);
+    string sampleName;
+    if (i < sampleNames.size()) sampleName = sampleNames[i];
+    else sampleName = gtc->sampleName;
+    for (unsigned int j = 0; j < manifest->snps.size(); j++) {
+      string snpName = manifest->snps[j].name;
+      double x_raw = gtc->xRawIntensity[j];
+      double y_raw = gtc->yRawIntensity[j];
+      float score = gtc->scores[j];
+      double x_norm;
+      double y_norm;
+      unsigned int norm_id = manifest->normIdMap[manifest->snps[j].normId];
+      char *alleles = manifest->snps[j].snp;
+      gtc->normalizeIntensity(x_raw, y_raw, x_norm, y_norm, norm_id);
+      // correction of negative intensities, for consistency with GenomeStudio
+      if (x_norm < epsilon) { x_norm = 0.0; }
+      if (y_norm < epsilon) { y_norm = 0.0; }
+      char buffer[500] = { }; // initialize to null values
+      if (x_raw == 0 || y_raw == 0){
+        // zero intensity; set other fields to NaN
+        string format = string("%s\t%s\t-\t-\tNaN\tNaN\tNaN\tNaN\tNaN")+
+          string("\t%d\t%d\tNaN\tNaN\n");
+        sprintf(buffer, format.c_str(), snpName.c_str(), sampleName.c_str(),
+                int(x_raw), int(y_raw));
+      } else {
+        // output metrics to correct precision
+        double theta;
+        double r;
+        this->illuminaCoordinates(x_norm, y_norm, theta, r);
+        double logR = this->logR(theta, r, *egt, j);
+        double baf = this->BAF(theta, *egt, j);
+        string format = string("%s\t%s\t%c\t%c\t%.4f\t%.3f\t%.3f\t%.3f\t%.3f")+
+          string("\t%d\t%d\t%.4f\t%.4f\n");
+        sprintf(buffer, format.c_str(), snpName.c_str(), 
+                sampleName.c_str(), alleles[0], alleles[1],
+                score, theta, r, x_norm, y_norm,
+                int(x_raw), int(y_raw), baf, logR);
+      }
+      *outStream << string(buffer);
+    }
+  }
+ delete gtc;
 } 
