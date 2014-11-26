@@ -191,8 +191,7 @@ int main(int argc, char *argv[])
 	    commander->commandCreate(infile, outfile, normalize, 
 				     manfile, verbose);
 	  } else if (command == "fcr") {
-            commander->commandFCR(infile, outfile, manfile, egtfile, 
-                                  start_pos, end_pos, verbose);
+            commander->commandFCR(infile, outfile, manfile, egtfile, verbose);
           } else if (command == "illuminus") {
 	    commander->commandIlluminus(infile, outfile, manfile, 
 					start_pos, end_pos, verbose);

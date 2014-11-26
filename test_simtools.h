@@ -314,12 +314,9 @@ class SimtoolsTest : public TestBase
     string manfile = "data/example_normalized.bpm.csv";
     string egtfile = "data/humancoreexome-12v1-1_a.egt";
     string normfile = "data/fcr_test_notime.txt";
-    int start_pos = 0;
-    int end_pos = -1;
     bool verbose = true;
     TS_ASSERT_THROWS_NOTHING(commander->commandFCR(infile, outfile, manfile, 
-                                                   egtfile, start_pos, 
-                                                   end_pos, verbose));
+                                                   egtfile, verbose));
     int size = 4657; // expected file size
     assertFileSize(outfile, size);
     TS_TRACE("FCR file is of correct length");

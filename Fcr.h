@@ -35,6 +35,9 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <vector>
+#include "Egt.h"
+#include "Manifest.h"
 
 using namespace std;
 
@@ -46,6 +49,7 @@ class Fcr {
   void illuminaCoordinates(double x, double y, double &theta, double &r);
   string createHeader(string content, int samples, int snps);
   double logR(double theta, double r, Egt egt, long snpIndex);
+  void run(Egt egt, Manifest manifest, ostream outStream, vector<string> infiles);
 
 };
 

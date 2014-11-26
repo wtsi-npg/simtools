@@ -282,7 +282,7 @@ void Commander::commandCreate(string infile, string outfile, bool normalize, str
 // BAF, logR)
 // 
 
-void Commander::commandFCR(string infile, string outfile, string manfile, string egtfile, int start_pos, int end_pos, bool verbose)
+void Commander::commandFCR(string infile, string outfile, string manfile, string egtfile, bool verbose)
 {
   vector<string> sampleNames;	// list of sample names from JSON input file
   vector<string> infiles;	// list of GTC files to process
@@ -308,7 +308,6 @@ void Commander::commandFCR(string infile, string outfile, string manfile, string
   // iterate over all (snp, sample) pairs
   // write output to a (gzipped?) FCR file
   // Fields in each FCR line: snp_name, sample_id, allele_A, allele_B, score, chr, pos, theta, R, X_normalized, Y_normalized, X_raw, Y_raw, BAF, logR
-  if (end_pos == -1) end_pos = manifest->snps.size();// - 1;
   string header = fcr->createHeader(manifest->filename, infiles.size(), 
                                     manifest->snps.size());
   *outStream  << header;

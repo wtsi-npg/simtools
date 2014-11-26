@@ -64,7 +64,7 @@ class Commander {
   void normalizeIntensity(double x_raw, double y_raw, double &x_norm, double &y_norm, unsigned int norm_id, Gtc *gtc);
   void commandView(string infile, bool verbose);
   void commandCreate(string infile, string outfile, bool normalize, string manfile, bool verbose);
-  void commandFCR(string infile, string outfile, string manfile, string egtfile, int start_pos, int end_pos, bool verbose);
+  void commandFCR(string infile, string outfile, string manfile, string egtfile, bool verbose);
   void commandIlluminus(string infile, string outfile, string manfile, int start_pos, int end_pos, bool verbose);
   void commandGenoSNP(string infile, string outfile, string manfile, int start_pos, int end_pos, bool verbose);
   void commandQC(string infile, string magnitude, string xydiff, bool verbose);

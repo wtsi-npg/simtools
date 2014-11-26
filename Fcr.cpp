@@ -134,3 +134,11 @@ double Fcr::logR(double theta, double r, Egt egt, long snpIndex) {
   delete meanTheta;
   return log2(r/rExpected);
 }
+
+
+void Fcr::run(Egt egt, Manifest manifest, ostream outStream, 
+              vector<string> infiles) {
+  // 'main' method to generate FCR
+
+
+} 
