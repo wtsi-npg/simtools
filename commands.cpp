@@ -38,6 +38,8 @@
 #include "commands.h"
 #include "Sim.h"
 #include "Gtc.h"
+#include "Egt.h"
+#include "Fcr.h"
 #include "QC.h"
 #include "Manifest.h"
 #include "json/json.h"
@@ -91,6 +93,14 @@ void Commander::parseInfile(string infile, vector<string> &sampleNames, vector<s
     while (f >> filename) infiles.push_back(filename);
   }
   f.close();
+  // do simple validation
+  if (infiles.size() == 0) throw("No GTC files are specified in the infile");
+  Gtc *gtc = new Gtc();
+  for (unsigned int i = 0; i < infiles.size(); i++) {
+    gtc->open(infiles[i],0);
+    if (gtc->errorMsg.length()) throw gtc->errorMsg;
+  }
+  delete gtc;
 }
 
 // View the header of a .sim file and (optionally) its contents
@@ -172,15 +182,7 @@ void Commander::commandCreate(string infile, string outfile, bool normalize, str
   // First, get a list of GTC files. and possibly sample names
   //
   if (infile == "") throw("commandCreate(): infile not specified");
-  
   parseInfile(infile,sampleNames,infiles);
-  if (infiles.size() == 0) throw("No GTC files are specified in the infile");
-  
-  // Let's check the GTC files, shall we?
-  for (unsigned int n = 0; n < infiles.size(); n++) {
-    gtc->open(infiles[n],0);
-    if (gtc->errorMsg.length()) throw gtc->errorMsg;
-  }
   
   // We need a manifest file to sort the SNPs and to normalise the intensities (if required)
   loadManifest(manifest, manfile);
@@ -189,17 +191,11 @@ void Commander::commandCreate(string infile, string outfile, bool normalize, str
   
   // Create the SIM file and write the header
   sim->openOutput(outfile);
-  sim->writeHeader(infiles.size(),gtc->numSnps, 2, numberFormat);
+  sim->writeHeader(infiles.size(), manifest->snps.size(), 2, numberFormat);
   
   // For each GTC file, write the sample name and intensities to the SIM file
   for (unsigned int n = 0; n < infiles.size(); n++) {
     gtc->open(infiles[n], Gtc::XFORM | Gtc::INTENSITY);
-    if (manifest->snps.size() != gtc->xRawIntensity.size()) {
-      ostringstream msg;
-      msg << "Size mismatch: Manifest contains " << manifest->snps.size() << " probes, but " 
-	  << infiles[0] << " contains " << gtc->xRawIntensity.size() << " probes.";
-      throw msg.str();
-    }
     char *buffer = new char[sim->sampleNameSize+1];
     memset(buffer,0,sim->sampleNameSize);
     // if we have a sample name from the json file, use it
@@ -222,20 +218,11 @@ void Commander::commandCreate(string infile, string outfile, bool normalize, str
       double xn;
       double yn;
       int idx = snp->index - 1;   // index is zero based in arrays, but starts from 1 in the map file
+      double x_raw = gtc->xRawIntensity[idx];
+      double y_raw = gtc->yRawIntensity[idx];
+      unsigned int norm_id = manifest->normIdMap[snp->normId];
       if (normalize) {
-	// This is the normalization calculation, according to Illumina
-	unsigned int norm = manifest->normIdMap[snp->normId];
-	XFormClass *XF = &(gtc->XForm[norm]);
-	double tempx = gtc->xRawIntensity[idx] - XF->xOffset;
-	double tempy = gtc->yRawIntensity[idx] - XF->yOffset;
-	double cos_theta = cos(XF->theta);
-	double sin_theta = sin(XF->theta);
-	double tempx2 = cos_theta * tempx + sin_theta * tempy;
-	double tempy2 = -sin_theta * tempx + cos_theta * tempy;
-	double tempx3 = tempx2 - XF->shear * tempy2;
-	double tempy3 = tempy2;
-	xn = tempx3 / XF->xScale;
-	yn = tempy3 / XF->yScale;
+        gtc->normalizeIntensity(x_raw, y_raw, xn, yn, norm_id);
       } else {
 	xn = gtc->xRawIntensity[idx];
 	yn = gtc->yRawIntensity[idx];
@@ -255,6 +242,41 @@ void Commander::commandCreate(string infile, string outfile, bool normalize, str
   sim->close();
   delete sim;
 }
+
+// write a Final Call Report (FCR) file
+//
+// FCR consists of header and body
+// Fields for each line in body: (snp_name, sample_id, allele_A, allele_B, 
+// score, chr, pos, theta, R, X_normalized, Y_normalized, X_raw, Y_raw, 
+// BAF, logR)
+// 
+
+void Commander::commandFCR(string infile, string outfile, string manfile, string egtfile, bool verbose)
+{
+  vector<string> sampleNames;	// list of sample names from JSON input file
+  vector<string> infiles;	// list of GTC files to process
+  Manifest *manifest = new Manifest();
+  Egt *egt = new Egt();
+  Fcr *fcr = new Fcr(); // Final Call Report generator
+  ofstream outFStream;
+  ostream *outStream;
+  if (outfile == "-") {
+    outStream = &cout;
+  } else {
+    outFStream.open(outfile.c_str(),ios::trunc | ios::out);
+    outStream = &outFStream;
+  }
+  if (infile == "") throw("commandCreate(): infile not specified");
+  parseInfile(infile, sampleNames, infiles);
+  loadManifest(manifest, manfile);
+  egt->open(egtfile);
+  // now we have output stream, GTC paths, populated manifest and EGT
+  // write output to an FCR file
+  fcr->write(egt, manifest, outStream, infiles, sampleNames);
+  delete manifest;
+  delete egt;
+}
+
 
 //
 // Generate Illuminus output
