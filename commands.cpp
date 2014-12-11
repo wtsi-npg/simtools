@@ -68,7 +68,6 @@ void Commander::loadManifest(Manifest *manifest, string manfile)
   if (manfile == "") throw("No manifest file specified");
   manifest->open(manfile);
 }
-
   
 // Parse the infile, which is either an ascii list of GTC files, 
 // or a JSON format file

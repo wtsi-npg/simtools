@@ -59,15 +59,12 @@ class Commander {
 
   void loadManifest(Manifest *manifest, string manfile);
   void parseInfile(string infile, vector<string> &sampleNames, vector<string> &infiles);
-  //void readGTC(string gtcfile, Manifest manifest, vector<double> &intensities, vector<float> &scores, string &name);
   void commandView(string infile, bool verbose);
   void commandCreate(string infile, string outfile, bool normalize, string manfile, bool verbose);
   void commandFCR(string infile, string outfile, string manfile, string egtfile, bool verbose);
   void commandIlluminus(string infile, string outfile, string manfile, int start_pos, int end_pos, bool verbose);
   void commandGenoSNP(string infile, string outfile, string manfile, int start_pos, int end_pos, bool verbose);
   void commandQC(string infile, string magnitude, string xydiff, bool verbose);
-
-
 
 
 };

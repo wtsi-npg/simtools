@@ -1,5 +1,5 @@
 
-// Egt.cpp
+// Fcr.cpp
 //
 // Author: Iain Bancarz <ib5@sanger.ac.uk>
 //

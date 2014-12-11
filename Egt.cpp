@@ -42,6 +42,11 @@
  * This class stores as polar
  * (More efficient than converting and storing as Cartesian, since both are 
 needed for FCR output)
+ *
+ * IMPORTANT: Illumina defines its own polar coordinates:
+ * - Theta is rescaled, such that 1 unit = pi/2 radians
+ * - R is equal to x+y, *not* sqrt(x^2 + y^2)
+ * - R is a "Manhattan distance", not Euclidean distance
  */
 
 #include <string> 
@@ -59,17 +64,6 @@ Egt::Egt(bool verbose)
   BYTES_IN_RECORD = NUMERIC_BYTES * ENTRIES_IN_RECORD;
   ENTRIES_TO_USE = 15;
 }
-
-/*
-Egt::~Egt()
-{ // destructor
-  cerr << counts[0] << ", " << params[0] << ", " << snpNames[0] << endl;
-
-  delete[] this->counts;
-  delete[] this->params;
-  delete[] this->snpNames;
-}
-*/
 
 void Egt::open(string filename)
 {
