@@ -28,6 +28,7 @@
 
 // Test classes for simtools in cxxtest framework
 
+#include <cerrno>
 #include <fstream>
 #include <cstdio>
 #include <cstdlib>
@@ -36,6 +37,7 @@
 #include "Manifest.h"
 #include "Egt.h"
 #include "Fcr.h"
+#include "unistd.h"
 #include "win2unix.h"
 
 using namespace std;
@@ -60,7 +62,7 @@ class TestBase :  public CxxTest::TestSuite
     strcpy(_template,  "temp_XXXXXX"); // template string for directory name
     tempdir = string(mkdtemp(_template)); // returns name of new directory
     TS_TRACE("Created tempdir:"+tempdir);
-    string cmd = "cp data/example.raw.sim data/example.bpm.csv "+tempdir;
+    string cmd = "/bin/cp data/example.raw.sim data/example.bpm.csv "+tempdir;
     int status = system(cmd.c_str());
     if (status!=0) { // test assertions are not allowed in setup
       cerr << "Failed to copy test data to temporary directory: ";
@@ -75,7 +77,7 @@ class TestBase :  public CxxTest::TestSuite
   void tearDown()
   {
     // this is called after every test (successful or not)
-    string cmd = "rm -Rf " + tempdir;
+    string cmd = "/bin/rm -Rf " + tempdir;
     int status = system(cmd.c_str());
     if (status!=0) { // test assertions are not allowed in teardown
       cerr << "Failed to delete temporary directory: " << tempdir << endl;
@@ -112,27 +114,39 @@ class TestBase :  public CxxTest::TestSuite
     TS_ASSERT_EQUALS(size, testSize);
   }
 
-  void stdoutRedirect(string tempfile) {
+  int stdoutRedirect(string tempfile) {
+
+    fflush(stdout);
+    int sout = dup(fileno(stdout));
+    if (sout == -1) {
+      cerr << "Failed to dup stdout: " << string(strerror(errno)) << endl;
+      throw 1;
+    }
+
     // redirect standard output to given path, which may be /dev/null
     FILE *ptr;
-    ptr = freopen(tempfile.c_str(), "w", stdout); 
+    ptr = freopen(tempfile.c_str(), "w", stdout);
     if (!ptr) { // null pointer
       cerr << "Failed to redirect standard output to file: ";
       cerr << tempfile << endl;
       throw 1;
     }
+
+    return sout;
   }
 
-  void stdoutRestore(void) {
+  void stdoutRestore(int sout) {
     // restore stdout to standard terminal
-    FILE *ptr;
-    ptr = freopen("/dev/tty", "w", stdout); 
-    if (!ptr) { // null pointer
-      cerr << "Failed to return stdout to terminal!" << endl;
+
+    int fd = dup2(sout, fileno(stdout));
+    if (fd == -1) {
+      //cerr << "Failed to restore stdout: " << string(strerror(errno)) << endl;
       throw 1;
     }
-  }
 
+    close(sout);
+    clearerr(stdout);
+  }
 };
 
 
@@ -271,10 +285,9 @@ class SimTest : public TestBase {
 
   void testExecutable(void) {
     TS_TRACE("Testing the 'sim' executable");
-    stdoutRedirect("/dev/null"); // suppress standard output form command
-    string cmd = "./sim "+sim_raw+" 10";
+    // suppress standard output form command
+    string cmd = "./sim "+sim_raw+" 10 >/dev/null";
     TS_ASSERT_EQUALS(system(cmd.c_str()), 0);
-    stdoutRestore();
   }
 
 };
@@ -348,14 +361,19 @@ class SimtoolsTest : public TestBase
     TS_ASSERT_THROWS_NOTHING(commander->commandGenoSNP(sim_raw, outfile1, manfile, start_pos, end_pos, verbose));
     assertFileSize(outfile1, size_all);
     assertFilesIdentical(outfile1, expected, size_all);
+
     // now try with standard input; TODO do this without a system call
     string outfile2 = tempdir+"/genosnp02.gsn";
-    string cmd = "cat "+sim_raw+" | ./simtools genosnp --infile - "+
-      "--outfile "+outfile2+" --man_file "+manfile;
+    char cmd[1024];
+    snprintf(cmd, sizeof cmd,
+             "./simtools genosnp --infile - --outfile %s --man_file %s < %s",
+             outfile2.c_str(), manfile.c_str(), sim_raw.c_str());
+
     TS_TRACE("Testing GenoSNP command with .sim input from STDIN");
-    TS_ASSERT_EQUALS(system(cmd.c_str()), 0);
+    TS_ASSERT_EQUALS(system(cmd), 0);
     assertFileSize(outfile2, size_all);
     assertFilesIdentical(outfile2, expected, size_all);
+
     // test output of a single sample
     start_pos = 2;
     end_pos = 3;
@@ -384,15 +402,19 @@ class SimtoolsTest : public TestBase
     TS_ASSERT_THROWS_NOTHING(commander->commandIlluminus(sim_raw, outfile1, manfile, start_pos, end_pos, verbose));
     assertFileSize(outfile1, size_all);
     assertFilesIdentical(outfile1, expected, size_all);
+
     // now try with standard input
     string outfile2 = tempdir+"/illuminus02.iln";
     // TODO Would be cleaner to run test without the system call
     TS_TRACE("Testing Illuminus command with .sim input from STDIN");
-    string cmd = "cat "+sim_raw+" | ./simtools illuminus --infile - "+
-      "--outfile "+outfile2+" --man_file "+manfile;
-    TS_ASSERT_EQUALS(system(cmd.c_str()), 0);
+    char cmd[1024];
+    snprintf(cmd, sizeof cmd,
+             "./simtools illuminus --infile - --outfile %s --man_file %s < %s",
+             outfile2.c_str(), manfile.c_str(), sim_raw.c_str());
+    TS_ASSERT_EQUALS(system(cmd), 0);
     assertFileSize(outfile2, size_all);
     assertFilesIdentical(outfile2, expected, size_all);
+
     // input a subset of SNPs
     TS_TRACE("Testing Illuminus command with output of a single SNP");
     start_pos = 3;
@@ -436,15 +458,19 @@ class SimtoolsTest : public TestBase
     string viewfile = "data/simview.txt"; // expected view output
     int viewsize = 355;
     bool verbose = false;
-    stdoutRedirect(tempfile);
+
+    int sout = stdoutRedirect(tempfile);
+
     Commander *commander = new Commander();
     TS_ASSERT_THROWS_NOTHING(commander->commandView(simfile, verbose));
     delete commander;
-    stdoutRestore();
+
     assertFileSize(tempfile, viewsize);
     TS_TRACE("Sim view output is of expected size");
     assertFilesIdentical(tempfile, viewfile, viewsize);
     TS_TRACE("Sim view output is identical to master");
+
+    stdoutRestore(sout);
   }
 };
 
