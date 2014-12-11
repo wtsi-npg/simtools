@@ -83,7 +83,7 @@ usage:
 clean:
 	rm -f *.o *.so Gtc_wrap.cxx Gtc.pm Sim_wrap.cxx Sim.pm runner.cpp runner $(TARGETS)
 
-test: Sim.o Gtc.o Manifest.o QC.o win2unix.o json/json_reader.o json/json_writer.o json/json_value.o commands.o runner.o
+test: Sim.o Egt.o Fcr.o Gtc.o Manifest.o QC.o win2unix.o json/json_reader.o json/json_writer.o json/json_value.o commands.o runner.o
 	$(CXX) $(CXXFLAGS) -Wno-deprecated $(LDFLAGS) -o runner $^ -lstlport
 	LD_LIBRARY_PATH=. ./runner # run "./runner -v" to print trace information
 
@@ -151,8 +151,9 @@ Gtc.so: Gtc_wrap.swig.o Gtc.swig.o Manifest.swig.o gtc_process.swig.o win2unix.s
 Sim.so: Sim_wrap.swig.o Sim.swig.o
 	$(CXX) -shared $(PERL_LD_OPTS) -o $@ $^
 
-libsimtools.so: Sim.o Gtc.o Manifest.o QC.o json/json_reader.o json/json_writer.o json/json_value.o utilities.o plink_binary.o gtc_process.o win2unix.o
+libsimtools.so: Sim.o Gtc.o Manifest.o QC.o Fcr.o Egt.o json/json_reader.o json/json_writer.o json/json_value.o utilities.o plink_binary.o gtc_process.o win2unix.o
 	$(CXX) -shared $(LDFLAGS) -o $@ $^
 
-libsimtools.a: Sim.o Gtc.o Manifest.o QC.o json/json_reader.o json/json_writer.o json/json_value.o utilities.o plink_binary.o gtc_process.o win2unix.o
+libsimtools.a: Sim.o Gtc.o Manifest.o QC.o Fcr.o Egt.o json/json_reader.o json/json_writer.o json/json_value.o utilities.o plink_binary.o gtc_process.o win2unix.o
 	$(AR) rcs $@ $^
+

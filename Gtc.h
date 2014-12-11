@@ -80,6 +80,8 @@ public:
 	double passRate(double cutoff);
 	double correctedPassRate(double cutoff);
 
+        void normalizeIntensity(double x_raw, double y_raw, double &x_norm, double &y_norm, unsigned int norm_id);
+
 	string errorMsg;
 	string filename;
 	int version;			// file version (expected to be 3
