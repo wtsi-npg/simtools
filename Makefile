@@ -156,4 +156,3 @@ libsimtools.so: Sim.o Gtc.o Manifest.o QC.o Fcr.o Egt.o json/json_reader.o json/
 
 libsimtools.a: Sim.o Gtc.o Manifest.o QC.o Fcr.o Egt.o json/json_reader.o json/json_writer.o json/json_value.o utilities.o plink_binary.o gtc_process.o win2unix.o
 	$(AR) rcs $@ $^
-
