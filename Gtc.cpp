@@ -198,6 +198,23 @@ string Gtc::dump(void)
 	return s.str();
 }
 
+void Gtc::normalizeIntensity(double x_raw, double y_raw,
+                             double &x_norm, double &y_norm,
+                             unsigned int norm_id) {
+  // This is the normalization calculation, according to Illumina
+  XFormClass *XF = &(this->XForm[norm_id]);
+  double tempx = x_raw - XF->xOffset;
+  double tempy = y_raw - XF->yOffset;
+  double cos_theta = cos(XF->theta);
+  double sin_theta = sin(XF->theta);
+  double tempx2 = cos_theta * tempx + sin_theta * tempy;
+  double tempy2 = -sin_theta * tempx + cos_theta * tempy;
+  double tempx3 = tempx2 - XF->shear * tempy2;
+  double tempy3 = tempy2;
+  x_norm = tempx3 / XF->xScale;
+  y_norm = tempy3 / XF->yScale;
+}
+
 void Gtc::readXForm(ifstream &file, int offset)
 {
 	int arrayLen;
