@@ -37,6 +37,8 @@
 
 #include "Sim.h"
 #include "Gtc.h"
+#include "Egt.h"
+#include "Fcr.h"
 #include "QC.h"
 #include "Manifest.h"
 #include "json/json.h"
@@ -59,6 +61,7 @@ class Commander {
   void parseInfile(string infile, vector<string> &sampleNames, vector<string> &infiles);
   void commandView(string infile, bool verbose);
   void commandCreate(string infile, string outfile, bool normalize, string manfile, bool verbose);
+  void commandFCR(string infile, string outfile, string manfile, string egtfile, bool verbose);
   void commandIlluminus(string infile, string outfile, string manfile, int start_pos, int end_pos, bool verbose);
   void commandGenoSNP(string infile, string outfile, string manfile, int start_pos, int end_pos, bool verbose);
   void commandQC(string infile, string magnitude, string xydiff, bool verbose);

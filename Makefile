@@ -1,3 +1,4 @@
+
 #
 # Makefile for Gtc classes
 #
@@ -35,23 +36,25 @@
 
 .PHONY: test # always run, regardless of timestamps
 
-DIR = INSTALL_DIRECTORY # placeholder for main installation directory
-BIN=$(DIR)/bin
-# default directories for g2i 
-INSTALLLIB=/software/varinf/lib 
-INSTALLBIN=/software/varinf/bin
+PREFIX=/usr/local
+INSTALL_INC=$(PREFIX)/include
+INSTALL_LIB=$(PREFIX)/lib
+INSTALL_BIN=$(PREFIX)/bin
+
 # other useful paths
 STLPORT_INC=/software/solexa/pkg/STLport/current/stlport
 STLPORT_LIB=/software/solexa/pkg/STLport/current/build/lib/obj/gcc/so
-#STLPORT_INC=/software/varinf/lib/STLport/include/stlport
-#STLPORT_LIB=/software/varinf/lib/STLport/lib
-PERL_CORE=/usr/lib/perl/5.8.8/CORE
-PERL_CORE=/software/perl-5.8.8/lib/5.8.8/x86_64-linux-thread-multi/CORE
 
+EXECUTABLES=gtc g2i gtc_process sim simtools normalize_manifest
+INCLUDES=Sim.h Gtc.h Manifest.h win2unix.h 
+LIBS=libsimtools.so libsimtools.a
+PERL_MODULES=Gtc.pm Sim.pm
+PERL_LIBS=Gtc.so Sim.so
+TARGETS=$(EXECUTABLES) $(LIBS)
+PERL_TARGETS=$(PERL_MODULES)
 
-TARGETS=libplinkbin.so gtc g2i gtc_process sim simtools normalize_manifest
-PERL_TARGETS=Gtc.so Sim.so
-LIBS=Gtc.o win2unix.o Sim.o
+PERL_CC_OPTS=$(shell perl -MExtUtils::Embed -e ccopts)
+PERL_LD_OPTS=$(shell perl -MExtUtils::Embed -e ldopts)
 
 # To compile with debug information added, invoke as (say): 
 # make DEBUG='y'
@@ -59,102 +62,97 @@ LIBS=Gtc.o win2unix.o Sim.o
 # For just one target, say:
 # make DEBUG='y' simtools
 
-CC=/usr/bin/g++
-
 # do NOT use -ffast-math, as it causes errors in infinity/NaN handling
 ifeq ($(DEBUG),y)
-	CFLAGS=-g -Wall -fPIC -O0 -I$(STLPORT_INC) -std=c++0x
+	CXXFLAGS+=-g -O0
 else
-	CFLAGS=-Wall -fPIC -O3 -I$(STLPORT_INC) -std=c++0x
+	CXXFLAGS+=-O3
 endif
+
+CXXFLAGS+=-Wall -fPIC -I$(STLPORT_INC) -std=c++0x
+
 # Set runpath instead of relying on LD_LIBRARY_PATH
-LDFLAGS=-Wl,-rpath -Wl,$(STLPORT_LIB) -L$(STLPORT_LIB) -lstlport -lm 
-CXXFLAGS=-Wno-deprecated -I/software/gapi/pkg/cxxtest/4.2.1/
+LDFLAGS=-L./ -L$(STLPORT_LIB) -Wl,-rpath -Wl,$(STLPORT_LIB)
+
+
+default: all
 
 usage:
 	@echo -e "Usage: make install DIR=<destination directory>\nOther targets: make all, make test, make install_g2i"
 
-
 clean:
-	rm -f *.o Gtc_wrap.cxx Gtc.pm Sim_wrap.cxx Sim.pm runner.cpp runner $(TARGETS)
+	rm -f *.o *.so Gtc_wrap.cxx Gtc.pm Sim_wrap.cxx Sim.pm runner.cpp runner $(TARGETS)
 
-test: Sim.o Gtc.o Manifest.o QC.o win2unix.o json/json_reader.o json/json_writer.o json/json_value.o commands.o runner.o
-	$(CC) $(CFLAGS) $(LDFLAGS) $(CXXFLAGS) -o runner $^ -lstlport
-	./runner # run "./runner -v" to print trace information
+test: Sim.o Egt.o Fcr.o Gtc.o Manifest.o QC.o win2unix.o json/json_reader.o json/json_writer.o json/json_value.o commands.o runner.o
+	$(CXX) $(CXXFLAGS) -Wno-deprecated $(LDFLAGS) -o runner $^ -lstlport
+	LD_LIBRARY_PATH=. ./runner # run "./runner -v" to print trace information
 
-runner.o: all
+test_perl:
+	perl -e 'use Gtc; my $$g=new Gtc::Gtc()'
+
+runner.cpp: test_simtools.h
 	cxxtestgen --error-printer -o runner.cpp test_simtools.h
-	$(CC) -c $(CFLAGS) $(LDFLAGS) $(CXXFLAGS)  -o $@ runner.cpp
+
+runner.o: runner.cpp all
+	$(CXX) -c $(CXXFLAGS) -Wno-deprecated $(LDFLAGS) -o $@ runner.cpp
 
 install: all
-	install -d $(BIN) 
-	install g2i gtc normalize_manifest sim simtools $(BIN)
-	@echo -e "Simtools successfully installed."
+	@echo "Installing to "$(PREFIX)
+	install -d $(INSTALL_INC) $(INSTALL_LIB) $(INSTALL_BIN)
+	install $(INCLUDES) $(INSTALL_INC)
+	install $(LIBS) $(INSTALL_LIB)
+	install $(PERL_MODULES:pm=so) $(INSTALL_LIB)
+	install $(PERL_MODULES) $(INSTALL_LIB)
+	install $(EXECUTABLES) $(INSTALL_BIN)
 
-install_g2i: all
-	cp Gtc.pm $(INSTALLLIB)
-	cp Gtc.so $(INSTALLLIB)
-	cp Sim.pm $(INSTALLLIB)
-	cp Sim.so $(INSTALLLIB)
-	cp g2i $(INSTALLBIN)
+all: $(TARGETS) $(PERL_MODULES) $(PERL_LIBS)
 
-all: $(TARGETS)
+perl: $(PERL_MODULES) $(PERL_LIBS)
 
-perl: $(PERL_TARGETS)
+gtc: gtc.o libsimtools.a
+	$(CXX) $< $(LDFLAGS) -o $@ -lm -lstlport -Wl,-Bstatic -lsimtools -Wl,-Bdynamic
 
-gtc: gtc.o Gtc.o Manifest.o
-	$(CC) $(LDFLAGS) -o $@ $^ -lstlport
+normalize_manifest: normalize_manifest.o libsimtools.a
+	$(CXX) $< $(LDFLAGS) -o $@ -lm -lstlport -Wl,-Bstatic -lsimtools -Wl,-Bdynamic
 
-normalize_manifest: normalize_manifest.o Manifest.o
-	$(CC) $(LDFLAGS) -o $@ $^ -lstlport
+sim: sim.o libsimtools.a
+	$(CXX) $< $(LDFLAGS) -o $@ -lm -lstlport -Wl,-Bstatic -lsimtools -Wl,-Bdynamic
 
-sim: sim.o Sim.o
-	$(CC) $(LDFLAGS) -o $@ $^ -lstlport
+simtools: simtools.o commands.o libsimtools.a
+	$(CXX) simtools.o commands.o $(LDFLAGS) -o $@ -lm -lstlport -Wl,-Bstatic -lsimtools -Wl,-Bdynamic
 
-simtools: simtools.o commands.o Sim.o Gtc.o Manifest.o QC.o json/json_reader.o json/json_writer.o json/json_value.o
-	$(CC) $(LDFLAGS) -o $@ $^ -lstlport
+g2i: g2i.o libsimtools.a
+	$(CXX) $< $(LDFLAGS) -o $@ -lm -lstlport -Wl,-Bstatic -lsimtools -Wl,-Bdynamic
 
-commands.o: commands.cpp
-	$(CC) -c  $(CFLAGS) $(CPPFLAGS) -o $@ $<
-
-manifest: manifest.o Manifest.o
-	$(CC) $(LDFLAGS) -o $@ $^ -lstlport
-
-g2i: g2i.o Gtc.o Manifest.o win2unix.o Sim.o json/json_reader.o json/json_writer.o json/json_value.o utilities.o plink_binary.o
-	$(CC) $(LDFLAGS) -o $@ $^ -lstlport
-
-gtc_process: Gtc.o Manifest.o gtc_process.o 
-	$(CC) $(LDFLAGS) -o $@ $^ -lstlport
+gtc_process: gtc_process.o libsimtools.a
+	$(CXX) $< $(LDFLAGS) -o $@ -lm -lstlport -Wl,-Bstatic -lsimtools -Wl,-Bdynamic
 
 gtc_process.o: gtc_process.cpp
-	$(CC) -c -DTEST $(CFLAGS) $(CPPFLAGS) -o $@ $<
+	$(CXX) -c -DTEST $(CXXFLAGS) -o $@ $<
 
 %.o : %.cpp
-	$(CC) -c $(CFLAGS) $(CPPFLAGS) -o $@ $<
+	$(CXX) -c $(CXXFLAGS) -o $@ $<
 
-Gtc.so: Gtc.cpp Gtc.h Manifest.cpp gtc_process.cpp win2unix.cpp Gtc.i
+%.swig.o: %.cpp
+	$(CXX) -c -DSWIG $(CXXFLAGS) $(PERL_CC_OPTS) -o $@ $<
+
+%.swig.o: %.cxx
+	$(CXX) -c -DSWIG $(CXXFLAGS) $(PERL_CC_OPTS) -o $@ $<
+
+Gtc_wrap.cxx Gtc.pm: Gtc.i
 	swig -perl -c++ -shadow -Wall Gtc.i
-	$(CC) -c -DSWIG -I$(PERL_CORE) -fPIC Gtc.cpp Gtc_wrap.cxx Manifest.cpp gtc_process.cpp win2unix.cpp `perl -MExtUtils::Embed -e ccopt`
-	$(CC) -shared Gtc.o Gtc_wrap.o Manifest.o gtc_process.o win2unix.o -o Gtc.so
-	perl -e 'use Gtc; $$g=new Gtc::Gtc(); $$g->open("/nfs/new_illumina_geno04/call/20090407/4439467315_R01C01.gtc",$$Gtc::Gtc::BASECALLS);$$m=new Gtc::Manifest();'
-	rm Gtc.o Manifest.o gtc_process.o win2unix.o
 
-Sim.so: Sim.cpp Sim.h Sim.i
+Sim_wrap.cxx Sim.pm: Sim.i
 	swig -perl -c++ -shadow -Wall Sim.i
-	$(CC) -c -DSWIG -I$(PERL_CORE) -fPIC Sim.cpp Sim_wrap.cxx `perl -MExtUtils::Embed -e ccopt`
-	$(CC) -shared Sim.o Sim_wrap.o -o Sim.so
-	rm Sim.o
 
-libplinkbin.so: utilities.o plink_binary.o
-	$(CXX) -shared utilities.o plink_binary.o -o $@
+Gtc.so: Gtc_wrap.swig.o Gtc.swig.o Manifest.swig.o gtc_process.swig.o win2unix.swig.o
+	$(CXX) -shared $(PERL_LD_OPTS) -o $@ $^
 
-Gtc.o: Gtc.cpp Gtc.h
-Sim.o: Sim.cpp Sim.h
-Manifest.o: Manifest.cpp Manifest.h
-gtc.o: Gtc.h Manifest.h
-sim.o: Sim.h
-simtools.o: Sim.h
-g2i.o: Gtc.h Manifest.h plink_binary.h
-win2unix.o: win2unix.cpp win2unix.h
-plink_binary.o: plink_binary.cpp plink_binary.h
+Sim.so: Sim_wrap.swig.o Sim.swig.o
+	$(CXX) -shared $(PERL_LD_OPTS) -o $@ $^
 
+libsimtools.so: Sim.o Gtc.o Manifest.o QC.o Fcr.o Egt.o json/json_reader.o json/json_writer.o json/json_value.o utilities.o plink_binary.o gtc_process.o win2unix.o
+	$(CXX) -shared $(LDFLAGS) -o $@ $^
+
+libsimtools.a: Sim.o Gtc.o Manifest.o QC.o Fcr.o Egt.o json/json_reader.o json/json_writer.o json/json_value.o utilities.o plink_binary.o gtc_process.o win2unix.o
+	$(AR) rcs $@ $^
