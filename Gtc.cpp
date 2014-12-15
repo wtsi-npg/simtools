@@ -198,6 +198,27 @@ string Gtc::dump(void)
 	return s.str();
 }
 
+string Gtc::json_dump(void)
+{
+	ostringstream s;
+	s << "{" 
+	  << "\"sample_name\":\"" << sampleName << "\","
+	  << "\"sample_plate\":\"" << samplePlate << "\","
+	  << "\"sample_well\":\"" << sampleWell << "\","
+	  << "\"cluster_file\":\"" << clusterFile << "\","
+	  << "\"manifest\":\"" << manifest << "\","
+	  << "\"imaging_date\":\"" << imagingDate << "\","
+	  << "\"autocall_date\":\"" << autocallDate << "\","
+	  << "\"autocall_version\":\"" << autocallVersion << "\","
+	  << "\"scanner_name\":\"" << scannerName << "\","
+	  << "\"scanner_version\":\"" << scannerVersion << "\","
+	  << "\"pmt_green\":\"" << pmtGreen << "\","
+	  << "\"pmt_red\":\"" << pmtRed << "\","
+	  << "\"imaging_user\":\"" << imagingUser << "\""
+	  << "}";
+	return s.str();
+}
+
 void Gtc::readXForm(ifstream &file, int offset)
 {
 	int arrayLen;
