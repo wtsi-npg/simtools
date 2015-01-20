@@ -69,7 +69,9 @@ else
 	CXXFLAGS+=-O3
 endif
 
-CXXFLAGS+=-Wall -fPIC -I$(STLPORT_INC) -std=c++0x
+
+
+CXXFLAGS+=-Wall -Wfloat-equal -ffloat-store -fPIC -I$(STLPORT_INC) -std=c++0x
 
 # Set runpath instead of relying on LD_LIBRARY_PATH
 LDFLAGS=-L./ -L$(STLPORT_LIB) -Wl,-rpath -Wl,$(STLPORT_LIB)
