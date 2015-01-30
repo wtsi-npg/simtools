@@ -11,6 +11,7 @@ Executables
   * View SIM contents
   * Generate input for Illuminus or GenoSNP from SIM
   * Compute QC metrics
+  * Create Illumina Final Call Report (FCR) from GTC
 * normalize_manifest
   * Normalize a .bpm.csv manifest to Illumina TOP strand
 * sim
