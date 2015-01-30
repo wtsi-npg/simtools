@@ -198,6 +198,26 @@ string Gtc::dump(void)
 	return s.str();
 }
 
+string Gtc::json_dump(void)
+{
+	ostringstream s;
+	s << "{" 
+	  << "\"sample_name\":\"" << sampleName << "\","
+	  << "\"sample_plate\":\"" << samplePlate << "\","
+	  << "\"sample_well\":\"" << sampleWell << "\","
+	  << "\"cluster_file\":\"" << clusterFile << "\","
+	  << "\"manifest\":\"" << manifest << "\","
+	  << "\"imaging_date\":\"" << imagingDate << "\","
+	  << "\"autocall_date\":\"" << autocallDate << "\","
+	  << "\"autocall_version\":\"" << autocallVersion << "\","
+	  << "\"scanner_name\":\"" << scannerName << "\","
+	  << "\"scanner_version\":\"" << scannerVersion << "\","
+	  << "\"pmt_green\":\"" << pmtGreen << "\","
+	  << "\"pmt_red\":\"" << pmtRed << "\","
+	  << "\"imaging_user\":\"" << imagingUser << "\""
+	  << "}";
+	return s.str();
+
 void Gtc::normalizeIntensity(double x_raw, double y_raw,
                              double &x_norm, double &y_norm,
                              unsigned int norm_id) {

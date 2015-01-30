@@ -46,6 +46,7 @@
 
 #include "Gtc.h"
 #include "Manifest.h"
+#include "win2unix.h"
 
 using namespace std;
 
@@ -153,17 +154,17 @@ int main(int argc, char *argv[])
 	verbose = true;
 
 	for (int n=1; n<argc; n++) {
-		gtc->open(argv[n],Gtc::XFORM | Gtc::INTENSITY | Gtc::SCORES);
-		if (manifestFile != gtc->manifest) manifest = loadManifest(argv[n],gtc->manifest);
+		gtc->open(win2unix(argv[n]),Gtc::XFORM | Gtc::INTENSITY | Gtc::SCORES);
+		if (manifestFile != gtc->manifest) manifest = loadManifest(win2unix(argv[n]),gtc->manifest);
 		manifestFile = gtc->manifest;
-		double mean = getMeanIntensity(gtc, manifest);
-		printf("Mean Intensity Difference for %s \t= %lf\n", argv[n], mean);
+//		double mean = getMeanIntensity(gtc, manifest);
+//		printf("Mean Intensity Difference for %s \t= %lf\n", argv[n], mean);
 		double passrate = getIlluminaPassrate(0.15, gtc, manifest);
 		printf("Illumina Passrate = %lf\n", passrate);
-		passrate = gtc->passRate(0.15);
-		printf("Passrate = %lf\n", passrate);
-		passrate = gtc->correctedPassRate(0.15);
-		printf("Corrected Passrate = %lf\n", passrate);
+//		passrate = gtc->passRate(0.15);
+//		printf("Passrate = %lf\n", passrate);
+//		passrate = gtc->correctedPassRate(0.15);
+//		printf("Corrected Passrate = %lf\n", passrate);
 	}
 }
 #endif
