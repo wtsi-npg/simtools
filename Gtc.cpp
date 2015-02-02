@@ -217,6 +217,7 @@ string Gtc::json_dump(void)
 	  << "\"imaging_user\":\"" << imagingUser << "\""
 	  << "}";
 	return s.str();
+}
 
 void Gtc::normalizeIntensity(double x_raw, double y_raw,
                              double &x_norm, double &y_norm,
