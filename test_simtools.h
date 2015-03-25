@@ -319,11 +319,8 @@ class SimtoolsTest : public TestBase
     TS_TRACE("Test of final call report (FCR) command");
     Commander *commander = new Commander();
     string infile = "data/example.json";
-    // TODO switch these paths back when development is stable
-    //string outfile = tempdir+"/fcr_test.txt";
-    //string outfile_notime = tempdir+"/fcr_test_notime.txt";
-    string outfile = "/tmp/fcr_test.txt";
-    string outfile_notime = "/tmp/fcr_test_notime.txt";
+    string outfile = tempdir+"/fcr_test.txt";
+    string outfile_notime = tempdir+"/fcr_test_notime.txt";
     string manfile = "data/example_normalized.bpm.csv";
     string egtfile = "data/humancoreexome-12v1-1_a.egt";
     string normfile = "data/fcr_test_notime.txt";
