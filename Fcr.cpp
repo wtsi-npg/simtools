@@ -159,9 +159,10 @@ void Fcr::write(Egt *egt, Manifest *manifest, ostream *outStream,
                               manifest->snps.size());
  *outStream  << header;
  double epsilon = 1e-6;
+ // control determines which fields are read from GTC binary
+ int control =  Gtc::XFORM | Gtc::INTENSITY | Gtc::SCORES | Gtc::BASECALLS;
  for (unsigned int i = 0; i < infiles.size(); i++) {
-    // TODO is SCORES flag necessary?
-    gtc->open(infiles[i], Gtc::XFORM | Gtc::INTENSITY | Gtc::SCORES);
+    gtc->open(infiles[i], control);
     compareNumberOfSNPs(manifest, gtc);
     string sampleName;
     if (i < sampleNames.size()) sampleName = sampleNames[i];
@@ -174,14 +175,13 @@ void Fcr::write(Egt *egt, Manifest *manifest, ostream *outStream,
       double x_norm;
       double y_norm;
       unsigned int norm_id = manifest->normIdMap[manifest->snps[j].normId];
-      char *alleles = manifest->snps[j].snp;
       gtc->normalizeIntensity(x_raw, y_raw, x_norm, y_norm, norm_id);
       // correction of negative intensities, for consistency with GenomeStudio
       if (x_norm < epsilon) { x_norm = 0.0; }
       if (y_norm < epsilon) { y_norm = 0.0; }
       char buffer[500] = { }; // initialize to null values
-      if (x_raw == 0 || y_raw == 0){
-        // zero intensity; set other fields to NaN
+      if (x_raw < epsilon || y_raw < epsilon ){
+        // (effectively) zero intensity; set other fields to NaN
         string format = string("%s\t%s\t-\t-\tNaN\tNaN\tNaN\tNaN\tNaN")+
           string("\t%d\t%d\tNaN\tNaN\n");
         sprintf(buffer, format.c_str(), snpName.c_str(), sampleName.c_str(),
@@ -196,7 +196,7 @@ void Fcr::write(Egt *egt, Manifest *manifest, ostream *outStream,
         string format = string("%s\t%s\t%c\t%c\t%.4f\t%.3f\t%.3f\t%.3f\t%.3f")+
           string("\t%d\t%d\t%.4f\t%.4f\n");
         sprintf(buffer, format.c_str(), snpName.c_str(), 
-                sampleName.c_str(), alleles[0], alleles[1],
+                sampleName.c_str(), gtc->baseCalls[j].a, gtc->baseCalls[j].b,
                 score, theta, r, x_norm, y_norm,
                 int(x_raw), int(y_raw), baf, logR);
       }
