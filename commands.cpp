@@ -257,7 +257,7 @@ void Commander::commandFCR(string infile, string outfile, string manfile, string
   vector<string> infiles;	// list of GTC files to process
   Manifest *manifest = new Manifest();
   Egt *egt = new Egt();
-  Fcr *fcr = new Fcr(); // Final Call Report generator
+  FcrWriter *fcrWriter = new FcrWriter(); // Final Call Report generator
   ofstream outFStream;
   ostream *outStream;
   if (outfile == "-") {
@@ -272,9 +272,10 @@ void Commander::commandFCR(string infile, string outfile, string manfile, string
   egt->open(egtfile);
   // now we have output stream, GTC paths, populated manifest and EGT
   // write output to an FCR file
-  fcr->write(egt, manifest, outStream, infiles, sampleNames);
+  fcrWriter->write(egt, manifest, outStream, infiles, sampleNames);
   delete manifest;
   delete egt;
+  delete fcrWriter;
 }
 
 
@@ -348,10 +349,9 @@ void Commander::commandIlluminus(string infile, string outfile, string manfile, 
   for (int n = start_pos; n <= end_pos; n++) {
     *outStream << manifest->snps[n].name << "\t" << manifest->snps[n].position << "\t" << manifest->snps[n].snp[0] << manifest->snps[n].snp[1];
     for (unsigned int i = 0; i < sim->numSamples; i++) {
-      vector<float> s = SampleArray[i];
       for (unsigned int j=0; j < sim->numChannels; j++) {
-	int k = (n - start_pos) * sim->numChannels + j;
-	*outStream << '\t' << setw(7) << std::fixed << setprecision(3) << s[k];
+        int k = (n - start_pos) * sim->numChannels + j;
+        *outStream << '\t' << setw(7) << std::fixed << setprecision(3) << SampleArray[i][k];
       }
     }
     *outStream << endl;

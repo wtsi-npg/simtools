@@ -11,6 +11,7 @@ Executables
   * View SIM contents
   * Generate input for Illuminus or GenoSNP from SIM
   * Compute QC metrics
+  * Create Illumina Final Call Report (FCR) from GTC
 * normalize_manifest
   * Normalize a .bpm.csv manifest to Illumina TOP strand
 * sim
@@ -29,7 +30,7 @@ Installation and testing
 
 * To compile: `make all`
 * To run tests: `make test`. Requires `cxxtestgen` on the PATH. In the WTSI environment, can use `module load cxxtest/$(VERSION)`.
-* To install simtools and normalize_manifest: `make install DIR=$(DESTINATION)` will install executables to the `bin` subdirectory of `$DESTINATION`.
+* To install simtools and normalize_manifest: `make install PREFIX=$(DESTINATION)` will install executables to the `bin` subdirectory of `$DESTINATION`.
 * To install g2i to /software/varinf: `make install_g2i`
 
 

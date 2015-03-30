@@ -37,20 +37,35 @@
 
 #include "Gtc.h"
 #include "Manifest.h"
+#include "win2unix.h"
 
 using namespace std;
 
 int main(int argc, char *argv[])
 {
 	Gtc *gtc = new Gtc();
+	int json_flag = 0;
+	string filename;
 
-		cout << endl << "Reading GTC file: " << argv[1] << endl;
-		gtc->open(argv[1], Gtc::ALL);
-		if (!gtc->errorMsg.empty()) {
-			cout << gtc->errorMsg << endl;
-			exit(1);
-		}
-		cout << gtc->dump() << endl;
+	if (argc>1 && strcmp(argv[1],"-j")==0) {
+		json_flag = 1;
+		filename = win2unix(argv[2]);
+	} else {
+		filename = win2unix(argv[1]);
+	}
+
+	gtc->open(filename, Gtc::ALL);
+	if (!gtc->errorMsg.empty()) {
+		cout << gtc->errorMsg << endl;
+		exit(1);
+	}
+
+	if (json_flag) {
+		cout << gtc->json_dump();
+		exit(0);
+	}
+
+	cout << gtc->dump() << endl;
 	cout << "Pass Rate: " << gtc->passRate(.15) << endl;
 	cout << "Corrected Pass Rate: " << gtc->correctedPassRate(.15) << endl;
 

@@ -46,6 +46,7 @@
 
 #include "Gtc.h"
 #include "Manifest.h"
+#include "win2unix.h"
 
 using namespace std;
 
@@ -57,6 +58,7 @@ double goForIt(Gtc *gtc, Manifest *manifest)
 {
 	double meanTotal = 0;
 	int n = 0;
+        double epsilon = 1e-6;
 
 	for (vector<snpClass>::iterator snp = manifest->snps.begin(); snp != manifest->snps.end(); snp++) {
 		int idx = snp->index - 1;	// index is zero based in arrays, but starts from 1 in the map file
@@ -75,7 +77,8 @@ double goForIt(Gtc *gtc, Manifest *manifest)
 		double tempx3 = tempx2 - XF->shear * tempy2;
 		double tempy3 = tempy2;
 
-		if (XF->xScale != 0 && XF->yScale != 0) {
+		if (abs(XF->xScale) > epsilon && abs(XF->yScale) > epsilon) {
+                        // intensities are non-zero (for tolerance epsilon)
 			double xn = tempx3 / XF->xScale;
 			double yn = tempy3 / XF->yScale;
 			if (!isnan(xn) && !isnan(yn)) {
@@ -153,17 +156,17 @@ int main(int argc, char *argv[])
 	verbose = true;
 
 	for (int n=1; n<argc; n++) {
-		gtc->open(argv[n],Gtc::XFORM | Gtc::INTENSITY | Gtc::SCORES);
-		if (manifestFile != gtc->manifest) manifest = loadManifest(argv[n],gtc->manifest);
+		gtc->open(win2unix(argv[n]),Gtc::XFORM | Gtc::INTENSITY | Gtc::SCORES);
+		if (manifestFile != gtc->manifest) manifest = loadManifest(win2unix(argv[n]),gtc->manifest);
 		manifestFile = gtc->manifest;
-		double mean = getMeanIntensity(gtc, manifest);
-		printf("Mean Intensity Difference for %s \t= %lf\n", argv[n], mean);
+//		double mean = getMeanIntensity(gtc, manifest);
+//		printf("Mean Intensity Difference for %s \t= %lf\n", argv[n], mean);
 		double passrate = getIlluminaPassrate(0.15, gtc, manifest);
 		printf("Illumina Passrate = %lf\n", passrate);
-		passrate = gtc->passRate(0.15);
-		printf("Passrate = %lf\n", passrate);
-		passrate = gtc->correctedPassRate(0.15);
-		printf("Corrected Passrate = %lf\n", passrate);
+//		passrate = gtc->passRate(0.15);
+//		printf("Passrate = %lf\n", passrate);
+//		passrate = gtc->correctedPassRate(0.15);
+//		printf("Corrected Passrate = %lf\n", passrate);
 	}
 }
 #endif
