@@ -180,7 +180,7 @@ void Fcr::write(Egt *egt, Manifest *manifest, ostream *outStream,
       if (x_norm < epsilon) { x_norm = 0.0; }
       if (y_norm < epsilon) { y_norm = 0.0; }
       char buffer[500] = { }; // initialize to null values
-      if (x_raw < epsilon || y_raw < epsilon ){
+      if (abs(x_raw) < epsilon || abs(y_raw) < epsilon ){
         // (effectively) zero intensity; set other fields to NaN
         string format = string("%s\t%s\t-\t-\tNaN\tNaN\tNaN\tNaN\tNaN")+
           string("\t%d\t%d\tNaN\tNaN\n");
