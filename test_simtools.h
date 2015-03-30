@@ -114,6 +114,8 @@ class TestBase :  public CxxTest::TestSuite
     TS_ASSERT_EQUALS(size, testSize);
   }
 
+
+
   int stdoutRedirect(string tempfile) {
 
     fflush(stdout);
@@ -205,28 +207,28 @@ class FcrTest : public TestBase
 {
  public:
 
-  void testFcrClass(void)
+  void testFcrWriterClass(void)
   {
     string infile = "data/humancoreexome-12v1-1_a.egt";
-    Fcr *fcr;
+    FcrWriter *fcrWriter;
     Egt *egt;
     egt = new Egt();
     egt->open(infile);
-    TS_ASSERT_THROWS_NOTHING(new Fcr());
-    fcr = new Fcr();
+    TS_ASSERT_THROWS_NOTHING(new FcrWriter());
+    fcrWriter = new FcrWriter();
     double r;
     double theta;
     double x = 3.0;
     double y = 4.0;
-    fcr->illuminaCoordinates(x, y, theta, r);
+    fcrWriter->illuminaCoordinates(x, y, theta, r);
     TS_ASSERT_DELTA(r, 7.0, 1e-6);
     TS_ASSERT_DELTA(theta, 0.5903345, 1e-6);
-    double baf = fcr->BAF(0.738881, *egt, 0);
+    double baf = fcrWriter->BAF(0.738881, *egt, 0);
     TS_ASSERT_DELTA(baf, 0.75, 1e-6);
-    double logR = fcr->logR(1, 0.73881, *egt, 0);
+    double logR = fcrWriter->logR(1, 0.73881, *egt, 0);
     TS_ASSERT_DELTA(logR, -0.7180, 1e-4);
     delete egt;
-    delete fcr;
+    delete fcrWriter;
   }
 };
 
@@ -320,26 +322,26 @@ class SimtoolsTest : public TestBase
     Commander *commander = new Commander();
     string infile = "data/example.json";
     string outfile = tempdir+"/fcr_test.txt";
-    string outfile_notime = tempdir+"/fcr_test_notime.txt";
     string manfile = "data/example_normalized.bpm.csv";
     string egtfile = "data/humancoreexome-12v1-1_a.egt";
-    string normfile = "data/fcr_test_notime.txt";
+    string normfile = "data/fcr_test.txt";
     bool verbose = true;
     TS_ASSERT_THROWS_NOTHING(commander->commandFCR(infile, outfile, manfile, 
                                                    egtfile, verbose));
     int size = 4657; // expected file size
     assertFileSize(outfile, size);
-    TS_TRACE("FCR file is of correct length");
-    // compare output data; first, need to strip out file creation time
-    string cmd = "grep -v \"^Processing Date\" "+outfile+" > "+outfile_notime;
-    int status = system(cmd.c_str());
-    if (status!=0) {
-      cerr << "Failed to grep test FCR file: " << outfile << endl;
-      throw 1;
-    }
-    size = 4621;
-    assertFilesIdentical(normfile, outfile_notime, size);
-    TS_TRACE("FCR file is identical to master");
+    TS_TRACE("FCR output file is of expected length");
+    FcrReader data_ref = FcrReader(normfile);
+    TS_ASSERT(data_ref.totalPairs == 50);
+    TS_ASSERT(data_ref.snps.size() == 50);
+    TS_ASSERT(data_ref.samples.size() == 50);
+    TS_ASSERT(data_ref.header["Num SNPs"].compare("10")==0);
+    TS_ASSERT(data_ref.header["Num Samples"].compare("5")==0);
+    TS_ASSERT(data_ref.equivalent(data_ref));
+    FcrReader data_test = FcrReader(outfile);
+    TS_TRACE("Created and tested FCRData objects"); 
+    TS_ASSERT(data_ref.equivalent(data_test));
+    TS_TRACE("FCR output file is equivalent to reference copy");
   }
 
   void testGenoSNP(void) {

@@ -58,6 +58,7 @@ double goForIt(Gtc *gtc, Manifest *manifest)
 {
 	double meanTotal = 0;
 	int n = 0;
+        double epsilon = 1e-6;
 
 	for (vector<snpClass>::iterator snp = manifest->snps.begin(); snp != manifest->snps.end(); snp++) {
 		int idx = snp->index - 1;	// index is zero based in arrays, but starts from 1 in the map file
@@ -76,7 +77,8 @@ double goForIt(Gtc *gtc, Manifest *manifest)
 		double tempx3 = tempx2 - XF->shear * tempy2;
 		double tempy3 = tempy2;
 
-		if (XF->xScale != 0 && XF->yScale != 0) {
+		if (abs(XF->xScale) > epsilon && abs(XF->yScale) > epsilon) {
+                        // intensities are non-zero (for tolerance epsilon)
 			double xn = tempx3 / XF->xScale;
 			double yn = tempy3 / XF->yScale;
 			if (!isnan(xn) && !isnan(yn)) {

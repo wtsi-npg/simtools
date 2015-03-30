@@ -50,11 +50,11 @@ using namespace std;
 
 const static double pi = 3.141593;
 
-Fcr::Fcr() {
+FcrWriter::FcrWriter() {
   // empty constructor
 }
 
-double Fcr::BAF(double theta, Egt egt, long snpIndex) {
+double FcrWriter::BAF(double theta, Egt egt, long snpIndex) {
   // estimate the B allele frequency by interpolating between known clusters
   float *meanTheta = new float[egt.GENOTYPES_PER_SNP];
   egt.getMeanTheta(snpIndex, meanTheta);
@@ -73,7 +73,7 @@ double Fcr::BAF(double theta, Egt egt, long snpIndex) {
 }
 
 // sanity check on manifest and gtc file
-void Fcr::compareNumberOfSNPs(Manifest *manifest, Gtc *gtc) {
+void FcrWriter::compareNumberOfSNPs(Manifest *manifest, Gtc *gtc) {
   if (manifest->snps.size() != gtc->xRawIntensity.size()) {
     ostringstream msg;
     msg << "Size mismatch: Manifest contains " << manifest->snps.size() 
@@ -84,7 +84,7 @@ void Fcr::compareNumberOfSNPs(Manifest *manifest, Gtc *gtc) {
   }
 }
 
-void Fcr::illuminaCoordinates(double x, double y, double &theta, double &r) {
+void FcrWriter::illuminaCoordinates(double x, double y, double &theta, double &r) {
   // convert (x,y) cartesian coordinates to Illumina coordinates (theta, r)
   // these are ***NOT*** standard polar coordinates!
   // the angle theta is rescaled s.t. pi/2 radians = 1 "Illumina angular unit"
@@ -94,7 +94,7 @@ void Fcr::illuminaCoordinates(double x, double y, double &theta, double &r) {
 
 }
 
-string Fcr::createHeader(string content, int samples, int snps) {
+string FcrWriter::createHeader(string content, int samples, int snps) {
   // generate standard FCR header
   // content argument is typically the manifest name
   // includes data set summary, and column heads for main body
@@ -127,7 +127,7 @@ string Fcr::createHeader(string content, int samples, int snps) {
   return header;
 }
 
-double Fcr::logR(double theta, double r, Egt egt, long snpIndex) {
+double FcrWriter::logR(double theta, double r, Egt egt, long snpIndex) {
   // calculate the LogR metric for given (theta, r) of sample
   // snpIndex is position in the manifest (starting from 0)
   // get (theta, R) for AA, AB, BB from EGT and interpolate
@@ -151,7 +151,7 @@ double Fcr::logR(double theta, double r, Egt egt, long snpIndex) {
 }
 
 
-void Fcr::write(Egt *egt, Manifest *manifest, ostream *outStream, 
+void FcrWriter::write(Egt *egt, Manifest *manifest, ostream *outStream, 
               vector<string> infiles, vector<string> sampleNames) {
   // 'main' method to generate FCR and write to given output stream
  Gtc *gtc = new Gtc();
@@ -159,9 +159,10 @@ void Fcr::write(Egt *egt, Manifest *manifest, ostream *outStream,
                               manifest->snps.size());
  *outStream  << header;
  double epsilon = 1e-6;
+ // control determines which fields are read from GTC binary
+ int control =  Gtc::XFORM | Gtc::INTENSITY | Gtc::SCORES | Gtc::BASECALLS;
  for (unsigned int i = 0; i < infiles.size(); i++) {
-    // TODO is SCORES flag necessary?
-    gtc->open(infiles[i], Gtc::XFORM | Gtc::INTENSITY | Gtc::SCORES);
+    gtc->open(infiles[i], control);
     compareNumberOfSNPs(manifest, gtc);
     string sampleName;
     if (i < sampleNames.size()) sampleName = sampleNames[i];
@@ -174,14 +175,13 @@ void Fcr::write(Egt *egt, Manifest *manifest, ostream *outStream,
       double x_norm;
       double y_norm;
       unsigned int norm_id = manifest->normIdMap[manifest->snps[j].normId];
-      char *alleles = manifest->snps[j].snp;
       gtc->normalizeIntensity(x_raw, y_raw, x_norm, y_norm, norm_id);
       // correction of negative intensities, for consistency with GenomeStudio
       if (x_norm < epsilon) { x_norm = 0.0; }
       if (y_norm < epsilon) { y_norm = 0.0; }
       char buffer[500] = { }; // initialize to null values
-      if (x_raw == 0 || y_raw == 0){
-        // zero intensity; set other fields to NaN
+      if (abs(x_raw) < epsilon || abs(y_raw) < epsilon ){
+        // (effectively) zero intensity; set other fields to NaN
         string format = string("%s\t%s\t-\t-\tNaN\tNaN\tNaN\tNaN\tNaN")+
           string("\t%d\t%d\tNaN\tNaN\n");
         sprintf(buffer, format.c_str(), snpName.c_str(), sampleName.c_str(),
@@ -196,7 +196,7 @@ void Fcr::write(Egt *egt, Manifest *manifest, ostream *outStream,
         string format = string("%s\t%s\t%c\t%c\t%.4f\t%.3f\t%.3f\t%.3f\t%.3f")+
           string("\t%d\t%d\t%.4f\t%.4f\n");
         sprintf(buffer, format.c_str(), snpName.c_str(), 
-                sampleName.c_str(), alleles[0], alleles[1],
+                sampleName.c_str(), gtc->baseCalls[j].a, gtc->baseCalls[j].b,
                 score, theta, r, x_norm, y_norm,
                 int(x_raw), int(y_raw), baf, logR);
       }
@@ -205,3 +205,230 @@ void Fcr::write(Egt *egt, Manifest *manifest, ostream *outStream,
   }
  delete gtc;
 } 
+
+
+FcrReader::FcrReader(string infile) {
+  ifstream inStream;
+  string line;
+  bool body = false;
+  inStream.open(infile.c_str());
+  totalPairs = 0;
+  timeStampKey = "Processing Date";
+  fileKey = "File";
+  unsigned int fieldsExpected = 13;
+  vector<string> header_lines;
+  // populate the list of header prefixes, used as hash keys
+  headerKeys.push_back("[Header]");
+  headerKeys.push_back("GSGT Version");
+  headerKeys.push_back(timeStampKey);
+  headerKeys.push_back("Content");
+  headerKeys.push_back("Num SNPs");
+  headerKeys.push_back("Total SNPs");
+  headerKeys.push_back("Num Samples");
+  headerKeys.push_back("Total Samples");
+  headerKeys.push_back(fileKey);
+  headerKeys.push_back("[Data]");
+  while (getline(inStream, line)) {
+    if (line.compare(0, 8, "SNP Name")==0) {
+      // column titles are first line of body
+      body = true;
+      continue;
+    }
+    if (body) {
+      totalPairs += 1;
+      // if length of tokens != 13, raise error
+      vector<string> tokens = splitByWhiteSpace(line); 
+      if (tokens.size() != fieldsExpected) {
+        cerr << "Wrong number of fields in FCR line: Expected " <<
+          fieldsExpected << ", found " << tokens.size() << endl;
+        throw 1;
+      }
+      snps.push_back(tokens[0]);
+      samples.push_back(tokens[1]);
+      alleles_a.push_back(tokens[2]);
+      alleles_b.push_back(tokens[3]);      
+      gcScore.push_back(atof(tokens[4].c_str()));
+      theta.push_back(atof(tokens[5].c_str()));
+      radius.push_back(atof(tokens[6].c_str()));
+      x.push_back(atof(tokens[7].c_str()));
+      y.push_back(atof(tokens[8].c_str()));
+      x_raw.push_back(atoi(tokens[9].c_str()));
+      y_raw.push_back(atoi(tokens[10].c_str()));
+      logR.push_back(atof(tokens[11].c_str()));
+      baf.push_back(atof(tokens[12].c_str()));
+    } else {
+      header_lines.push_back(line);
+    }
+  }
+  if (body==false) {
+    cerr << "Body of FCR file not found!" << endl;
+    throw 1;
+  }
+  inStream.close();
+  this->header = parseHeader(header_lines);
+}
+
+bool FcrReader::equivalent(FcrReader other, bool verbose) {
+  // check for equality on data fields with another FcrReader object
+  bool equal = true;
+  double epsilon = 1e-5;
+  if (totalPairs != other.totalPairs) {
+    equal = false;
+    if (verbose) {
+      cerr << "Number of (snp, sample) pairs is not equal" << endl;
+    }
+  } else if (!equivalentHeaders(other)) {
+    equal = false;
+    if (verbose) {
+      cerr << "FCR headers are not equivalent" << endl;
+    }
+  } else {
+    for (int i=0; i<totalPairs; i++) {
+      if (snps[i] != other.snps[i]) {
+        equal = false;
+        if (verbose) { 
+          cerr << "Unequal SNPs at position " << i << endl; 
+        }
+        break;
+      } else if (samples[i] != other.samples[i]) {
+        equal = false;
+        if (verbose) { 
+          cerr << "Unequal sample names at position " << i << endl; 
+        }
+        break;
+      } else if (alleles_a[i] != other.alleles_a[i]) {
+        equal = false;
+        if (verbose) { 
+          cerr << "Unequal A alleles at position " << i << endl; 
+        }
+        break;
+      } else if (alleles_b[i] != other.alleles_b[i]) {
+        equal = false;
+        if (verbose) { 
+          cerr << "Unequal B alleles at position " << i << endl; 
+        }
+        break;
+      } else if (abs(gcScore[i] - other.gcScore[i]) > epsilon) {
+        cerr << "ABS: " << abs(gcScore[i] - other.gcScore[i]) << endl;
+        equal = false;
+        if (verbose) { 
+          cerr << "Unequal GC scores at position " << i << endl; 
+        }
+        break;
+      } else if (abs(theta[i] - other.theta[i]) > epsilon) {
+        equal = false;
+        if (verbose) { 
+          cerr << "Unequal theta at position " << i << endl; 
+        }
+        break;
+      } else if (abs(radius[i] - other.radius[i]) > epsilon) {
+        equal = false;
+        if (verbose) { 
+          cerr << "Unequal radius at position " << i << endl; 
+        }
+        break;
+      } else if (abs(x[i] - other.x[i]) > epsilon) {
+        equal = false;
+        if (verbose) { 
+          cerr << "Unequal normalised x intensity at position " << i << endl; 
+        }
+        break;
+      } else if (abs(y[i] - other.y[i]) > epsilon) {
+        equal = false;
+        if (verbose) { 
+          cerr << "Unequal normalised y intensity at position " << i << endl; 
+        }
+        break;
+      } else if (x_raw[i] != other.x_raw[i]) {
+        equal = false;
+        if (verbose) { 
+          cerr << "Unequal raw x intensity at position " << i << endl; 
+        }
+        break;
+      } else if (y_raw[i] != other.y_raw[i]) {
+        equal = false;
+        if (verbose) { 
+          cerr << "Unequal raw y intensity at position " << i << endl; 
+        }
+        break;
+      } else if (abs(logR[i] - other.logR[i]) > epsilon) {
+        equal = false;
+        if (verbose) { 
+          cerr << "Unequal logR value at position " << i << endl; 
+        }
+        break;
+      } else if (abs(baf[i] - other.baf[i]) > epsilon) {
+        equal = false;
+        if (verbose) { 
+          cerr << "Unequal B allele frequency at position " << i << endl; 
+        }
+        break;
+      }
+    }
+  }
+  return equal;
+                
+}
+
+bool FcrReader::equivalentHeaders(FcrReader other, bool verbose) {
+  map<string, string> myHead = this->header;
+  map<string, string> otherHead = other.header;
+  bool equivalent = true;
+  for (unsigned int i=0; i<headerKeys.size(); i++) {
+    string myVal = myHead[headerKeys[i]];
+    string otherVal = otherHead[headerKeys[i]];
+    if (headerKeys[i].compare(fileKey) == 0 || 
+	headerKeys[i].compare(timeStampKey) == 0) {
+      continue; // ignore the timestamp, and "File K of N" lines
+    } else if (myVal.compare(otherVal)!=0) {
+      equivalent = false;
+      if (verbose) {
+	cerr << "Differing values in FCR headers: " << myVal << ", " 
+	     << otherVal << endl;
+      }
+      break;
+    }
+  }
+  return equivalent;
+}
+
+map<string, string> FcrReader::parseHeader(vector<string> input) {
+  // parse header fields
+  vector<unsigned int> keyLengths(headerKeys.size(), 0);
+  for (unsigned int i=0; i<headerKeys.size(); i++) {
+    keyLengths[i] = headerKeys[i].size();
+  }
+  map<string, string> header;
+  for (unsigned int i=0; i<input.size(); i++) {
+    for (unsigned int j=0; j<headerKeys.size(); j++) {
+      if (input[i].compare(0, keyLengths[j], headerKeys[j])==0) {
+        // remove prefix string from the map value
+	// also remove the following tab character (if any)
+	// [Header], [Data] and Content have empty strings as values
+	int start;
+	if (input[i].size() == keyLengths[j]) {  start = keyLengths[j]; }
+	else { start = keyLengths[j] + 1; } // remove the tab
+        header[headerKeys[j]] = input[i].substr(start);
+        break;
+      }
+    }
+  }
+  // the File line is optional; all others should have values
+  if (header.size() < headerKeys.size() -1) {
+    cerr << "Insufficient lines parsed in header: Expected minimum " << 
+      headerKeys.size() -1 << ", found " << header.size() << endl;
+    throw 1;
+  }
+  return header;
+}
+
+vector<string> FcrReader::splitByWhiteSpace(string str) {
+  // split line into tokens by iterating over a stringstream
+  string buffer; 
+  stringstream ss(str); // Insert the string into a stream
+  vector<string> tokens; // Create vector to hold our words
+  while (ss >> buffer) {
+    tokens.push_back(buffer);
+  }
+  return tokens;
+}
