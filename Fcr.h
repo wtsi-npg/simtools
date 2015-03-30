@@ -42,10 +42,10 @@
 
 using namespace std;
 
-class Fcr {
+class FcrWriter {
 
  public:
-  Fcr();
+  FcrWriter();
   double BAF(double theta, Egt egt, long snpIndex);
   void compareNumberOfSNPs(Manifest *manifest, Gtc *gtc);
   void illuminaCoordinates(double x, double y, double &theta, double &r);
@@ -55,7 +55,7 @@ class Fcr {
 
 };
 
-class FcrData {
+class FcrReader {
  // Container for data in an FCR file
  // Intended only for running tests
  // "Real" FCR files are typically too big to slurp into memory
@@ -65,7 +65,7 @@ class FcrData {
   string fileKey;
   vector<string> headerKeys;
   map<string, string> header;
-  FcrData(string infile);
+  FcrReader(string infile);
   vector<string> snps;
   vector<string> samples;
   vector<string> alleles_a;
@@ -79,10 +79,10 @@ class FcrData {
   vector<int> y_raw;
   vector<double> logR;
   vector<double> baf;
-  bool equivalent(FcrData other, bool verbose=true);
+  bool equivalent(FcrReader other, bool verbose=true);
 
  private:
-  bool equivalentHeaders(FcrData other, bool verbose=true);
+  bool equivalentHeaders(FcrReader other, bool verbose=true);
   map<string, string> parseHeader(vector<string> header);
   vector<string> splitByWhiteSpace(string str);
 

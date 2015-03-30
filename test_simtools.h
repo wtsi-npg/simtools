@@ -207,28 +207,28 @@ class FcrTest : public TestBase
 {
  public:
 
-  void testFcrClass(void)
+  void testFcrWriterClass(void)
   {
     string infile = "data/humancoreexome-12v1-1_a.egt";
-    Fcr *fcr;
+    FcrWriter *fcrWriter;
     Egt *egt;
     egt = new Egt();
     egt->open(infile);
-    TS_ASSERT_THROWS_NOTHING(new Fcr());
-    fcr = new Fcr();
+    TS_ASSERT_THROWS_NOTHING(new FcrWriter());
+    fcrWriter = new FcrWriter();
     double r;
     double theta;
     double x = 3.0;
     double y = 4.0;
-    fcr->illuminaCoordinates(x, y, theta, r);
+    fcrWriter->illuminaCoordinates(x, y, theta, r);
     TS_ASSERT_DELTA(r, 7.0, 1e-6);
     TS_ASSERT_DELTA(theta, 0.5903345, 1e-6);
-    double baf = fcr->BAF(0.738881, *egt, 0);
+    double baf = fcrWriter->BAF(0.738881, *egt, 0);
     TS_ASSERT_DELTA(baf, 0.75, 1e-6);
-    double logR = fcr->logR(1, 0.73881, *egt, 0);
+    double logR = fcrWriter->logR(1, 0.73881, *egt, 0);
     TS_ASSERT_DELTA(logR, -0.7180, 1e-4);
     delete egt;
-    delete fcr;
+    delete fcrWriter;
   }
 };
 
@@ -331,14 +331,14 @@ class SimtoolsTest : public TestBase
     int size = 4657; // expected file size
     assertFileSize(outfile, size);
     TS_TRACE("FCR output file is of expected length");
-    FcrData data_ref = FcrData(normfile);
+    FcrReader data_ref = FcrReader(normfile);
     TS_ASSERT(data_ref.totalPairs == 50);
     TS_ASSERT(data_ref.snps.size() == 50);
     TS_ASSERT(data_ref.samples.size() == 50);
     TS_ASSERT(data_ref.header["Num SNPs"].compare("10")==0);
     TS_ASSERT(data_ref.header["Num Samples"].compare("5")==0);
     TS_ASSERT(data_ref.equivalent(data_ref));
-    FcrData data_test = FcrData(outfile);
+    FcrReader data_test = FcrReader(outfile);
     TS_TRACE("Created and tested FCRData objects"); 
     TS_ASSERT(data_ref.equivalent(data_test));
     TS_TRACE("FCR output file is equivalent to reference copy");

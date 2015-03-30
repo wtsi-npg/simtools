@@ -50,11 +50,11 @@ using namespace std;
 
 const static double pi = 3.141593;
 
-Fcr::Fcr() {
+FcrWriter::FcrWriter() {
   // empty constructor
 }
 
-double Fcr::BAF(double theta, Egt egt, long snpIndex) {
+double FcrWriter::BAF(double theta, Egt egt, long snpIndex) {
   // estimate the B allele frequency by interpolating between known clusters
   float *meanTheta = new float[egt.GENOTYPES_PER_SNP];
   egt.getMeanTheta(snpIndex, meanTheta);
@@ -73,7 +73,7 @@ double Fcr::BAF(double theta, Egt egt, long snpIndex) {
 }
 
 // sanity check on manifest and gtc file
-void Fcr::compareNumberOfSNPs(Manifest *manifest, Gtc *gtc) {
+void FcrWriter::compareNumberOfSNPs(Manifest *manifest, Gtc *gtc) {
   if (manifest->snps.size() != gtc->xRawIntensity.size()) {
     ostringstream msg;
     msg << "Size mismatch: Manifest contains " << manifest->snps.size() 
@@ -84,7 +84,7 @@ void Fcr::compareNumberOfSNPs(Manifest *manifest, Gtc *gtc) {
   }
 }
 
-void Fcr::illuminaCoordinates(double x, double y, double &theta, double &r) {
+void FcrWriter::illuminaCoordinates(double x, double y, double &theta, double &r) {
   // convert (x,y) cartesian coordinates to Illumina coordinates (theta, r)
   // these are ***NOT*** standard polar coordinates!
   // the angle theta is rescaled s.t. pi/2 radians = 1 "Illumina angular unit"
@@ -94,7 +94,7 @@ void Fcr::illuminaCoordinates(double x, double y, double &theta, double &r) {
 
 }
 
-string Fcr::createHeader(string content, int samples, int snps) {
+string FcrWriter::createHeader(string content, int samples, int snps) {
   // generate standard FCR header
   // content argument is typically the manifest name
   // includes data set summary, and column heads for main body
@@ -127,7 +127,7 @@ string Fcr::createHeader(string content, int samples, int snps) {
   return header;
 }
 
-double Fcr::logR(double theta, double r, Egt egt, long snpIndex) {
+double FcrWriter::logR(double theta, double r, Egt egt, long snpIndex) {
   // calculate the LogR metric for given (theta, r) of sample
   // snpIndex is position in the manifest (starting from 0)
   // get (theta, R) for AA, AB, BB from EGT and interpolate
@@ -151,7 +151,7 @@ double Fcr::logR(double theta, double r, Egt egt, long snpIndex) {
 }
 
 
-void Fcr::write(Egt *egt, Manifest *manifest, ostream *outStream, 
+void FcrWriter::write(Egt *egt, Manifest *manifest, ostream *outStream, 
               vector<string> infiles, vector<string> sampleNames) {
   // 'main' method to generate FCR and write to given output stream
  Gtc *gtc = new Gtc();
@@ -207,7 +207,7 @@ void Fcr::write(Egt *egt, Manifest *manifest, ostream *outStream,
 } 
 
 
-FcrData::FcrData(string infile) {
+FcrReader::FcrReader(string infile) {
   ifstream inStream;
   string line;
   bool body = false;
@@ -268,8 +268,8 @@ FcrData::FcrData(string infile) {
   this->header = parseHeader(header_lines);
 }
 
-bool FcrData::equivalent(FcrData other, bool verbose) {
-  // check for equality on data fields with another FcrData object
+bool FcrReader::equivalent(FcrReader other, bool verbose) {
+  // check for equality on data fields with another FcrReader object
   bool equal = true;
   double epsilon = 1e-5;
   if (totalPairs != other.totalPairs) {
@@ -370,7 +370,7 @@ bool FcrData::equivalent(FcrData other, bool verbose) {
                 
 }
 
-bool FcrData::equivalentHeaders(FcrData other, bool verbose) {
+bool FcrReader::equivalentHeaders(FcrReader other, bool verbose) {
   map<string, string> myHead = this->header;
   map<string, string> otherHead = other.header;
   bool equivalent = true;
@@ -392,7 +392,7 @@ bool FcrData::equivalentHeaders(FcrData other, bool verbose) {
   return equivalent;
 }
 
-map<string, string> FcrData::parseHeader(vector<string> input) {
+map<string, string> FcrReader::parseHeader(vector<string> input) {
   // parse header fields
   vector<unsigned int> keyLengths(headerKeys.size(), 0);
   for (unsigned int i=0; i<headerKeys.size(); i++) {
@@ -422,7 +422,7 @@ map<string, string> FcrData::parseHeader(vector<string> input) {
   return header;
 }
 
-vector<string> FcrData::splitByWhiteSpace(string str) {
+vector<string> FcrReader::splitByWhiteSpace(string str) {
   // split line into tokens by iterating over a stringstream
   string buffer; 
   stringstream ss(str); // Insert the string into a stream
