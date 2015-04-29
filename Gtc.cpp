@@ -36,6 +36,7 @@
 #include <cstring>
 #include <cstdio>
 #include <iostream>
+#include <iomanip>  
 #include <fstream>
 #include <sstream>
 #include <vector>
@@ -72,48 +73,17 @@ void XFormClass::normalize(unsigned short x_raw, unsigned short y_raw,
 
 string XFormClass::toString(void)
 {
-  int bufSize = 1000;
-  char buffer[bufSize];
-  string v, xoff, yoff, xsca, ysca, shr, th;
-  int n;
-  const char *float_format = "%.6f";
-  try { // attempt to convert other data types to strings
-      n = snprintf(buffer, bufSize, "%d", version);
-      if (n >= bufSize) { throw 1; }
-      v = string(buffer, n);
-
-      n = snprintf(buffer, bufSize, float_format, xOffset);
-      if (n >= bufSize) { throw 1; }
-      xoff = string(buffer, n);
-
-      n = snprintf(buffer, bufSize, float_format, yOffset);
-      if (n >= bufSize) { throw 1; }
-      yoff = string(buffer, n);
-
-      n = snprintf(buffer, bufSize, float_format, xScale);
-      if (n >= bufSize) { throw 1; }
-      xsca = string(buffer, n);
-
-      n = snprintf(buffer, bufSize, float_format, yScale);
-      if (n >= bufSize) { throw 1; }
-      ysca = string(buffer, n);
-
-      n = snprintf(buffer, bufSize, float_format, shear);
-      if (n >= bufSize) { throw 1; }
-      shr = string(buffer, n);
-
-      n = snprintf(buffer, bufSize, float_format, theta);
-      if (n >= bufSize) { throw 1; }
-      th = string(buffer, n);
-  } catch (int param) {
-    cerr << "Error: Unable to convert variable from GTC XForm to "
-         << "string format. Bad input or corrupt GTC file?" << endl;
-    throw;
-  }
-  string xf = "Version: "+v+"\nXOffset: "+xoff+"\nYOffset: "+yoff\
-    +"\nXScale: "+xsca+"\nYScale: "+ysca+"\nShear: "+shr+"\nTheta: "+th;
-  return xf;
-
+  int digits = 6;
+  stringstream sstream;
+  sstream << "Version: " << version << endl;
+  sstream << setprecision(digits);
+  sstream << "XOffset: " << xOffset << endl;
+  sstream << "YOffset: " << yOffset << endl;
+  sstream << "XScale: " << xScale << endl;
+  sstream << "YScale: " << yScale << endl;
+  sstream << "Shear: " << shear << endl;
+  sstream << "Theta: " << theta << endl;  
+  return sstream.str();
 }
 
 Gtc::Gtc(void) 
