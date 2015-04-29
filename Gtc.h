@@ -45,14 +45,21 @@ using namespace std;
 
 class XFormClass {
 public:
-	XFormClass();
-	int version;
-	float xOffset;
-	float yOffset;
-	float xScale;
-	float yScale;
-	float shear;
-	float theta;
+  XFormClass(int version, float xOffset, float yOffset, float xScale, 
+             float yScale, float shear, float theta);
+  int version;
+  float xOffset;
+  float yOffset;
+  float xScale;
+  float yScale;
+  float shear;
+  float theta;
+  
+  void normalize(unsigned short x_raw, unsigned short y_raw, 
+                 double &x_norm, double &y_norm);
+
+  string toString();
+
 };
 
 class BaseCallClass {
@@ -80,8 +87,6 @@ public:
 	const char *dumpc(void) { return dump().c_str(); }
 	double passRate(double cutoff);
 	double correctedPassRate(double cutoff);
-
-        void normalizeIntensity(double x_raw, double y_raw, double &x_norm, double &y_norm, unsigned int norm_id);
 
 	string errorMsg;
 	string filename;
