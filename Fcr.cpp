@@ -169,13 +169,14 @@ void FcrWriter::write(Egt *egt, Manifest *manifest, ostream *outStream,
     else sampleName = gtc->sampleName;
     for (unsigned int j = 0; j < manifest->snps.size(); j++) {
       string snpName = manifest->snps[j].name;
-      double x_raw = gtc->xRawIntensity[j];
-      double y_raw = gtc->yRawIntensity[j];
+      unsigned short x_raw = gtc->xRawIntensity[j];
+      unsigned short y_raw = gtc->yRawIntensity[j];
       float score = gtc->scores[j];
       double x_norm;
       double y_norm;
       unsigned int norm_id = manifest->normIdMap[manifest->snps[j].normId];
-      gtc->normalizeIntensity(x_raw, y_raw, x_norm, y_norm, norm_id);
+      XFormClass xf = gtc->XForm[norm_id];
+      xf.normalize(x_raw, y_raw, x_norm, y_norm);
       // correction of negative intensities, for consistency with GenomeStudio
       if (x_norm < epsilon) { x_norm = 0.0; }
       if (y_norm < epsilon) { y_norm = 0.0; }

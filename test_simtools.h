@@ -232,7 +232,7 @@ class FcrTest : public TestBase
   }
 };
 
-class NormalizeTest : public TestBase
+class ManifestTest : public TestBase
 {
  public:
 
@@ -257,7 +257,7 @@ class NormalizeTest : public TestBase
     TS_TRACE("Finished manifest test");
   }
 
-  void testNormalize(void)
+  void testManifestNormalize(void)
   {
     // compare normalized output with reference file
     string infile = "data/mock.bpm.csv";
@@ -485,6 +485,45 @@ class Win2UnixTest : public TestBase
     filepath = win2unix(filepath);
     TS_ASSERT_EQUALS(filepath, expected);
    
+  }
+
+};
+
+class XFormTest : public TestBase
+{
+  // tests the intensity normalization for writing .sim files
+
+ public:
+
+  void testXForm(void) {
+
+    int version= 1;
+    float xOffset = 150.0;
+    float yOffset = 90.0;
+    float xScale = 12000.0;
+    float yScale = 8000.0;
+    float shear = 0.02;
+    float theta = 0.01;
+
+    XFormClass *X;
+    TS_ASSERT_THROWS_NOTHING(X = new XFormClass(version, xOffset, yOffset, 
+                                                xScale, yScale, shear, theta)
+                             );
+    TS_TRACE("Created XFormClass object");
+
+    unsigned short x_raw = 400;
+    unsigned short y_raw = 200;
+    double x_norm;
+    double y_norm;
+    double x_norm_expected = 0.020744799066257; // 14 significant digits
+    double y_norm_expected = 0.013436817602487;
+    TS_ASSERT_THROWS_NOTHING(X->normalize(x_raw, y_raw, x_norm, y_norm));
+    TS_TRACE("Ran intensity normalization");
+
+    double epsilon = 1e-14;
+    TS_ASSERT(abs(x_norm - x_norm_expected) < epsilon);
+    TS_ASSERT(abs(y_norm - y_norm_expected) < epsilon);
+    TS_TRACE("Normalized intensities checked against expected values");
   }
 
 };

@@ -50,6 +50,8 @@ needed for FCR output)
  */
 
 #include <string> 
+#include <iostream>
+#include <sstream>
 #include "Egt.h"
 
 using namespace std;
@@ -193,13 +195,13 @@ void Egt::readHeader(ifstream &file)
   // populate instance variables with header values
   file.seekg(0); // set read position to zero, if not already there
   fileVersion = readInteger(file);
-  gcVersion = readString(file);
-  clusterVersion = readString(file);
-  callVersion = readString(file);
-  normalizationVersion = readString(file);
-  dateCreated = readString(file);
+  gcVersion = readString(file, "GC version");
+  clusterVersion = readString(file, "Cluster version");
+  callVersion = readString(file, "Call version");
+  normalizationVersion = readString(file, "Normalization version");
+  dateCreated = readString(file, "Date created");
   mode = file.get();
-  manifest = readString(file);
+  manifest = readString(file, "Manifest name");
 }
 
 int Egt::readInteger(ifstream &file)
@@ -214,7 +216,7 @@ void Egt::readPreface(ifstream &file) {
   // read the 'preface' from the body of an EGT file
   // assumes file is positioned at start of the body
   dataVersion = readInteger(file);
-  opa = readString(file);
+  opa = readString(file, "OPA");
   snpTotal = readInteger(file);
 }
 
@@ -226,29 +228,40 @@ void Egt::readSNPNames(ifstream &file, string names[]) {
   for (int i=0;i<snpTotal;i++) {
     // skip genotype scores
     // length of strings is unknown, so must read each one and discard it
-    readString(file);
+    readString(file, "genotype score");
   }
   for (int i=0;i<snpTotal;i++) {
-    names[i] = readString(file);
+    stringstream sstream;
+    sstream << "SNP name at index " << i;
+    names[i] = readString(file, sstream.str());
   }
 }
 
-string Egt::readString(ifstream &file) {
+string Egt::readString(ifstream &file, string name) {
   // EGT string format is as follows: 
   // - First byte is a *signed* char encoding the string length
   // - Subsequent bytes contain the string
   // Total bytes read is (length encoded in first byte)+1 -- at most 128
+  // Second argument is an (optional) identifier used for logging
   int length = int(file.get()); // get a single byte
-  if (not file.good())
+  if (not file.good()) {
     throw("Cannot read length from EGT file, file state is not good");
-  else if (length <= 0)
+  } else if (length < 0) {
     throw("Illegal string length in EGT file");
+  } else if (length == 0) {
+    cerr << "Warning: String '" << name << "' has zero length." << endl;
+    return "";
+  }
   char * buffer;
   buffer = new char[length+1];
   buffer[length] = '\0'; // ensure buffer ends with a null character
   file.read(buffer, length);
-  if (not file.good())
-    throw("Cannot read string from EGT file, file state is not good");
+  if (not file.good()) {
+    stringstream sstream;
+    sstream << "Cannot read string '" << name << \
+      "' from EGT file, file state is not good";
+    throw(sstream.str());
+  }
   string result = string(buffer);
   delete buffer;
   return result;
