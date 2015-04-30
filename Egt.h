@@ -92,7 +92,7 @@ private:
   float readFloat(ifstream &file);
   void readPreface(ifstream &file);
   void readSNPNames(ifstream &file, string names[]);
-  string readString(ifstream &file);
+  string readString(ifstream &file, string name="UNKNOWN_NAME");
 
 };
 
