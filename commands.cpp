@@ -218,11 +218,12 @@ void Commander::commandCreate(string infile, string outfile, bool normalize, str
       double xn;
       double yn;
       int idx = snp->index - 1;   // index is zero based in arrays, but starts from 1 in the map file
-      double x_raw = gtc->xRawIntensity[idx];
-      double y_raw = gtc->yRawIntensity[idx];
+      unsigned short x_raw = gtc->xRawIntensity[idx];
+      unsigned short y_raw = gtc->yRawIntensity[idx];
       unsigned int norm_id = manifest->normIdMap[snp->normId];
       if (normalize) {
-        gtc->normalizeIntensity(x_raw, y_raw, xn, yn, norm_id);
+        XFormClass xf = gtc->XForm[norm_id];
+        xf.normalize(x_raw, y_raw, xn, yn);
       } else {
 	xn = gtc->xRawIntensity[idx];
 	yn = gtc->yRawIntensity[idx];

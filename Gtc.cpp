@@ -34,15 +34,56 @@
 //
 #include "Gtc.h"
 #include <cstring>
+#include <cstdio>
 #include <iostream>
+#include <iomanip>  
 #include <fstream>
 #include <sstream>
 #include <vector>
 
 using namespace std;
 
-XFormClass::XFormClass(void)
+XFormClass::XFormClass(int version, float xOffset, float yOffset, 
+                       float xScale, float yScale, float shear, float theta)
 {
+  this->version = version;
+  this->xOffset = xOffset;
+  this->yOffset = yOffset;
+  this->xScale = xScale;
+  this->yScale = yScale;
+  this->shear = shear;
+  this->theta = theta;  
+}
+
+void XFormClass::normalize(unsigned short x_raw, unsigned short y_raw, 
+                           double &x_norm, double &y_norm)
+{
+  // This is the intensity normalization calculation, according to Illumina
+  double tempx = x_raw - xOffset;
+  double tempy = y_raw - yOffset;
+  double cos_theta = cos(theta);
+  double sin_theta = sin(theta);
+  double tempx2 = cos_theta * tempx + sin_theta * tempy;
+  double tempy2 = -sin_theta * tempx + cos_theta * tempy;
+  double tempx3 = tempx2 - shear * tempy2;
+  double tempy3 = tempy2;
+  x_norm = tempx3 / xScale;
+  y_norm = tempy3 / yScale;
+}
+
+string XFormClass::toString(void)
+{
+  int digits = 6;
+  stringstream sstream;
+  sstream << "Version: " << version << endl;
+  sstream << setprecision(digits);
+  sstream << "XOffset: " << xOffset << endl;
+  sstream << "YOffset: " << yOffset << endl;
+  sstream << "XScale: " << xScale << endl;
+  sstream << "YScale: " << yScale << endl;
+  sstream << "Shear: " << shear << endl;
+  sstream << "Theta: " << theta << endl;  
+  return sstream.str();
 }
 
 Gtc::Gtc(void) 
@@ -219,48 +260,38 @@ string Gtc::json_dump(void)
 	return s.str();
 }
 
-void Gtc::normalizeIntensity(double x_raw, double y_raw,
-                             double &x_norm, double &y_norm,
-                             unsigned int norm_id) {
-  // This is the normalization calculation, according to Illumina
-  XFormClass *XF = &(this->XForm[norm_id]);
-  double tempx = x_raw - XF->xOffset;
-  double tempy = y_raw - XF->yOffset;
-  double cos_theta = cos(XF->theta);
-  double sin_theta = sin(XF->theta);
-  double tempx2 = cos_theta * tempx + sin_theta * tempy;
-  double tempy2 = -sin_theta * tempx + cos_theta * tempy;
-  double tempx3 = tempx2 - XF->shear * tempy2;
-  double tempy3 = tempy2;
-  x_norm = tempx3 / XF->xScale;
-  y_norm = tempy3 / XF->yScale;
-}
-
 void Gtc::readXForm(ifstream &file, int offset)
 {
 	int arrayLen;
+        int total_reserved = 6; // 'reserved' floats after the xform fields
 	float reserved;
+
+        int version;
+        float xOffset;
+        float yOffset;
+        float xScale;
+        float yScale;
+        float shear;
+        float theta;
 
 	ios::pos_type pos = file.tellg();
 	file.seekg(offset);
 	file.read((char*)&arrayLen,4);
 
-	for (int n=0; n<arrayLen; n++) {
-		XFormClass X;
-		file.read((char*)&X.version, 4);
-		file.read((char*)&X.xOffset, 4);
-		file.read((char*)&X.yOffset, 4);
-		file.read((char*)&X.xScale, 4);
-		file.read((char*)&X.yScale, 4);
-		file.read((char*)&X.shear, 4);
-		file.read((char*)&X.theta, 4);
-		file.read((char*)&reserved, 4);
-		file.read((char*)&reserved, 4);
-		file.read((char*)&reserved, 4);
-		file.read((char*)&reserved, 4);
-		file.read((char*)&reserved, 4);
-		file.read((char*)&reserved, 4);
-		this->XForm.push_back(X);
+	for (int i=0; i<arrayLen; i++) {
+            file.read((char*)&version, 4);
+            file.read((char*)&xOffset, 4);
+            file.read((char*)&yOffset, 4);
+            file.read((char*)&xScale, 4);
+            file.read((char*)&yScale, 4);
+            file.read((char*)&shear, 4);
+            file.read((char*)&theta, 4);
+            XFormClass X = XFormClass(version, xOffset, yOffset, xScale, 
+                                      yScale, shear, theta);
+            this->XForm.push_back(X);
+            for (int j=0; j<total_reserved; j++) {
+              file.read((char*)&reserved, 4);
+            }
 	}
 	file.seekg(pos);
 }
