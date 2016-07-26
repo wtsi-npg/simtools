@@ -41,12 +41,8 @@ INSTALL_INC=$(PREFIX)/include
 INSTALL_LIB=$(PREFIX)/lib
 INSTALL_BIN=$(PREFIX)/bin
 
-# other useful paths
-STLPORT_INC=/software/solexa/pkg/STLport/current/stlport
-STLPORT_LIB=/software/solexa/pkg/STLport/current/build/lib/obj/gcc/so
-
 EXECUTABLES=gtc g2i gtc_process sim simtools normalize_manifest
-INCLUDES=Sim.h Gtc.h Manifest.h win2unix.h 
+INCLUDES=Sim.h Gtc.h Manifest.h win2unix.h
 LIBS=libsimtools.so libsimtools.a
 PERL_MODULES=Gtc.pm Sim.pm
 PERL_LIBS=Gtc.so Sim.so
@@ -69,12 +65,10 @@ else
 	CXXFLAGS+=-O3
 endif
 
-
-
-CXXFLAGS+=-Wall -Wfloat-equal -ffloat-store -fPIC -I$(STLPORT_INC) -std=c++0x
+CXXFLAGS+=-Wall -Wfloat-equal -ffloat-store -fPIC -std=c++0x
 
 # Set runpath instead of relying on LD_LIBRARY_PATH
-LDFLAGS=-L./ -L$(STLPORT_LIB) -Wl,-rpath -Wl,$(STLPORT_LIB)
+LDFLAGS+=-L./
 
 
 default: all
@@ -86,7 +80,7 @@ clean:
 	rm -f *.o *.so Gtc_wrap.cxx Gtc.pm Sim_wrap.cxx Sim.pm runner.cpp runner $(TARGETS)
 
 test: Sim.o Egt.o Fcr.o Gtc.o Manifest.o QC.o win2unix.o json/json_reader.o json/json_writer.o json/json_value.o commands.o runner.o
-	$(CXX) $(CXXFLAGS) -Wno-deprecated $(LDFLAGS) -o runner $^ -lstlport
+	$(CXX) $(CXXFLAGS) -Wno-deprecated $(LDFLAGS) -o runner $^
 	LD_LIBRARY_PATH=. ./runner # run "./runner -v" to print trace information
 
 test_perl:
@@ -112,22 +106,22 @@ all: $(TARGETS) $(PERL_MODULES) $(PERL_LIBS)
 perl: $(PERL_MODULES) $(PERL_LIBS)
 
 gtc: gtc.o libsimtools.a
-	$(CXX) $< $(LDFLAGS) -o $@ -lm -lstlport -Wl,-Bstatic -lsimtools -Wl,-Bdynamic
+	$(CXX) $< $(LDFLAGS) -o $@ -lm -Wl,-Bstatic -lsimtools -Wl,-Bdynamic
 
 normalize_manifest: normalize_manifest.o libsimtools.a
-	$(CXX) $< $(LDFLAGS) -o $@ -lm -lstlport -Wl,-Bstatic -lsimtools -Wl,-Bdynamic
+	$(CXX) $< $(LDFLAGS) -o $@ -lm -Wl,-Bstatic -lsimtools -Wl,-Bdynamic
 
 sim: sim.o libsimtools.a
-	$(CXX) $< $(LDFLAGS) -o $@ -lm -lstlport -Wl,-Bstatic -lsimtools -Wl,-Bdynamic
+	$(CXX) $< $(LDFLAGS) -o $@ -lm -Wl,-Bstatic -lsimtools -Wl,-Bdynamic
 
 simtools: simtools.o commands.o libsimtools.a
-	$(CXX) simtools.o commands.o $(LDFLAGS) -o $@ -lm -lstlport -Wl,-Bstatic -lsimtools -Wl,-Bdynamic
+	$(CXX) simtools.o commands.o $(LDFLAGS) -o $@ -lm -Wl,-Bstatic -lsimtools -Wl,-Bdynamic
 
 g2i: g2i.o libsimtools.a
-	$(CXX) $< $(LDFLAGS) -o $@ -lm -lstlport -Wl,-Bstatic -lsimtools -Wl,-Bdynamic
+	$(CXX) $< $(LDFLAGS) -o $@ -lm -Wl,-Bstatic -lsimtools -Wl,-Bdynamic
 
 gtc_process: gtc_process.o libsimtools.a
-	$(CXX) $< $(LDFLAGS) -o $@ -lm -lstlport -Wl,-Bstatic -lsimtools -Wl,-Bdynamic
+	$(CXX) $< $(LDFLAGS) -o $@ -lm -Wl,-Bstatic -lsimtools -Wl,-Bdynamic
 
 gtc_process.o: gtc_process.cpp
 	$(CXX) -c -DTEST $(CXXFLAGS) -o $@ $<

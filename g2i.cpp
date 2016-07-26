@@ -35,6 +35,7 @@
 //
 
 #include <unistd.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <errno.h>
@@ -44,11 +45,12 @@
 #include <iostream>
 #include <sstream>
 #include <cstdio>
+#include <cstring>
 #include <iomanip>
 #include <cmath>
 #include <vector>
 #include <algorithm>
-#include <hash_map>
+#include <unordered_map>
 
 #include "Gtc.h"
 #include "Manifest.h"
@@ -63,20 +65,20 @@
 using namespace std;
 
 
-hash_map<string,string> gtcHash;	// <sample_name, filename>
+unordered_map<string,string> gtcHash;	// <sample_name, filename>
 Manifest *manifest = new Manifest();
 vector<string> sampleArray;
-hash_map<string,float*> cache;
-hash_map<string,string> gcCache;
-hash_map<string,int> exclusionList;	// List of samples to exclude
-typedef hash_map<string,fstream*> FileMap;
+unordered_map<string,float*> cache;
+unordered_map<string,string> gcCache;
+unordered_map<string,int> exclusionList;	// List of samples to exclude
+typedef unordered_map<string,fstream*> FileMap;
 FileMap outFile;
 FileMap::iterator pos;
 vector<string> filenameArray;
 vector<string> sampleNames;
 vector<string> gender_code;
 
-typedef hash_map<string,ios::pos_type> PosMap;
+typedef unordered_map<string,ios::pos_type> PosMap;
 PosMap filePos;
 PosMap::iterator fp;
 
@@ -253,7 +255,7 @@ void goForIt(string fname)
 
 			*f << "SNP\tCoor\tAlleles";
 			// write sample names from all the gtc files
-			for (hash_map<string,string>::iterator i = gtcHash.begin(); i != gtcHash.end(); i++) {
+			for (unordered_map<string,string>::iterator i = gtcHash.begin(); i != gtcHash.end(); i++) {
 				*f << "\t" << i->first << "A\t" << i->first << "B";
 			}
 			*f << endl;
@@ -273,7 +275,7 @@ void goForIt(string fname)
 	//
 	int n=1;
 	int cacheIndex = 0;
-	for (hash_map<string,string>::iterator i = gtcHash.begin(); i != gtcHash.end(); i++) {
+	for (unordered_map<string,string>::iterator i = gtcHash.begin(); i != gtcHash.end(); i++) {
 		if (verbose) cout << timestamp() << "Processing GTC file " << n++ << " of " << gtcHash.size() << endl;
 		gtc.open(i->second,Gtc::XFORM | Gtc::INTENSITY);	// reload GTC file to read XForm and Intensity arrays
 
@@ -450,7 +452,7 @@ void createBedFile(string fname, vector<string>infiles)
 	// Process each GTC file in turn
 	//
 	for (unsigned int n = 0; n < infiles.size(); n++) {
-//	for (hash_map<string,string>::iterator i = gtcHash.begin(); i != gtcHash.end(); i++) {
+//	for (unordered_map<string,string>::iterator i = gtcHash.begin(); i != gtcHash.end(); i++) {
 		if (verbose) cout << timestamp() << "Processing GTC file " << n+1 << " of " << infiles.size() << endl << infiles[n] << endl;
 		gtc.open(infiles[n],Gtc::GENOTYPES | Gtc::BASECALLS | Gtc::SCORES);	// reload GTC file to read required arrays
 
@@ -495,7 +497,7 @@ void createSimFile(string fname)
 {
 	Sim *sim = new Sim();
 
-	hash_map<string,string>::iterator i = gtcHash.begin();
+	unordered_map<string,string>::iterator i = gtcHash.begin();
 	gtc.open(i->second, Gtc::INTENSITY);
 	sim->openOutput(fname);
 	sim->writeHeader(gtcHash.size(), gtc.xRawIntensity.size());
@@ -505,7 +507,7 @@ void createSimFile(string fname)
 	// Process each GTC file in turn
 	//
 	unsigned int n=1;
-	for (hash_map<string,string>::iterator i = gtcHash.begin(); i != gtcHash.end(); i++) {
+	for (unordered_map<string,string>::iterator i = gtcHash.begin(); i != gtcHash.end(); i++) {
 		char *buffer;
 		if (verbose) cout << timestamp() << "Processing GTC file " << n << " of " << gtcHash.size() << endl;
 		//
@@ -607,7 +609,7 @@ void createGenoSNP(string fname)
 	// Process each GTC file in turn
 	//
 	int n=1;
-	for (hash_map<string,string>::iterator i = gtcHash.begin(); i != gtcHash.end(); i++) {
+	for (unordered_map<string,string>::iterator i = gtcHash.begin(); i != gtcHash.end(); i++) {
 		if (verbose) cout << timestamp() << "Processing GTC file " << n++ << " of " << gtcHash.size() << endl;
 		//
 		// add sample name to each output file
@@ -692,7 +694,7 @@ void createGenoCalling(string fname)
 			f->open(fullFname.c_str(), ios::in | ios::out | ios::trunc);
 
 			// write sample names from all the gtc files
-			for (hash_map<string,string>::iterator i = gtcHash.begin(); i != gtcHash.end(); i++) {
+			for (unordered_map<string,string>::iterator i = gtcHash.begin(); i != gtcHash.end(); i++) {
 				*f << "\t" << i->first;
 			}
 			*f << endl;
@@ -712,7 +714,7 @@ void createGenoCalling(string fname)
 	//
 	int n=1;
 	int cacheIndex = 0;
-	for (hash_map<string,string>::iterator i = gtcHash.begin(); i != gtcHash.end(); i++) {
+	for (unordered_map<string,string>::iterator i = gtcHash.begin(); i != gtcHash.end(); i++) {
 		if (verbose) cout << timestamp() << "Processing GTC file " << n++ << " of " << gtcHash.size() << endl;
 		gtc.open(i->second,Gtc::GENOTYPES | Gtc::BASECALLS | Gtc::SCORES);	// reload GTC file to read required arrays
 
@@ -876,7 +878,7 @@ int main(int argc, char *argv[])
 	}
 
 	string manifestName = "";
-	for (hash_map<string,string>::iterator i = gtcHash.begin(); i != gtcHash.end(); i++) {
+	for (unordered_map<string,string>::iterator i = gtcHash.begin(); i != gtcHash.end(); i++) {
 		gtc.open(i->second,0);
 		if (manifestName != "" && gtc.manifest != manifestName) {
 			cout << "GTC files do not all have the same manifest" << endl;
