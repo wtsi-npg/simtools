@@ -159,14 +159,14 @@ void QC::magnitudeByProbe(float magByProbe[], bool verbose=false) {
       t = new char[QC::TIME_BUFFER];
       timeText(t);
       cerr << t << " Sample " << i+1 << " of " << qcsim->numSamples << endl;
-      delete t;
+      delete [] t;
     }
   }
   for (unsigned int i=0; i < qcsim->numProbes; i++) {
     magByProbe[i] = magByProbe[i] / qcsim->numSamples;
   }
   free(magnitudes);
-  delete sampleName;
+  delete [] sampleName;
   if (verbose) cerr << "Completed mean magnitude by probe" << endl;
 }
 
@@ -193,11 +193,11 @@ void QC::magnitudeBySample(float magBySample[], float magByProbe[],
       t = new char[QC::TIME_BUFFER];
       timeText(t);
       cerr << t << " Sample " << i+1 << " of " << qcsim->numSamples << endl;
-      delete t;
+      delete [] t;
     }
   }
   free(magnitudes);
-  delete sampleName;
+  delete [] sampleName;
   if (verbose) cerr << "Completed mean magnitude by sample" << endl;
 }
 
@@ -235,7 +235,7 @@ void QC::xydiffBySample(float xydBySample[],
     }
     xydBySample[i] = xydTotal / qcsim->numProbes;
   }
-  delete sampleName;
+  delete [] sampleName;
 }
 
 void QC::timeText(char *buffer) {

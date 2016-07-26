@@ -81,7 +81,7 @@ double goForIt(Gtc *gtc, Manifest *manifest)
                         // intensities are non-zero (for tolerance epsilon)
 			double xn = tempx3 / XF->xScale;
 			double yn = tempy3 / XF->yScale;
-			if (!isnan(xn) && !isnan(yn)) {
+			if (!std::isnan(xn) && !std::isnan(yn)) {
 				meanTotal += (yn-xn);
 //cout << xn << '\t' << yn << '\t' << tempx3 << '\t' << tempy3 << '\t' << XF->xScale << '\t' << XF->yScale << '\t' << meanTotal << endl;
 				n++;
@@ -151,7 +151,7 @@ double getIlluminaPassrate(double cutOff, Gtc *gtc, Manifest *manifest)
 int main(int argc, char *argv[])
 {
 	string manifestFile = "";
-	Manifest *manifest;
+	Manifest *manifest = NULL;
 	Gtc *gtc = new Gtc();
 	verbose = true;
 

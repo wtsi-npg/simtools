@@ -28,6 +28,7 @@
 // Class to provide a high-level interface to simtools functionality
 // Parse command-line options in simtools.cpp, input to methods in this class
 
+#include <cstring>
 #include <iostream>
 #include <sstream>
 #include <vector>
@@ -68,8 +69,8 @@ void Commander::loadManifest(Manifest *manifest, string manfile)
   if (manfile == "") throw("No manifest file specified");
   manifest->open(manfile);
 }
-  
-// Parse the infile, which is either an ascii list of GTC files, 
+
+// Parse the infile, which is either an ascii list of GTC files,
 // or a JSON format file
 // Return an array of filenames and (for a JSON file) a list of sample names
 void Commander::parseInfile(string infile, vector<string> &sampleNames, vector<string> &infiles)
@@ -77,7 +78,7 @@ void Commander::parseInfile(string infile, vector<string> &sampleNames, vector<s
   Json::Value root;   // will contains the root value after parsing.
   Json::Reader reader;
   ifstream f;
-  
+
   f.open(infile.c_str());
   if (infile.find(".json") != string::npos) {
     // Parse JSON file
@@ -107,7 +108,7 @@ void Commander::parseInfile(string infile, vector<string> &sampleNames, vector<s
 void Commander::commandView(string infile, bool verbose)
 {
   Sim *sim = new Sim();
-  
+
   cout << endl << "Commander::commandView" << endl;
   cout << endl << "Reading SIM file: " << infile << endl;
   sim->openInput(infile);
@@ -124,7 +125,7 @@ void Commander::commandView(string infile, bool verbose)
   cout << "Format:    " << (int)sim->numberFormat << endl;
   cout << "RecLength: " << (int)sim->recordLength << endl;
   cout << endl;
-  
+
   char *sampleName = new char[sim->sampleNameSize+1];
   uint16_t *intensity_int = 
     (uint16_t *) calloc(sim->sampleIntensityTotal, sizeof(uint16_t));
@@ -152,7 +153,7 @@ void Commander::commandView(string infile, bool verbose)
   sim->reportNonNumeric();
   free(intensity_int);
   free(intensity_float);
-  delete sampleName;
+  delete [] sampleName;
   sim->close();
   delete sim;
 }
@@ -177,22 +178,22 @@ void Commander::commandCreate(string infile, string outfile, bool normalize, str
   Gtc *gtc = new Gtc();
   Manifest *manifest = new Manifest();
   int numberFormat = normalize ? 0 : 1;
-  
+
   //
   // First, get a list of GTC files. and possibly sample names
   //
   if (infile == "") throw("commandCreate(): infile not specified");
   parseInfile(infile,sampleNames,infiles);
-  
+
   // We need a manifest file to sort the SNPs and to normalise the intensities (if required)
   loadManifest(manifest, manfile);
   // Sort the SNPs into position order
   sort(manifest->snps.begin(), manifest->snps.end(), SNPSorter());
-  
+
   // Create the SIM file and write the header
   sim->openOutput(outfile);
   sim->writeHeader(infiles.size(), manifest->snps.size(), 2, numberFormat);
-  
+
   // For each GTC file, write the sample name and intensities to the SIM file
   for (unsigned int n = 0; n < infiles.size(); n++) {
     gtc->open(infiles[n], Gtc::XFORM | Gtc::INTENSITY);
@@ -203,7 +204,7 @@ void Commander::commandCreate(string infile, string outfile, bool normalize, str
     else                        { strcpy(buffer,gtc->sampleName.c_str()); }
     sim->write(buffer, sim->sampleNameSize);
     if (verbose) {
-      cerr << "Gtc file " 
+      cerr << "Gtc file "
 	   << n+1
 	   << " of " 
 	   << infiles.size()
@@ -238,7 +239,7 @@ void Commander::commandCreate(string infile, string outfile, bool normalize, str
 	v = yn; sim->write(&v,sizeof(v));
       }
     }
-    
+
   }
   sim->close();
   delete sim;
@@ -247,10 +248,10 @@ void Commander::commandCreate(string infile, string outfile, bool normalize, str
 // write a Final Call Report (FCR) file
 //
 // FCR consists of header and body
-// Fields for each line in body: (snp_name, sample_id, allele_A, allele_B, 
-// score, chr, pos, theta, R, X_normalized, Y_normalized, X_raw, Y_raw, 
+// Fields for each line in body: (snp_name, sample_id, allele_A, allele_B,
+// score, chr, pos, theta, R, X_normalized, Y_normalized, X_raw, Y_raw,
 // BAF, logR)
-// 
+//
 
 void Commander::commandFCR(string infile, string outfile, string manfile, string egtfile, bool verbose)
 {
@@ -298,30 +299,30 @@ void Commander::commandIlluminus(string infile, string outfile, string manfile, 
   char *sampleName;
   vector<vector<float> > SampleArray;
   Manifest *manifest = new Manifest();
-  
+
   if (outfile == "-") {
     outStream = &cout;
   } else {
     outFStream.open(outfile.c_str(),ios::binary | ios::trunc | ios::out);
     outStream = &outFStream;
   }
-  
+
   sim->openInput(infile);
-  
+
   if (sim->numChannels != 2) throw("simtools can only handle SIM files with exactly 2 channels at present");
   uint16_t *intensity_int = 
     (uint16_t *) calloc(sim->sampleIntensityTotal, sizeof(uint16_t));
   float *intensity_float = 
     (float *) calloc(sim->sampleIntensityTotal, sizeof(float));
   sampleName = new char[sim->sampleNameSize+1];
-  
+
   // We need a manifest file to sort the SNPs
   loadManifest(manifest, manfile);
   // Sort the SNPs into position order
   sort(manifest->snps.begin(), manifest->snps.end(), SNPSorter());
-  
+
   if (end_pos == -1) end_pos = sim->numProbes - 1;
-  
+
   // load the (relevant parts of) the SIM file
   if (verbose) cerr << "Reading SIM file " << infile << endl;
   *outStream << "SNP\tCoor\tAlleles";
@@ -344,7 +345,7 @@ void Commander::commandIlluminus(string infile, string outfile, string manfile, 
     *outStream << "\t" << sampleName << "A\t" << sampleName << "B";
   }
   *outStream << endl;
-  
+
     // Now write it out in Illuminus format
   if (verbose) cerr << "Writing Illuminus file " << outfile << endl;
   for (int n = start_pos; n <= end_pos; n++) {
@@ -370,20 +371,20 @@ void Commander::commandGenoSNP(string infile, string outfile, string manfile, in
   Sim *sim = new Sim();
   ofstream outFStream;
   ostream *outStream;
-  
+
   outStream = &cout;
   if (outfile == "-") {
   } else {
     outFStream.open(outfile.c_str(),ios::binary | ios::trunc | ios::out);
     outStream = &outFStream;
   }
-  
+
   sim->openInput(infile);
-  
+
   if (end_pos == -1) end_pos = sim->numSamples - 1;
-  
+
   char *sampleName = new char[sim->sampleNameSize+1];
-  uint16_t *intensity = (uint16_t *) calloc(sim->sampleIntensityTotal, 
+  uint16_t *intensity = (uint16_t *) calloc(sim->sampleIntensityTotal,
 					    sizeof(uint16_t));
   for (int n=0; n <= end_pos ; n++) {
     sim->getNextRecord(sampleName, intensity);
@@ -396,7 +397,7 @@ void Commander::commandGenoSNP(string infile, string outfile, string manfile, in
     *outStream << endl;
   }
   if (verbose) sim->reportNonNumeric();
-  free(sampleName);
+  delete [] sampleName;
   free(intensity);
   sim->close();
   delete sim;
@@ -424,7 +425,5 @@ void Commander::commandQC(string infile, string magnitude, string xydiff, bool v
   }
   qc->close();
   delete qc;
-  
+
 }
-
-
