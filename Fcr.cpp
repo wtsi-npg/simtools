@@ -68,7 +68,7 @@ double FcrWriter::BAF(double theta, Egt egt, long snpIndex) {
   } else {
     baf = 0.5 + ((theta - meanTheta[1])/(meanTheta[2] - meanTheta[1]))*0.5;
   }
-  delete meanTheta;
+  delete [] meanTheta;
   return baf;
 }
 
@@ -105,23 +105,31 @@ string FcrWriter::createHeader(string content, int samples, int snps) {
   struct tm * timeinfo;
   time ( &rawtime );
   timeinfo = localtime ( &rawtime );
-  char *buffer = new char[20];
+
   // use date format from Illumina FCR files
+  char *buffer = new char[20];
   strftime(buffer, 20, "%m/%d/%Y %I:%M %p", timeinfo);
   header += "Processing Date\t"+string(buffer)+"\n";
-  delete buffer;
+  delete [] buffer;
+
   header += "Content\t"+content+"\n";
   // to_string is not working because of compiler issues
-  buffer = new char[50];  
+
+  buffer = new char[50];
   sprintf(buffer, "%d", snps);
   header += "Num SNPs\t"+string(buffer)+"\n";
   header += "Total SNPs\t"+string(buffer)+"\n";
-  buffer = new char[50];  
+  delete [] buffer;
+
+  buffer = new char[50];
   sprintf(buffer, "%d", samples);
   header += "Num Samples\t"+string(buffer)+"\n";
   header += "Total Samples\t"+string(buffer)+"\n";
+  delete [] buffer;
+
   header += "File\t1 of 1\n"; // no split across files
   header += "[Data]\n";
+
   // now add column headers for man body
   header += "SNP Name\tSample ID\tAllele1 - Top\tAllele2 - Top\tGC Score\tTheta\tR\tX\tY\tX Raw\tY Raw\tB Allele Freq\tLog R Ratio\n";
   return header;
@@ -145,17 +153,16 @@ double FcrWriter::logR(double theta, double r, Egt egt, long snpIndex) {
       break;
     }
   }
-  delete meanR;
-  delete meanTheta;
+  delete [] meanR;
+  delete [] meanTheta;
   return log2(r/rExpected);
 }
 
-
-void FcrWriter::write(Egt *egt, Manifest *manifest, ostream *outStream, 
+void FcrWriter::write(Egt *egt, Manifest *manifest, ostream *outStream,
               vector<string> infiles, vector<string> sampleNames) {
   // 'main' method to generate FCR and write to given output stream
  Gtc *gtc = new Gtc();
- string header = createHeader(manifest->filename, infiles.size(), 
+ string header = createHeader(manifest->filename, infiles.size(),
                               manifest->snps.size());
  *outStream  << header;
  double epsilon = 1e-6;
@@ -204,9 +211,9 @@ void FcrWriter::write(Egt *egt, Manifest *manifest, ostream *outStream,
       *outStream << string(buffer);
     }
   }
- delete gtc;
-} 
 
+ delete gtc;
+}
 
 FcrReader::FcrReader(string infile) {
   ifstream inStream;
@@ -368,7 +375,6 @@ bool FcrReader::equivalent(FcrReader other, bool verbose) {
     }
   }
   return equal;
-                
 }
 
 bool FcrReader::equivalentHeaders(FcrReader other, bool verbose) {
@@ -416,7 +422,7 @@ map<string, string> FcrReader::parseHeader(vector<string> input) {
   }
   // the File line is optional; all others should have values
   if (header.size() < headerKeys.size() -1) {
-    cerr << "Insufficient lines parsed in header: Expected minimum " << 
+    cerr << "Insufficient lines parsed in header: Expected minimum " <<
       headerKeys.size() -1 << ", found " << header.size() << endl;
     throw 1;
   }
@@ -425,7 +431,7 @@ map<string, string> FcrReader::parseHeader(vector<string> input) {
 
 vector<string> FcrReader::splitByWhiteSpace(string str) {
   // split line into tokens by iterating over a stringstream
-  string buffer; 
+  string buffer;
   stringstream ss(str); // Insert the string into a stream
   vector<string> tokens; // Create vector to hold our words
   while (ss >> buffer) {

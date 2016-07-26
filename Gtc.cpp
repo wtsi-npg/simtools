@@ -33,6 +33,7 @@
 //
 //
 #include "Gtc.h"
+#include <cmath>
 #include <cstring>
 #include <cstdio>
 #include <iostream>

@@ -49,16 +49,16 @@ class TestBase :  public CxxTest::TestSuite
 
  public:
 
-  static const int sim_size = 1491; // size of data/example.raw.sim 
+  static const int sim_size = 1491; // size of data/example.raw.sim
   string tempdir;
   string sim_raw;
   string manfile;
   bool verbose;
 
-  void setUp() 
+  void setUp()
   {
     // called before every test
-    char *_template = new char[20]; 
+    char *_template = new char[20];
     strcpy(_template,  "temp_XXXXXX"); // template string for directory name
     tempdir = string(mkdtemp(_template)); // returns name of new directory
     TS_TRACE("Created tempdir:"+tempdir);
@@ -71,7 +71,7 @@ class TestBase :  public CxxTest::TestSuite
     }
     sim_raw = tempdir+"/example.raw.sim";
     manfile = tempdir+"/example.bpm.csv";
-    verbose = false;    
+    verbose = false;
   }
 
   void tearDown()
@@ -83,14 +83,14 @@ class TestBase :  public CxxTest::TestSuite
       cerr << "Failed to delete temporary directory: " << tempdir << endl;
       throw 1;
     }
-    TS_TRACE("Removed tempdir: "+tempdir);
+    TS_TRACE("Removed tempdir: " + tempdir);
   }
 
   void assertFilesIdentical(string path1, string path2, int size)
   {
     // check if given files contain same data; size = expected size in bytes
-    char *buf1 = new char[size];   
-    char *buf2 = new char[size];   
+    char *buf1 = new char[size];
+    char *buf2 = new char[size];
     ifstream stream1;
     ifstream stream2;
     stream1.open(path1.c_str());
@@ -100,8 +100,8 @@ class TestBase :  public CxxTest::TestSuite
     stream2.read(buf2, size);
     stream2.close();
     TS_ASSERT_SAME_DATA(buf1, buf2, size);
-    delete buf1;
-    delete buf2;
+    delete [] buf1;
+    delete [] buf2;
   }
 
   void assertFileSize(string path, int size)
@@ -113,8 +113,6 @@ class TestBase :  public CxxTest::TestSuite
     testStream.close();
     TS_ASSERT_EQUALS(size, testSize);
   }
-
-
 
   int stdoutRedirect(string tempfile) {
 
@@ -172,38 +170,42 @@ class EgtTest : public TestBase
     // check items for first two SNPs in numerical data
     TS_ASSERT_EQUALS(egt->counts[0], 286);
     TS_ASSERT_EQUALS(egt->counts[3], 286);
-    TS_ASSERT_DELTA(egt->params[0], 0.1098993, 1e-6);
+    TS_ASSERT_DELTA(egt->params[0],  0.1098993, 1e-6);
     TS_ASSERT_DELTA(egt->params[12], 0.1409651, 1e-6);
     TS_TRACE("Check on counts and params for first two SNPs complete");
     // check first SNP name
     TS_ASSERT_EQUALS(egt->snpNames[0], "1KG_1_100177980");
     TS_TRACE("SNP name check complete");
-    float expected[12] = { 0.109899, 0.183567, 0.107813, 
-                           1.31153, 1.62674, 1.23534, 
-                           0.00652837, 0.0223607, 0.0223607, 
-                           0.0283947, 0.502052, 0.97571 };
-    float *clusters = new float[egt->GENOTYPES_PER_SNP];
-    float *meanR = new float[egt->GENOTYPES_PER_SNP];
+
+    float expected[12] = { 0.109899,   0.183567,  0.107813,
+                           1.31153,    1.62674,   1.23534,
+                           0.00652837, 0.0223607, 0.0223607,
+                           0.0283947,  0.502052,  0.97571 };
+    float *clusters  = new float[egt->PARAMS_PER_SNP];
+    float *meanR     = new float[egt->GENOTYPES_PER_SNP];
     float *meanTheta = new float[egt->GENOTYPES_PER_SNP];
+
     egt->getClusters(0, clusters);
-    for (int i=0;i<egt->PARAMS_PER_SNP;i++) {
-      TS_ASSERT_DELTA(clusters[i], expected[i], 1e-5);
+    for (int i = 0; i <egt->PARAMS_PER_SNP; i++) {
+      TS_ASSERT_DELTA(clusters[i],  expected[i],     1e-5);
     }
+
     egt->getMeanR(0, meanR);
-    for (int i=0;i<3;i++) {
-      TS_ASSERT_DELTA(meanR[i], expected[i+3], 1e-5);
+    for (int i = 0; i < 3; i++) {
+      TS_ASSERT_DELTA(meanR[i],     expected[i + 3], 1e-5);
     }
+
     egt->getMeanTheta(0, meanTheta);
-    for (int i=0;i<3;i++) {
-      TS_ASSERT_DELTA(meanTheta[i], expected[i+9], 1e-5);
+    for (int i = 0; i < 3; i++) {
+      TS_ASSERT_DELTA(meanTheta[i], expected[i + 9], 1e-5);
     }
+
     TS_TRACE("Check on contents of first EGT cluster record complete");
     TS_TRACE("Finished EGT test");
-    delete egt;
   }
 };
 
-class FcrTest : public TestBase 
+class FcrTest : public TestBase
 {
  public:
 
@@ -231,7 +233,6 @@ class FcrTest : public TestBase
     delete fcrWriter;
   }
 };
-
 class ManifestTest : public TestBase
 {
  public:
@@ -280,7 +281,6 @@ class ManifestTest : public TestBase
   }
 
 };
-
 class SimTest : public TestBase {
 
  public:
@@ -326,7 +326,7 @@ class SimtoolsTest : public TestBase
     string egtfile = "data/humancoreexome-12v1-1_a.egt";
     string normfile = "data/fcr_test.txt";
     bool verbose = true;
-    TS_ASSERT_THROWS_NOTHING(commander->commandFCR(infile, outfile, manfile, 
+    TS_ASSERT_THROWS_NOTHING(commander->commandFCR(infile, outfile, manfile,
                                                    egtfile, verbose));
     int size = 4657; // expected file size
     assertFileSize(outfile, size);
@@ -339,7 +339,7 @@ class SimtoolsTest : public TestBase
     TS_ASSERT(data_ref.header["Num Samples"].compare("5")==0);
     TS_ASSERT(data_ref.equivalent(data_ref));
     FcrReader data_test = FcrReader(outfile);
-    TS_TRACE("Created and tested FCRData objects"); 
+    TS_TRACE("Created and tested FCRData objects");
     TS_ASSERT(data_ref.equivalent(data_test));
     TS_TRACE("FCR output file is equivalent to reference copy");
   }
@@ -473,7 +473,6 @@ class SimtoolsTest : public TestBase
   }
 };
 
-
 class Win2UnixTest : public TestBase
 {
  public:
@@ -484,7 +483,7 @@ class Win2UnixTest : public TestBase
     string expected = "/nfs/new_illumina_geno04/call/20130605/9298751015_R01C01.gtc";
     filepath = win2unix(filepath);
     TS_ASSERT_EQUALS(filepath, expected);
-   
+
   }
 
 };
@@ -505,10 +504,9 @@ class XFormTest : public TestBase
     float shear = 0.02;
     float theta = 0.01;
 
-    XFormClass *X;
-    TS_ASSERT_THROWS_NOTHING(X = new XFormClass(version, xOffset, yOffset, 
-                                                xScale, yScale, shear, theta)
-                             );
+    XFormClass *xform;
+    TS_ASSERT_THROWS_NOTHING(xform = new XFormClass(version, xOffset, yOffset,
+                                                    xScale, yScale, shear, theta));
     TS_TRACE("Created XFormClass object");
 
     unsigned short x_raw = 400;
@@ -517,7 +515,7 @@ class XFormTest : public TestBase
     double y_norm;
     double x_norm_expected = 0.020744799066257; // 14 significant digits
     double y_norm_expected = 0.013436817602487;
-    TS_ASSERT_THROWS_NOTHING(X->normalize(x_raw, y_raw, x_norm, y_norm));
+    TS_ASSERT_THROWS_NOTHING(xform->normalize(x_raw, y_raw, x_norm, y_norm));
     TS_TRACE("Ran intensity normalization");
 
     double epsilon = 1e-14;

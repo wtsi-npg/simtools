@@ -59,7 +59,7 @@ using namespace std;
 Egt::Egt(bool verbose)
 {
   this->verbose = verbose;
-  GENOTYPES_PER_SNP = 3; 
+  GENOTYPES_PER_SNP = 3;
   PARAMS_PER_SNP = 12;
   NUMERIC_BYTES = 4;
   ENTRIES_IN_RECORD = 30;
@@ -71,7 +71,7 @@ void Egt::open(string filename)
 {
   this->filename = filename;
   ifstream file;
- 
+
   file.open(filename.c_str());
   if (!file) {
     cerr << "Can't open file: " << filename << endl << flush;
@@ -95,14 +95,19 @@ void Egt::open(string filename)
     file.read(block, BYTES_IN_RECORD);
     int *ints = bytesToInts(block, 0, GENOTYPES_PER_SNP);
     float *floats = bytesToFloats(block, GENOTYPES_PER_SNP, ENTRIES_IN_RECORD);
-    for (int j=0;j<GENOTYPES_PER_SNP;j++)
+    for (int j=0;j<GENOTYPES_PER_SNP;j++) {
       counts[i*GENOTYPES_PER_SNP + j] = ints[j];
-    for (int j=0;j<PARAMS_PER_SNP;j++)
+    }
+    for (int j=0;j<PARAMS_PER_SNP;j++) {
       params[i*PARAMS_PER_SNP + j] = floats[j];
-    delete floats;
-    delete ints;
+    }
+
+    delete [] floats;
+    delete [] ints;
   }
-  delete block;
+
+  delete [] block;
+
   snpNames = new string[snpTotal];
   readSNPNames(file, snpNames);
   file.close();
@@ -178,7 +183,8 @@ numericConverter Egt::getNextConverter(ifstream &file) {
   for (int i=0; i<NUMERIC_BYTES; i++) {
     converter.ncChar[i] = buffer[i];
   }
-  delete buffer;
+  delete [] buffer;
+
   return converter;
 }
 
@@ -187,11 +193,9 @@ float Egt::readFloat(ifstream &file) {
   numericConverter converter = getNextConverter(file);
   result = converter.ncFloat;
   return result;
-
 }
 
-void Egt::readHeader(ifstream &file) 
-{
+void Egt::readHeader(ifstream &file) {
   // populate instance variables with header values
   file.seekg(0); // set read position to zero, if not already there
   fileVersion = readInteger(file);
@@ -209,7 +213,7 @@ int Egt::readInteger(ifstream &file)
   int result;
   numericConverter converter = getNextConverter(file);
   result = converter.ncInt;
-  return result; 
+  return result;
 }
 
 void Egt::readPreface(ifstream &file) {
@@ -252,7 +256,7 @@ string Egt::readString(ifstream &file, string name) {
     cerr << "Warning: String '" << name << "' has zero length." << endl;
     return "";
   }
-  char * buffer;
+  char *buffer;
   buffer = new char[length+1];
   buffer[length] = '\0'; // ensure buffer ends with a null character
   file.read(buffer, length);
@@ -263,7 +267,8 @@ string Egt::readString(ifstream &file, string name) {
     throw(sstream.str());
   }
   string result = string(buffer);
-  delete buffer;
+  delete [] buffer;
+
   return result;
 }
 

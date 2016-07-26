@@ -38,7 +38,7 @@
 #include <vector>
 
 #ifndef SWIG
-#include <hash_map>  // SGI extension to C++ STL standard
+#include <unordered_map>  // SGI extension to C++ STL standard
 #endif
 
 using namespace std;
@@ -138,7 +138,7 @@ public:
 #ifdef SWIG
 	map<string, int> snpNames;
 #else
-	hash_map<string, int, hash<string>, eqstr> snpNames;
+	unordered_map<string, int, hash<string>, eqstr> snpNames;
 #endif
 
 	string selectedChromosome; // Used if we are only concerned with a specific chromosome.
