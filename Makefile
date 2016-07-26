@@ -41,7 +41,7 @@ INSTALL_INC=$(PREFIX)/include
 INSTALL_LIB=$(PREFIX)/lib
 INSTALL_BIN=$(PREFIX)/bin
 
-EXECUTABLES=gtc g2i gtc_process sim simtools normalize_manifest
+EXECUTABLES=gtc g2i g2v gtc_process sim simtools normalize_manifest
 INCLUDES=Sim.h Gtc.h Manifest.h win2unix.h
 LIBS=libsimtools.so libsimtools.a
 PERL_MODULES=Gtc.pm Sim.pm
@@ -119,6 +119,9 @@ simtools: simtools.o commands.o libsimtools.a
 
 g2i: g2i.o libsimtools.a
 	$(CXX) $< $(LDFLAGS) -o $@ -lm -Wl,-Bstatic -lsimtools -Wl,-Bdynamic
+
+g2v: g2v.o libsimtools.a
+	$(CXX) $< $(LDFLAGS) -o $@ -pthread -lm -Wl,-Bstatic -lsimtools -Wl,-Bdynamic
 
 gtc_process: gtc_process.o libsimtools.a
 	$(CXX) $< $(LDFLAGS) -o $@ -lm -Wl,-Bstatic -lsimtools -Wl,-Bdynamic
