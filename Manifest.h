@@ -38,7 +38,7 @@
 #include <vector>
 
 #ifndef SWIG
-#include <hash_map>  // SGI extension to C++ STL standard
+#include <unordered_map>  // SGI extension to C++ STL standard
 #endif
 
 using namespace std;
@@ -80,6 +80,16 @@ class snpClass {
 
   bool converted; // has SNP been converted from original to ILMN top strand?
   // converted=true changes output of toString(), but not the iStrand and cStrand variables (which represent the original values)
+
+  bool operator<(snpClass other) const {
+    if (chromosome.compare(other.chromosome)) {
+      return (chromosome.compare(other.chromosome) < 0);
+    }
+	if (position != other.position) {
+      return (position < other.position);
+    }
+	return (name.compare(other.name) < 0);
+  }
 };
 
 
@@ -100,6 +110,7 @@ public:
 	void open (string filename, string chromosome, bool wide = false);
 
 	void order_by_position();
+    void order_by_locus();
 
 	string filename;
 
@@ -138,7 +149,7 @@ public:
 #ifdef SWIG
 	map<string, int> snpNames;
 #else
-	hash_map<string, int, hash<string>, eqstr> snpNames;
+	unordered_map<string, int, hash<string>, eqstr> snpNames;
 #endif
 
 	string selectedChromosome; // Used if we are only concerned with a specific chromosome.

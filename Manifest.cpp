@@ -31,6 +31,7 @@
 // THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
+#include <algorithm>
 #include <iostream>
 #include <fstream>
 #include <map>
@@ -765,8 +766,6 @@ void Manifest::write(string outPath) {
 
 }
 
-
-
 ///////////////////////////////////////////////
 //
 // void Manifest::order_by_position()
@@ -812,12 +811,24 @@ void Manifest::order_by_position() {
 	snps.push_back(s);
   }
 
-
   populate_hashmap();
-
 }
 
-
+///////////////////////////////////////////////
+//
+// void Manifest::order_by_locus()
+//
+// Re-order the vector of snpClass objects such that
+// they are stored in the order first of lexically sorted
+// chromosome name and then chromosomal position.
+//
+// Must be called after Manifest::open().
+//
+///////////////////////////////////////////////
+void Manifest::order_by_locus() {
+  sort(snps.begin(), snps.end());
+  return;
+}
 
 ///////////////////////////////////////////////
 //
@@ -943,6 +954,7 @@ int Manifest::get_map_value (map<string, int>& mymap, const char* const treasure
 
 
 }
+
 
 
 ///////////////////////////////////////////////
