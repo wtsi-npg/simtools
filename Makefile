@@ -65,7 +65,7 @@ else
 	CXXFLAGS+=-O3
 endif
 
-CXXFLAGS+=-Wall -Wfloat-equal -ffloat-store -fPIC -std=c++0x
+CXXFLAGS+=-Wall -ffloat-store -fPIC -std=c++0x
 
 # Set runpath instead of relying on LD_LIBRARY_PATH
 LDFLAGS+=-L./
