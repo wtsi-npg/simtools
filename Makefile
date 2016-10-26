@@ -77,7 +77,7 @@ usage:
 	@echo -e "Usage: make install DIR=<destination directory>\nOther targets: make all, make test, make install_g2i"
 
 clean:
-	rm -f *.o *.so Gtc_wrap.cxx Gtc.pm Sim_wrap.cxx Sim.pm runner.cpp runner $(TARGETS)
+	rm -f *.o json/*.o *.so Gtc_wrap.cxx Gtc.pm Sim_wrap.cxx Sim.pm runner.cpp runner $(TARGETS)
 
 test: Sim.o Egt.o Fcr.o Gtc.o Manifest.o QC.o win2unix.o json/json_reader.o json/json_writer.o json/json_value.o commands.o runner.o
 	$(CXX) $(CXXFLAGS) -Wno-deprecated $(LDFLAGS) -o runner $^
